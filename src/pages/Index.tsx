@@ -392,15 +392,14 @@ const Index = () => {
             <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               <h3 className="font-semibold mb-4 text-purple-400">Support</h3>
               <ul className="space-y-2 text-gray-400">
-                <li className="hover:text-purple-300 transition-colors duration-300">help@medistics.com</li>
-                <li className="hover:text-purple-300 transition-colors duration-300">+92 300 1234567</li>
-                <li className="hover:text-purple-300 transition-colors duration-300">Karachi, Pakistan</li>
+                <li className="hover:text-purple-300 transition-colors duration-300">medisticspakistan@gmail.com</li>
+                <li className="hover:text-purple-300 transition-colors duration-300">Pakistan</li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-            <p>&copy; 2024 Medistics. All rights reserved.</p>
+            <p>&copy; 2025 Medistics. All rights reserved.</p>
           </div>
         </div>
       </footer>
