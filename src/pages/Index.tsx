@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ const Index = () => {
   const [mounted, setMounted] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly'); // New state for billing cycle
   const [currency, setCurrency] = useState('PKR'); // New state for currency
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
@@ -246,90 +247,13 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl">
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Choose Your Learning Path
-          </h2>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Flexible plans designed for every stage of your medical journey.
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-4 mt-8">
-            <Button
-              variant={billingCycle === 'monthly' ? 'default' : 'outline'}
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-full ${billingCycle === 'monthly' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'border-purple-300 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
-            >
-              Monthly
-            </Button>
-            <Button
-              variant={billingCycle === 'yearly' ? 'default' : 'outline'}
-              onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-full ${billingCycle === 'yearly' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'border-purple-300 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
-            >
-              Yearly <Badge className="ml-2 bg-white text-purple-600 dark:bg-purple-900/30 dark:text-purple-200">Save!</Badge>
-            </Button>
-            <Button
-              variant={currency === 'PKR' ? 'default' : 'outline'}
-              onClick={() => setCurrency('PKR')}
-              className={`px-6 py-2 rounded-full ${currency === 'PKR' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'border-purple-300 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
-            >
-              PKR
-            </Button>
-            <Button
-              variant={currency === 'USD' ? 'default' : 'outline'}
-              onClick={() => setCurrency('USD')}
-              className={`px-6 py-2 rounded-full ${currency === 'USD' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'border-purple-300 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
-            >
-              USD
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, index) => (
-            <Card key={index} className={`relative flex flex-col ${plan.gradient} ${plan.border} ${plan.popular ? 'border-purple-500 dark:border-purple-400 scale-105 shadow-2xl' : 'shadow-lg'} transition-all duration-500 hover:shadow-2xl hover:scale-105 animate-scale-in group overflow-hidden`} style={{ animationDelay: `${index * 0.2}s` }}>
-              {plan.popular && (
-                <Badge className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg animate-pulse">
-                  Most Popular
-                </Badge>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardHeader className="text-center relative z-10">
-                <CardTitle className="text-xl md:text-2xl text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">{plan.display}</CardTitle>
-                <div className="mt-4">
-                  <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {currency === 'PKR' ? 'PKR' : '$'} {plan[billingCycle][currency].price}
-                  </span>
-                  {plan.id !== 'free' && (
-                    <span className="text-gray-600 dark:text-gray-400">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
-                  )}
-                  {plan[billingCycle][currency].originalPrice && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                      {currency === 'PKR' ? 'PKR' : '$'} {plan[billingCycle][currency].originalPrice}
-                    </p>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="relative z-10 flex-grow flex flex-col justify-between"> {/* Added flex-grow, flex, and justify-between */}
-                <ul className="space-y-3 mb-6">
-                  {plan[billingCycle][currency].features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-gray-700 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors duration-300">
-                      <div className="w-2 h-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mr-3 animate-pulse"></div>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/signup" className="mt-auto"> {/* Added mt-auto to push button to bottom */}
-                  <Button className={`w-full hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl ${plan.popular ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white' : 'bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white'}`}>
-                    Get Started
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+       {/* View Pricing CTA */}
+      <section className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl text-center">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">Ready for Unlimited Access?</h2>
+        <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">Unlock full access to AI Test Generator, Battle Arena, and unlimited Practice MCQs.</p>
+        <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl" onClick={() => navigate('/pricing')}>
+          View Pricing Plans <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
       </section>
 
       {/* CTA Section */}
@@ -392,14 +316,15 @@ const Index = () => {
             <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               <h3 className="font-semibold mb-4 text-purple-400">Support</h3>
               <ul className="space-y-2 text-gray-400">
-                <li className="hover:text-purple-300 transition-colors duration-300">medisticspakistan@gmail.com</li>
-                <li className="hover:text-purple-300 transition-colors duration-300">Pakistan</li>
+                <li className="hover:text-purple-300 transition-colors duration-300">help@medistics.com</li>
+                <li className="hover:text-purple-300 transition-colors duration-300">+92 300 1234567</li>
+                <li className="hover:text-purple-300 transition-colors duration-300">Karachi, Pakistan</li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-            <p>&copy; 2025 Medistics. All rights reserved.</p>
+            <p>&copy; 2024 Medistics. All rights reserved.</p>
           </div>
         </div>
       </footer>
