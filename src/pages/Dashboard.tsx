@@ -211,7 +211,7 @@ const Dashboard = () => {
       darkBgGradient: 'from-purple-900/30 to-pink-900/30',
       tag: 'For Iconic & Premium accounts', // Added tag
       tagColor: 'bg-green-500 text-white'.
-      disabled:true
+      disabled: true
     },
     {
       title: 'AI Chatbot',
@@ -224,7 +224,7 @@ const Dashboard = () => {
       darkBgGradient: 'from-green-900/30 to-emerald-900/30',
       tag: 'For Premium Account', // Added tag
       tagColor: 'bg-indigo-500 text-white',
-      disabled:true
+      disabled: true
     },
     {
       title: 'Hire a Tutor',
