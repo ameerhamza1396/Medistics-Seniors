@@ -478,7 +478,7 @@ const MockTest = () => {
 
       <div className="flex flex-grow">
         {/* Desktop Drawer (visible on larger screens) */}
-        <div className="hidden lg:block w-64 bg-white dark:bg-gray-900 border-r border-purple-200 dark:border-purple-800 p-6 flex-shrink-0">
+        <div className="hidden lg:block w-64 bg-white dark:bg-gray-900 border-r border-purple-200 dark:border-purple-800 p-6 flex-shrink-0 overflow-y-auto max-h-[calc(100vh-80px)]">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Question Map</h2>
           <div className="grid grid-cols-4 gap-2">
             {mockMcqs.map((mcq, index) => (
@@ -499,8 +499,10 @@ const MockTest = () => {
           </div>
         </div>
 
-        {/* Main Content Area (Question Display) */}
-        <main className="flex-grow container mx-auto px-4 lg:px-8 py-8 flex flex-col items-center justify-center">
+       {/* Main Content Area (Question Display) */}
+<main className="flex-grow flex justify-center px-4 lg:px-8 py-12">
+  <div className="w-full max-w-2xl">
+
           <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
             <img
               src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
@@ -567,7 +569,8 @@ const MockTest = () => {
             Best of luck, <span className="text-purple-600 dark:text-pink-400">{displayUsername}</span>!
           </p>
 
-        </main>
+        </div>
+</main>
       </div>
 
       {/* Confirmation Dialog for Unattempted Questions */}
