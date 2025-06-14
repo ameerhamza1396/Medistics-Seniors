@@ -210,7 +210,8 @@ const Dashboard = () => {
       bgGradient: 'from-purple-50 to-pink-50',
       darkBgGradient: 'from-purple-900/30 to-pink-900/30',
       tag: 'For Iconic & Premium accounts', // Added tag
-      tagColor: 'bg-green-500 text-white'
+      tagColor: 'bg-green-500 text-white'.
+      disabled:true
     },
     {
       title: 'AI Chatbot',
@@ -222,7 +223,8 @@ const Dashboard = () => {
       bgGradient: 'from-green-50 to-emerald-50',
       darkBgGradient: 'from-green-900/30 to-emerald-900/30',
       tag: 'For Premium Account', // Added tag
-      tagColor: 'bg-indigo-500 text-white'
+      tagColor: 'bg-indigo-500 text-white',
+      disabled:true
     },
     {
       title: 'Hire a Tutor',
