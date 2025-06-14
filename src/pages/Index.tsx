@@ -323,7 +323,7 @@ const Index = () => {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-            <p>&copy; 2024 Medistics. All rights reserved.</p>
+            <p>&copy; 2025 Medistics. All rights reserved.</p>
           </div>
         </div>
       </footer>
