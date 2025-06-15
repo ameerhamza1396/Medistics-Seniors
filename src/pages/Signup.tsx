@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,10 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 
 const Signup = () => {
-  const { signUp, user } = useAuth();
+  // 1. Import signInWithGoogle from useAuth
+  const { signUp, user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -22,7 +22,7 @@ const Signup = () => {
     password: '',
     confirmPassword: ''
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,7 +44,10 @@ const Signup = () => {
     const checkEmail = async () => {
       if (formData.email && formData.email.includes('@') && formData.email.length > 5) {
         setCheckingEmail(true);
-        setEmailExists(false); // Always allow signup, just checking format
+        // For security and privacy, you generally don't expose if an email exists on signup.
+        // Supabase's `signUp` function will return an error if the email is already registered,
+        // which is the recommended way to handle this on the frontend.
+        setEmailExists(false); // Reset this as we are not actively checking for existence here
         setCheckingEmail(false);
       } else {
         setEmailExists(false);
@@ -62,11 +65,11 @@ const Signup = () => {
         setCheckingUsername(true);
         try {
           const { data, error } = await supabase
-            .from('profiles')
+            .from('profiles') // Assuming 'profiles' table stores usernames
             .select('username')
             .eq('username', formData.username)
-            .maybeSingle();
-          
+            .maybeSingle(); // Use maybeSingle to get null if no row found
+
           setUsernameExists(!!data && !error);
         } catch (error) {
           console.error('Error checking username:', error);
@@ -92,14 +95,15 @@ const Signup = () => {
     }
 
     // Username validation
-    if (formData.username && formData.username.length < 3) {
-      errors.username = 'Username must be at least 3 characters';
-    }
-    if (formData.username && !/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      errors.username = 'Username can only contain letters, numbers, and underscores';
+    if (formData.username) {
+        if (formData.username.length < 3) {
+            errors.username = 'Username must be at least 3 characters';
+        } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+            errors.username = 'Username can only contain letters, numbers, and underscores';
+        }
     }
     if (usernameExists) {
-      errors.username = 'This username is already taken';
+        errors.username = 'This username is already taken';
     }
 
     // Full name validation
@@ -119,7 +123,10 @@ const Signup = () => {
     // Confirm password validation
     if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
+    } else if (formData.confirmPassword && !formData.password) {
+        errors.confirmPassword = 'Please enter your password first';
     }
+
 
     setValidationErrors(errors);
   }, [formData, usernameExists]);
@@ -133,9 +140,9 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check for validation errors
-    if (Object.keys(validationErrors).length > 0) {
+    if (Object.keys(validationErrors).length > 0 || usernameExists) { // Include usernameExists in pre-submit check
       toast({
         title: "Validation Error",
         description: "Please fix the errors before submitting",
@@ -144,14 +151,16 @@ const Signup = () => {
       return;
     }
 
-    if (usernameExists) {
-      toast({
-        title: "Username Taken",
-        description: "Please choose a different username",
-        variant: "destructive",
-      });
-      return;
+    // Ensure all required fields have data before attempting signup
+    if (!formData.email || !formData.username || !formData.fullName || !formData.password || !formData.confirmPassword) {
+        toast({
+            title: "Missing Information",
+            description: "Please fill in all required fields.",
+            variant: "destructive",
+        });
+        return;
     }
+
 
     setLoading(true);
 
@@ -168,21 +177,50 @@ const Signup = () => {
       });
 
       if (!error && data) {
+        // For email/password signup, Supabase typically sends a verification email.
+        // The user isn't logged in immediately until they click the verification link.
         toast({
           title: "Account Created!",
-          description: "Welcome to Medistics! You can now start learning.",
+          description: "Please check your email to verify your account and sign in.",
+          duration: 7000, // Give user time to read this important instruction
         });
-        navigate('/dashboard');
+        navigate('/login'); // Redirect to login page
+      } else if (error) {
+          // Handle specific Supabase errors, e.g., email already registered
+          if (error.message.includes("already registered")) {
+              toast({
+                  title: "Signup Failed",
+                  description: "This email is already registered. Please try logging in or use a different email.",
+                  variant: "destructive",
+              });
+          } else {
+              throw error; // Re-throw other errors to be caught by the outer catch
+          }
       }
     } catch (error: any) {
       console.error('Signup submission error:', error);
       toast({
         title: "Error",
-        description: error.message || "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred during signup",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 2. Create handleGoogleSignIn function
+  const handleGoogleSignIn = async () => {
+    setLoading(true); // Show loading state for the button
+    try {
+      await signInWithGoogle();
+      // The signInWithGoogle function (in useAuth) will handle the redirect
+      // to Google and then back to your app, so no explicit navigation here.
+    } catch (error) {
+      console.error('Error signing up with Google:', error);
+      // The useAuth hook should already be toasting errors, but you can add more here if needed.
+    } finally {
+      setLoading(false); // Reset loading state
     }
   };
 
@@ -334,14 +372,40 @@ const Signup = () => {
                 )}
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" 
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 disabled={loading || Object.keys(validationErrors).length > 0 || usernameExists}
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
+
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-purple-300 dark:border-purple-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white/80 dark:bg-gray-800/80 px-2 text-gray-500 dark:text-gray-400">Or</span>
+                </div>
+            </div>
+
+            {/* 3. Add the Google Sign-In button */}
+            <Button
+                type="button" // Important: set type to button to prevent form submission
+                variant="outline"
+                className="w-full border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 transition-all duration-200"
+                onClick={handleGoogleSignIn} // Attach the new handler
+                disabled={loading} // Disable if any loading is happening
+            >
+                <div className="flex items-center justify-center space-x-2">
+                    {/* Use a real Google logo here for better UX */}
+                <img src="../../public/googlelogo.svg"
+                  alt="Google Logo"
+                  className="w-4 h-4" />
+                    <span className="text-gray-900 dark:text-white">Sign up with Google</span>
+                </div>
+            </Button>
 
             <div className="text-center mt-4">
               <p className="text-gray-600 dark:text-gray-300">
