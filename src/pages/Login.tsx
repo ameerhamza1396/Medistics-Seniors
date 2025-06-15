@@ -7,17 +7,18 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
+import googleIcon from '@/public/googlelogo.svg';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { signIn, user } = useAuth();
+  const { signIn, user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
@@ -31,14 +32,22 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     const { data, error } = await signIn(formData.email, formData.password);
-    
+
     if (data && !error) {
       navigate('/dashboard');
     }
-    
+
     setIsLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+    }
   };
 
   if (!mounted) {
@@ -58,21 +67,21 @@ const Login = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200"
             >
-              {theme === "dark" ? (
+              {theme === 'dark' ? (
                 <Sun className="h-4 w-4" />
               ) : (
                 <Moon className="h-4 w-4" />
               )}
             </Button>
           </div>
-          
+
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <img 
-              src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" 
-              alt="Medistics Logo" 
+            <img
+              src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
+              alt="Medistics Logo"
               className="w-10 h-10 object-contain"
             />
             <span className="text-2xl font-bold text-gray-900 dark:text-white">Medistics</span>
@@ -87,19 +96,21 @@ const Login = () => {
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-900 dark:text-white">Email Address</Label>
+                <Label htmlFor="email" className="text-gray-900 dark:text-white">
+                  Email Address
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input 
+                  <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="pl-10 bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-400"
                     required
                   />
@@ -107,15 +118,17 @@ const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-900 dark:text-white">Password</Label>
+                <Label htmlFor="password" className="text-gray-900 dark:text-white">
+                  Password
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input 
+                  <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="pl-10 pr-10 bg-white dark:bg-gray-800 border-purple-300 dark:border-purple-700 focus:border-purple-500 dark:focus:border-purple-400"
                     required
                   />
@@ -134,13 +147,16 @@ const Login = () => {
                   <input type="checkbox" className="rounded border-gray-300 dark:border-gray-600" />
                   <span className="text-gray-600 dark:text-gray-400">Remember me</span>
                 </label>
-                <Link to="/forgot-password" className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                >
                   Forgot password?
                 </Link>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:scale-105 transition-transform duration-200"
                 disabled={isLoading}
               >
@@ -163,9 +179,18 @@ const Login = () => {
                 </div>
               </div>
 
-              <Button type="button" variant="outline" className="w-full border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 transition-all duration-200">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 transition-all duration-200"
+                onClick={handleGoogleSignIn}
+              >
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                  <img
+                    src="../../public/googlelogo.svg"
+                    alt="Google logo"
+                    className="w-4 h-4"
+                  />
                   <span className="text-gray-900 dark:text-white">Continue with Google</span>
                 </div>
               </Button>
@@ -173,7 +198,10 @@ const Login = () => {
               <div className="text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Don't have an account?{' '}
-                  <Link to="/signup" className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium transition-colors">
+                  <Link
+                    to="/signup"
+                    className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium transition-colors"
+                  >
                     Sign up for free
                   </Link>
                 </p>
@@ -181,15 +209,6 @@ const Login = () => {
             </form>
           </CardContent>
         </Card>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 animate-slide-up">
-          <h3 className="font-medium text-gray-900 dark:text-white mb-2">Demo Credentials</h3>
-          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-            <p><strong>Email:</strong> demo@medistics.com</p>
-            <p><strong>Password:</strong> demo123</p>
-          </div>
-        </div>
       </div>
     </div>
   );
