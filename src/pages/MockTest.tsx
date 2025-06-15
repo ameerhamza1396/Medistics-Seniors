@@ -88,7 +88,7 @@ const MockTest = () => {
   // Define test unlock and end times
   // IMPORTANT: Set these dates/times in PKT (Pakistan Standard Time)
   // June 15, 2025, 00:00:00 PKT
-  const testUnlockTime = new Date('2025-06-15T00:00:00+05:00'); // +05:00 for PKT
+  const testUnlockTime = new Date('2025-06-15T09:00:00+05:00'); // +05:00 for PKT
   const testEndTime = new Date(testUnlockTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours after unlock
 
   const now = new Date();
@@ -329,7 +329,7 @@ const MockTest = () => {
           Test Upcoming!
         </h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
-          The Weekly Mock Test will be unlocked on Sunday, June 15, 2025. Please check back then!
+          The Weekly Mock Test will be unlocked on Sunday, June 15, 2025 - 09 AM Pakistan Standard Time. Please check back then!
         </p>
         <Button
           onClick={() => navigate('/dashboard')}
@@ -396,7 +396,7 @@ const MockTest = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
         <p className="text-xl text-gray-700 dark:text-gray-300">No mock test questions available at the moment.</p>
         <Link to="/dashboard" className="mt-4">
-            <Button>Go to Dashboard</Button>
+          <Button>Go to Dashboard</Button>
         </Link>
       </div>
     );
@@ -445,8 +445,8 @@ const MockTest = () => {
             </Sheet>
 
             <Link to="/dashboard" className="text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors hidden lg:inline-flex items-center">
-                <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
-                <span className="text-xl font-bold">Mock Test</span>
+              <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
+              <span className="text-xl font-bold">Mock Test</span>
             </Link>
             <span className="text-xl font-bold text-gray-900 dark:text-white lg:hidden">Mock Test</span> {/* Title for mobile */}
           </div>
