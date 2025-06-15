@@ -396,7 +396,7 @@ const MockTest = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
         <p className="text-xl text-gray-700 dark:text-gray-300">No mock test questions available at the moment.</p>
         <Link to="/dashboard" className="mt-4">
-            <Button>Go to Dashboard</Button>
+          <Button>Go to Dashboard</Button>
         </Link>
       </div>
     );
@@ -442,10 +442,10 @@ const MockTest = () => {
             </Sheet>
 
             <Link to="/dashboard" className="text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors hidden lg:inline-flex items-center">
-                <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
-                <span className="text-xl font-bold">Mock Test</span>
+              <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
+              <span className="text-xl font-bold">Mock Test</span>
             </Link>
-             <span className="text-xl font-bold text-gray-900 dark:text-white lg:hidden">Mock Test</span> {/* Title for mobile */}
+            <span className="text-xl font-bold text-gray-900 dark:text-white lg:hidden">Mock Test</span> {/* Title for mobile */}
           </div>
 
           <div className="flex items-center space-x-3">
@@ -478,7 +478,7 @@ const MockTest = () => {
 
       <div className="flex flex-grow">
         {/* Desktop Drawer (visible on larger screens) */}
-        <div className="hidden lg:block w-64 bg-white dark:bg-gray-900 border-r border-purple-200 dark:border-purple-800 p-6 flex-shrink-0 overflow-y-auto max-h-[calc(100vh-80px)]">
+        <div className="hidden lg:block w-64 bg-white dark:bg-gray-900 border-r border-purple-200 dark:border-purple-800 p-6 flex-shrink-0">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Question Map</h2>
           <div className="grid grid-cols-4 gap-2">
             {mockMcqs.map((mcq, index) => (
@@ -499,18 +499,15 @@ const MockTest = () => {
           </div>
         </div>
 
-       {/* Main Content Area (Question Display) */}
-<main className="flex-grow flex justify-center px-4 lg:px-8 py-12">
-  <div className="w-full max-w-2xl">
-
-          <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
-            <img
-              src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-              alt="Medistics Logo"
-              className="w-12 h-12 object-contain mr-3"
-            />
-            Weekly Mock Test
-          </h1>
+        {/* Main Content Area (Question Display) */}
+        <main className="flex-grow container mx-auto px-4 lg:px-8 py-8 flex flex-col items-center">          <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
+          <img
+            src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
+            alt="Medistics Logo"
+            className="w-12 h-12 object-contain mr-3"
+          />
+          Weekly Mock Test
+        </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 text-center">
             Question {currentQuestionIndex + 1} of {mockMcqs.length}
           </p>
@@ -569,8 +566,7 @@ const MockTest = () => {
             Best of luck, <span className="text-purple-600 dark:text-pink-400">{displayUsername}</span>!
           </p>
 
-        </div>
-</main>
+        </main>
       </div>
 
       {/* Confirmation Dialog for Unattempted Questions */}
