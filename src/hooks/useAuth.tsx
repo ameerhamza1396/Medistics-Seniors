@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,17 +17,24 @@ export const useAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
+
         if (event === 'SIGNED_IN') {
           toast({
             title: "Welcome!",
             description: "You have successfully signed in.",
           });
+          // Optional: Add navigation here if you want immediate redirect on SIGNED_IN event
+          // For OAuth, the redirect happens automatically via the browser,
+          // but for email/password sign-in, you might want to navigate.
+          // Example:
+          // if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
+          //   window.location.href = '/dashboard'; // Force full page reload for session to be fully picked up
+          // }
         }
       }
     );
 
-    // Check for existing session
+    // Check for existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -36,12 +42,12 @@ export const useAuth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [toast]);
+  }, [toast]); // Added toast to dependency array, although it's stable.
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
       console.log('Starting signup with:', { email, userData });
-      
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -50,7 +56,7 @@ export const useAuth = () => {
             full_name: userData.fullName || userData.full_name,
             username: userData.username,
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: `${window.location.origin}/dashboard` // Ensure this is correct
         }
       });
 
@@ -63,9 +69,11 @@ export const useAuth = () => {
 
       toast({
         title: "Account created!",
-        description: "Welcome to Medistics! You can now start learning.",
+        description: "Welcome to Medistics! Please check your email to confirm your account.", // Adjusted message for email verification flow
       });
 
+      // Supabase sends a verification email. The user is not truly signed in until they verify.
+      // You might want to handle data.user being null here if email verification is required.
       return { data, error: null };
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -98,17 +106,51 @@ export const useAuth = () => {
     }
   };
 
+  // --- NEW: signInWithGoogle function ---
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // This redirectTo URL MUST be one of your "Authorized JavaScript origins"
+          // in Google Cloud Console and also implicitly handled by Supabase's callback URL.
+          // It's the URL your user will land on *after* completing Google's authentication.
+          redirectTo: `${window.location.origin}/dashboard`, // Example: redirects to your dashboard after Google auth
+        },
+      });
+
+      if (error) {
+        console.error('Google Sign-in error:', error);
+        throw error;
+      }
+
+      // No explicit navigation here for OAuth, as Supabase handles the redirect automatically
+      // through the browser's native flow.
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Google Sign-in process failed:', error);
+      toast({
+        title: "Google Sign-in Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
+  };
+  // --- END NEW FUNCTION ---
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
-      
+
       // Redirect to home page after successful logout
+      // Using window.location.href ensures a full page reload, clearing any previous state
       window.location.href = '/';
     } catch (error: any) {
       console.error('Signout error:', error);
@@ -127,5 +169,6 @@ export const useAuth = () => {
     signUp,
     signIn,
     signOut,
+    signInWithGoogle, // --- IMPORTANT: EXPOSE THE NEW FUNCTION HERE ---
   };
 };
