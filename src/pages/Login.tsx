@@ -187,7 +187,7 @@ const Login = () => {
               >
                 <div className="flex items-center space-x-2">
                   <img
-                    src="/public/googlelogo.svg"
+                    src="googlelogo.svg"
                     alt="Google logo"
                     className="w-4 h-4"
                   />
