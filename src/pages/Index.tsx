@@ -7,6 +7,9 @@ import { ArrowRight, Users, Trophy, Brain, Target, Moon, Sun, Bot, Sword } from 
 import { useTheme } from 'next-themes';
 import MobileNav from '@/components/MobileNav';
 
+// IMPORTANT: You need to replace this with the actual path to your AuthHook
+import { useAuth } from '@/hooks/useAuth'; // Assuming your AuthHook is here
+
 const Index = () => {
   const [isVisible, setIsVisible] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -15,10 +18,25 @@ const Index = () => {
   const [currency, setCurrency] = useState('PKR'); // New state for currency
   const navigate = useNavigate();
 
+  // --- Start of AuthHook integration ---
+  // Assuming useAuth() provides { user, isLoading } where user is null if not logged in
+  // and isLoading is true while checking authentication status.
+  const { user, isLoading: isLoadingAuth } = useAuth();
+  // --- End of AuthHook integration ---
+
   useEffect(() => {
     setIsVisible(true);
     setMounted(true);
   }, []);
+
+  // --- Redirection Logic based on AuthHook ---
+  useEffect(() => {
+    if (!isLoadingAuth && user) {
+      // If auth check is complete and user is logged in, redirect
+      navigate('/dashboard', { replace: true }); // 'replace: true' prevents going back to landing page
+    }
+  }, [user, isLoadingAuth, navigate]);
+  // --- End of Redirection Logic ---
 
   const features = [
     {
@@ -99,10 +117,16 @@ const Index = () => {
     }
   ];
 
-  if (!mounted) {
-    return null;
+  if (!mounted || isLoadingAuth) {
+    // Show a loading spinner or blank page while AuthHook is determining status
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500"></div>
+      </div>
+    );
   }
 
+  // If AuthHook is done loading and no user is found, render the landing page
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
       {/* Header */}
@@ -247,7 +271,7 @@ const Index = () => {
         </div>
       </section>
 
-       {/* View Pricing CTA */}
+      {/* View Pricing CTA */}
       <section className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl text-center">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">Ready for Unlimited Access?</h2>
         <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">Unlock full access to AI Test Generator, Battle Arena, and unlimited Practice MCQs.</p>
