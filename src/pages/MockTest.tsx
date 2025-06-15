@@ -396,7 +396,7 @@ const MockTest = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
         <p className="text-xl text-gray-700 dark:text-gray-300">No mock test questions available at the moment.</p>
         <Link to="/dashboard" className="mt-4">
-          <Button>Go to Dashboard</Button>
+            <Button>Go to Dashboard</Button>
         </Link>
       </div>
     );
@@ -417,33 +417,36 @@ const MockTest = () => {
                   <PanelLeft className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[250px] sm:w-[300px] bg-white dark:bg-gray-900 border-r border-purple-200 dark:border-purple-800 p-4">
+              <SheetContent side="left" className="w-[250px] sm:w-[300px] bg-white dark:bg-gray-900 border-r border-purple-200 dark:border-purple-800 p-4 flex flex-col">
                 <SheetHeader>
                   <SheetTitle className="text-xl font-bold text-gray-900 dark:text-white mb-4">Question Map</SheetTitle>
                 </SheetHeader>
-                <div className="grid grid-cols-4 gap-2">
-                  {mockMcqs.map((mcq, index) => (
-                    <Button
-                      key={mcq.id}
-                      variant={isQuestionAnswered(mcq.id) ? "default" : "outline"}
-                      className={`w-full ${currentQuestionIndex === index ? 'bg-purple-600 hover:bg-purple-700 text-white' : isQuestionAnswered(mcq.id) ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                      onClick={() => goToQuestion(index)}
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
-                </div>
-                <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
-                  <p className="mb-2"><span className="inline-block w-4 h-4 rounded-full bg-purple-600 mr-2"></span>Current Question</p>
-                  <p className="mb-2"><span className="inline-block w-4 h-4 rounded-full bg-green-500 mr-2"></span>Answered</p>
-                  <p><span className="inline-block w-4 h-4 rounded-full bg-gray-100 dark:bg-gray-700 mr-2"></span>Unanswered</p>
+                {/* Scrollable content area for the drawer */}
+                <div className="flex-grow overflow-y-auto pr-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    {mockMcqs.map((mcq, index) => (
+                      <Button
+                        key={mcq.id}
+                        variant={isQuestionAnswered(mcq.id) ? "default" : "outline"}
+                        className={`w-full ${currentQuestionIndex === index ? 'bg-purple-600 hover:bg-purple-700 text-white' : isQuestionAnswered(mcq.id) ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                        onClick={() => goToQuestion(index)}
+                      >
+                        {index + 1}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mb-2"><span className="inline-block w-4 h-4 rounded-full bg-purple-600 mr-2"></span>Current Question</p>
+                    <p className="mb-2"><span className="inline-block w-4 h-4 rounded-full bg-green-500 mr-2"></span>Answered</p>
+                    <p><span className="inline-block w-4 h-4 rounded-full bg-gray-100 dark:bg-gray-700 mr-2"></span>Unanswered</p>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
 
             <Link to="/dashboard" className="text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors hidden lg:inline-flex items-center">
-              <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
-              <span className="text-xl font-bold">Mock Test</span>
+                <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
+                <span className="text-xl font-bold">Mock Test</span>
             </Link>
             <span className="text-xl font-bold text-gray-900 dark:text-white lg:hidden">Mock Test</span> {/* Title for mobile */}
           </div>
@@ -500,14 +503,16 @@ const MockTest = () => {
         </div>
 
         {/* Main Content Area (Question Display) */}
-        <main className="flex-grow container mx-auto px-4 lg:px-8 py-8 flex flex-col items-center">          <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
-          <img
-            src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-            alt="Medistics Logo"
-            className="w-12 h-12 object-contain mr-3"
-          />
-          Weekly Mock Test
-        </h1>
+        {/* Removed justify-center to align content to the top */}
+        <main className="flex-grow container mx-auto px-4 lg:px-8 py-8 flex flex-col items-center">
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
+            <img
+              src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
+              alt="Medistics Logo"
+              className="w-12 h-12 object-contain mr-3"
+            />
+            Weekly Mock Test
+          </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 text-center">
             Question {currentQuestionIndex + 1} of {mockMcqs.length}
           </p>
