@@ -400,7 +400,7 @@ const Signup = () => {
             >
                 <div className="flex items-center justify-center space-x-2">
                     {/* Use a real Google logo here for better UX */}
-                <img src="../../public/googlelogo.svg"
+                <img src="/googlelogo.svg"
                   alt="Google Logo"
                   className="w-4 h-4" />
                     <span className="text-gray-900 dark:text-white">Sign up with Google</span>
