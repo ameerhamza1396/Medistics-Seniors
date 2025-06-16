@@ -372,6 +372,18 @@ const Signup = () => {
                 )}
               </div>
 
+              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+  By continuing, you agree to our{' '}
+  <Link to="/privacypolicy" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+    Privacy Policy
+  </Link>{' '}
+  and{' '}
+  <Link to="/terms" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+    Terms & Conditions
+  </Link>.
+</p>
+
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
@@ -400,7 +412,7 @@ const Signup = () => {
             >
                 <div className="flex items-center justify-center space-x-2">
                     {/* Use a real Google logo here for better UX */}
-                <img src="/googlelogo.svg"
+                <img src="../../public/googlelogo.svg"
                   alt="Google Logo"
                   className="w-4 h-4" />
                     <span className="text-gray-900 dark:text-white">Sign up with Google</span>
