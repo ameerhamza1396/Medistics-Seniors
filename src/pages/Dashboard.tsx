@@ -166,7 +166,7 @@ const Dashboard = () => {
     },
     {
       title: 'Classrooms',
-      description: 'Join or create study groups (Under Maintenance)', // Updated description
+      description: 'Join or create study groups', // Updated description
       icon: Users,
       link: '/classroom',
       type: 'internal',
