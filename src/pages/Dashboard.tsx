@@ -166,7 +166,7 @@ const Dashboard = () => {
     },
     {
       title: 'Classrooms',
-      description: 'Join or create study groups', // Updated description
+      description: 'Join or create study groups (Under Maintenance)', // Updated description
       icon: Users,
       link: '/classroom',
       type: 'internal',
@@ -214,7 +214,7 @@ const Dashboard = () => {
     },
     {
       title: 'AI Chatbot',
-      description: 'Get instant help from AI tutor (Under Maintenance)', // Updated description
+      description: 'Get instant help from AI tutor', // Updated description
       icon: Zap,
       link: '/ai/chatbot',
       type: 'internal',
