@@ -155,6 +155,18 @@ const Login = () => {
                 </Link>
               </div>
 
+              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+  By continuing, you agree to our{' '}
+  <Link to="/privacypolicy" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+    Privacy Policy
+  </Link>{' '}
+  and{' '}
+  <Link to="/terms" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+    Terms & Conditions
+  </Link>.
+</p>
+
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:scale-105 transition-transform duration-200"
