@@ -338,10 +338,12 @@ const Index = () => {
             </div>
 
             <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <h3 className="font-semibold mb-4 text-purple-400">Support</h3>
+              <h3 className="font-semibold mb-4 text-purple-400">Support & Legal</h3>
               <ul className="space-y-2 text-gray-400">
-                <li className="hover:text-purple-300 transition-colors duration-300">medisticspakistan@gmail.com</li>
+                <li className="hover:text-purple-300 transition-colors duration-300">medistics@dr.com</li>
                 <li className="hover:text-purple-300 transition-colors duration-300">Pakistan</li>
+                <li><Link to="/privacypolicy" className="hover:text-white transition-colors duration-300 hover:text-purple-300">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="hover:text-white transition-colors duration-300 hover:text-purple-300">Terms and Conditions</Link></li>
               </ul>
             </div>
           </div>
