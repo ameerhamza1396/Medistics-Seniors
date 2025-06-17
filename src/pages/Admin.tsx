@@ -1,4 +1,3 @@
-// app/admin/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -6,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, Lock, Users, Database, Upload, Code } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Lock, Users, Database, Upload, Code, ClipboardCheck } from 'lucide-react'; // Import ClipboardCheck icon
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -214,7 +213,8 @@ export default function AdminPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
+        {/* Updated grid layout to 3x2 with reordered boxes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto">
           {/* Admin 1: Update MCQs Database */}
           <a href="/admin1" className="block">
             <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
@@ -282,6 +282,24 @@ export default function AdminPage() {
               <CardContent className="text-center">
                 <Button className="bg-red-600 hover:bg-red-700 text-white w-full">
                   Go to Admin4
+                </Button>
+              </CardContent>
+            </Card>
+          </a>
+
+          {/* Admin 5: Mock Test Results (Now at the end) */}
+          <a href="/admin5" className="block">
+            <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
+              <CardHeader className="text-center pb-4">
+                <ClipboardCheck className="h-12 w-12 mx-auto mb-4 text-purple-600 dark:text-purple-400" />
+                <CardTitle className="text-xl mb-2">Admin5: Mock Test Results</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Review and analyze mock test performances.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full">
+                  Go to Admin5
                 </Button>
               </CardContent>
             </Card>
