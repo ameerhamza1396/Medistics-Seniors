@@ -26,8 +26,8 @@ import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
 import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
-// import TestCompletionPage from '@/pages/TestCompletion'; 
-import Classroom from '@/pages/Classroom'; // Import the new TestCompletionPage
+import TestCompletionPage from '@/pages/TestCompletion'; 
+import Classroom from '@/pages/Classroom'; 
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -67,8 +67,8 @@ function App() {
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
               <Route path="/mock-test" element={<MockTest />} />
-              <Route path="/test-completed" element={<TestCompletionPage />} /> {/* New route for TestCompletionPage */}
-{/*               <Route path="/terms" element={<Terms />} />  */}
+              <Route path="/test-completed" element={<TestCompletionPage />} /> 
+              <Route path="/terms-condition" element={<Terms />} /> 
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
               <Route path="*" element={<NotFound />} />
