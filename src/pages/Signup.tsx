@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 
 const Signup = () => {
-  // 1. Import signInWithGoogle from useAuth
   const { signUp, user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -27,7 +26,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [emailExists, setEmailExists] = useState(false);
+  const [emailExists, setEmailExists] = useState(false); // This is not used for pre-checking as per security best practices
   const [usernameExists, setUsernameExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [checkingUsername, setCheckingUsername] = useState(false);
@@ -181,10 +180,11 @@ const Signup = () => {
         // The user isn't logged in immediately until they click the verification link.
         toast({
           title: "Account Created!",
-          description: "Please check your email to verify your account and sign in.",
+          description: "Please check your email to verify your account.",
           duration: 7000, // Give user time to read this important instruction
         });
-        navigate('/login'); // Redirect to login page
+        // Redirect to a new page asking the user to check their inbox
+        navigate('/verify-email');
       } else if (error) {
           // Handle specific Supabase errors, e.g., email already registered
           if (error.message.includes("already registered")) {
@@ -209,9 +209,8 @@ const Signup = () => {
     }
   };
 
-  // 2. Create handleGoogleSignIn function
   const handleGoogleSignIn = async () => {
-    setLoading(true); // Show loading state for the button
+    setLoading(true);
     try {
       await signInWithGoogle();
       // The signInWithGoogle function (in useAuth) will handle the redirect
@@ -220,7 +219,7 @@ const Signup = () => {
       console.error('Error signing up with Google:', error);
       // The useAuth hook should already be toasting errors, but you can add more here if needed.
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -373,15 +372,15 @@ const Signup = () => {
               </div>
 
               <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-  By continuing, you agree to our{' '}
-  <Link to="/privacypolicy" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
-    Privacy Policy
-  </Link>{' '}
-  and{' '}
-  <Link to="/terms" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
-    Terms & Conditions
-  </Link>.
-</p>
+                By continuing, you agree to our{' '}
+                <Link to="/privacypolicy" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                  Privacy Policy
+                </Link>{' '}
+                and{' '}
+                <Link to="/terms" className="underline text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                  Terms & Conditions
+                </Link>.
+              </p>
 
 
               <Button
@@ -402,19 +401,17 @@ const Signup = () => {
                 </div>
             </div>
 
-            {/* 3. Add the Google Sign-In button */}
             <Button
-                type="button" // Important: set type to button to prevent form submission
+                type="button"
                 variant="outline"
                 className="w-full border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 transition-all duration-200"
-                onClick={handleGoogleSignIn} // Attach the new handler
-                disabled={loading} // Disable if any loading is happening
+                onClick={handleGoogleSignIn}
+                disabled={loading}
             >
                 <div className="flex items-center justify-center space-x-2">
-                    {/* Use a real Google logo here for better UX */}
-                <img src="../../public/googlelogo.svg"
-                  alt="Google Logo"
-                  className="w-4 h-4" />
+                    <img src="../../public/googlelogo.svg"
+                    alt="Google Logo"
+                    className="w-4 h-4" />
                     <span className="text-gray-900 dark:text-white">Sign up with Google</span>
                 </div>
             </Button>
