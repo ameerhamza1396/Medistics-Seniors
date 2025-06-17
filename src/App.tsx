@@ -28,8 +28,8 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
+import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
-import TermsAndConditions from '@/pages/Terms';
 
 const queryClient = new QueryClient();
 
