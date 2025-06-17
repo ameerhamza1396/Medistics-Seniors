@@ -28,7 +28,7 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
-import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
+// import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -69,7 +69,7 @@ function App() {
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
-              <Route path="/terms" element={<TermsAndConditions />} />
+{/*               <Route path="/terms" element={<TermsAndConditions />} /> */}
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
               <Route path="*" element={<NotFound />} />
