@@ -21,7 +21,7 @@ import Admin5 from '@/pages/Admin5';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import Terms from '@/pages/Terms';
-import PrivacyPolicy from '@/pages/privacypolicy';
+// import PrivacyPolicy from '@/pages/privacypolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
 import ChangePassword from '@/pages/ChangePassword';
@@ -66,7 +66,7 @@ function App() {
               <Route path="/profile/password" element={<ChangePassword />} />
               <Route path="/profile/upgrade" element={<Profile />} />
               <Route path="/pricing" element={<Pricing />} />
-              <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+{/*               <Route path="/privacypolicy" element={<PrivacyPolicy />} /> */}
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
 {/*               <Route path="/terms" element={<TermsAndConditions />} /> */}
