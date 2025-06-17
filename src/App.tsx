@@ -28,7 +28,7 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
-import VerifyEmail from '@/pages/VerifyEmail'; s
+import VerifyEmail from '@/pages/VerifyEmail';
 // import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
 
