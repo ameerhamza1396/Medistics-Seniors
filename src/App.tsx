@@ -68,7 +68,7 @@ function App() {
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} /> {/* New route for TestCompletionPage */}
-              <Route path="/terms" element={<Terms />} /> {/* New route for TestCompletionPage */}
+              <Route path="/terms" element={<Terms />} /> 
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
               <Route path="*" element={<NotFound />} />
