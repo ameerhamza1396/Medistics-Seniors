@@ -28,6 +28,7 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
+import VerifyEmail from '@/pages/VerifyEmail'; s
 // import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
 
@@ -69,6 +70,7 @@ function App() {
 {/*               <Route path="/privacypolicy" element={<PrivacyPolicy />} /> */}
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
+               <Route path="/verify-email" element={<VerifyEmail />} /> 
 {/*               <Route path="/terms" element={<TermsAndConditions />} /> */}
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
