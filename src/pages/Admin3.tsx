@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, Search, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Search, CalendarDays, Lock, Loader2 } from 'lucide-react'; // Import Lock icon
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const Admin3 = () => {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, isLoading: isUserLoading } = useAuth(); // Destructure isLoading from useAuth
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -26,18 +26,39 @@ const Admin3 = () => {
   const [selectedDurationOption, setSelectedDurationOption] = useState('30_day'); // '24_day', '30_day', '365_day', 'custom_date'
   const [customExpiryDate, setCustomExpiryDate] = useState('');
 
-  // Simplified admin check - replace with actual role check from your 'profiles' table for production
-  const isAuthorizedAdmin = !!user;
+  // --- Fetch User Profile to Check Role ---
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle(); // Use maybeSingle to handle cases where no profile is found
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        // Optionally toast an error, but don't prevent loading if it's just no profile
+        return null;
+      }
+      return data;
+    },
+    enabled: !!user?.id, // Only run this query if a user is logged in
+  });
+
+  // Determine if the current user is an admin
+  const isAdmin = profile?.role === 'admin';
 
   // --- Search Users Query ---
   const { data: users, isLoading: isSearching, refetch: refetchUsers } = useQuery({
     queryKey: ['adminUsers', searchTerm],
     queryFn: async () => {
-      if (!searchTerm) return [];
+      if (!searchTerm) return []; // Don't search if no term is entered
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, plan, plan_expiry_date') // Selecting required profile fields
-        .ilike('username', `%${searchTerm}%`); // Case-insensitive search
+        .select('id, username, plan, plan_expiry_date')
+        .ilike('username', `%${searchTerm}%`);
 
       if (error) {
         toast({
@@ -49,7 +70,8 @@ const Admin3 = () => {
       }
       return data;
     },
-    enabled: !!searchTerm.length && isAuthorizedAdmin,
+    // Only enable this query if a search term is present AND the user is an admin
+    enabled: !!searchTerm.length && isAdmin,
     staleTime: 0,
   });
 
@@ -59,7 +81,7 @@ const Admin3 = () => {
       const { data, error } = await supabase
         .from('profiles')
         .update({
-          plan: newPlan, // This will be 'free', 'iconic', 'premium', or 'custom'
+          plan: newPlan,
           plan_expiry_date: newExpiryDate,
         })
         .eq('id', userId);
@@ -75,9 +97,9 @@ const Admin3 = () => {
         description: `User plan successfully updated.`,
         variant: "success",
       });
-      queryClient.invalidateQueries(['adminUsers', searchTerm]); // Refresh search results
-      setSelectedUser(null); // Clear selected user after update
-      setSearchTerm(''); // Clear search term to reset results
+      queryClient.invalidateQueries(['adminUsers', searchTerm]);
+      setSelectedUser(null);
+      setSearchTerm('');
     },
     onError: (error) => {
       toast({
@@ -90,17 +112,15 @@ const Admin3 = () => {
 
   // --- Plan Expiry Date Calculation ---
   const calculateExpiryDate = (planType, durationOption, customDate = null) => {
-    // If plan is 'free', expiry date is null
     if (planType === 'free') {
       return null;
     }
 
-    let expiryDate = new Date(); // Start with today's date
+    let expiryDate = new Date();
 
     if (planType === 'custom') {
-      // For 'custom' plan, always use the customDate input directly
       const parsedDate = new Date(customDate);
-      if (!isNaN(parsedDate)) {
+      if (!isNaN(parsedDate.getTime())) { // Use getTime() for robust date validation
         return parsedDate.toISOString();
       } else {
         toast({
@@ -112,7 +132,6 @@ const Admin3 = () => {
       }
     }
 
-    // For 'iconic' or 'premium' plans, calculate based on durationOption
     if (durationOption === '24_day') {
       expiryDate.setDate(expiryDate.getDate() + 24);
     } else if (durationOption === '30_day') {
@@ -120,9 +139,8 @@ const Admin3 = () => {
     } else if (durationOption === '365_day') {
       expiryDate.setDate(expiryDate.getDate() + 365);
     } else if (durationOption === 'custom_date') {
-      // If 'custom_date' duration is selected for iconic/premium
       const parsedDate = new Date(customDate);
-      if (!isNaN(parsedDate)) {
+      if (!isNaN(parsedDate.getTime())) {
         expiryDate = parsedDate;
       } else {
         toast({
@@ -133,15 +151,11 @@ const Admin3 = () => {
         return null;
       }
     } else {
-      // Fallback for unexpected duration options (e.g., if durationOption is null/undefined)
-      // Default to 30 days if no duration is explicitly chosen for a paid plan.
       expiryDate.setDate(expiryDate.getDate() + 30);
     }
 
-    // Return date in ISO format for Supabase TIMESTAMP WITH TIME ZONE
     return expiryDate.toISOString();
   };
-
 
   const handleUpdatePlan = () => {
     if (!selectedUser) {
@@ -154,18 +168,16 @@ const Admin3 = () => {
     }
 
     let newExpiry = null;
-    // Determine the expiry date based on the chosen plan and duration/custom date
     if (selectedPlanName === 'free') {
-      newExpiry = null; // Free plan has no expiry
+      newExpiry = null;
     } else if (selectedPlanName === 'custom') {
       newExpiry = calculateExpiryDate('custom', null, customExpiryDate);
-    } else { // 'iconic' or 'premium'
+    } else {
       newExpiry = calculateExpiryDate(selectedPlanName, selectedDurationOption, customExpiryDate);
     }
 
     if (newExpiry === null && selectedPlanName !== 'free') {
-      // If a non-free plan was selected but expiry date calculation failed
-      return; // Toast already shown by calculateExpiryDate
+      return;
     }
 
     updatePlanMutation.mutate({
@@ -175,36 +187,37 @@ const Admin3 = () => {
     });
   };
 
-  // When a user is selected from search results, pre-fill the form fields
   useEffect(() => {
     if (selectedUser) {
-      // Map database 'plan' value to initial selectedPlanName
       let initialPlan = selectedUser.plan || 'free';
+      // Map existing plan types to the UI radio buttons
       if (['24_day', '30_day'].includes(initialPlan)) {
-        initialPlan = 'iconic'; // Map existing durations to iconic for UI
+        initialPlan = 'iconic';
       } else if (['365_day'].includes(initialPlan)) {
-        initialPlan = 'premium'; // Map existing durations to premium for UI
+        initialPlan = 'premium';
       }
       setSelectedPlanName(initialPlan);
 
-      // Set initial duration option if applicable
+      // Set initial duration option based on current plan or default
       if (['iconic', 'premium'].includes(initialPlan)) {
-        setSelectedDurationOption(selectedUser.plan || '30_day'); // Use actual plan from DB or default
+        // If the user's plan is actually a specific duration (e.g., '24_day'), pre-select it
+        if (['24_day', '30_day', '365_day'].includes(selectedUser.plan)) {
+            setSelectedDurationOption(selectedUser.plan);
+        } else {
+            setSelectedDurationOption('30_day'); // Default for iconic/premium if no specific duration is set
+        }
       } else if (initialPlan === 'custom' && selectedUser.plan_expiry_date) {
-        setSelectedDurationOption('custom_date'); // Set duration option to custom_date if plan is custom
+        setSelectedDurationOption('custom_date');
       } else {
-        setSelectedDurationOption('30_day'); // Default duration
+        setSelectedDurationOption('30_day');
       }
 
-      // Pre-fill custom expiry date if it exists
       if (selectedUser.plan_expiry_date) {
-        // Format date to 'YYYY-MM-DD' for input type="date"
         setCustomExpiryDate(new Date(selectedUser.plan_expiry_date).toISOString().split('T')[0]);
       } else {
         setCustomExpiryDate('');
       }
     } else {
-      // Reset form when no user is selected
       setSelectedPlanName('free');
       setSelectedDurationOption('30_day');
       setCustomExpiryDate('');
@@ -212,35 +225,41 @@ const Admin3 = () => {
   }, [selectedUser]);
 
 
-  // --- Render Logic ---
+  // --- Render Logic for Access Control ---
+  // Display a loading screen while user and profile data are being fetched
+  if (isUserLoading || isProfileLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" /> Loading admin panel...
+      </div>
+    );
+  }
+
+  // If no user is logged in, show access denied
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Access Denied</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">Please sign in to view this page.</p>
-          <Link to="/login">
-            <Button>Go to Login</Button>
-          </Link>
-        </div>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
+        <Lock className="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-lg mb-4">You must be logged in to access this page.</p>
+        <Link to="/login" className="text-blue-500 hover:underline">Go to Login</Link>
       </div>
     );
   }
 
-  if (!isAuthorizedAdmin) {
+  // If user is logged in but not an admin, show unauthorized access
+  if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Unauthorized Access</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">You do not have administrative privileges to view this page.</p>
-          <Link to="/dashboard">
-            <Button>Go to Dashboard</Button>
-          </Link>
-        </div>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
+        <Lock className="w-16 h-16 text-red-500 dark:text-red-400 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Unauthorized Access</h1>
+        <p className="text-lg mb-4">You do not have administrative privileges to view this page.</p>
+        <Link to="/dashboard" className="text-blue-500 hover:underline">Go to Dashboard</Link>
       </div>
     );
   }
 
+  // --- Main Component Render (only if authorized and data loaded) ---
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
       {/* Header - Consistent with Dashboard and other Admin pages */}
@@ -327,8 +346,8 @@ const Admin3 = () => {
                     onClick={() => setSelectedUser(u)}>
                     <CardTitle className="text-lg">{u.username}</CardTitle>
                     <CardDescription className="text-sm">
-                        Current Plan: <Badge variant="outline" className="mr-2">{u.plan || 'Free'}</Badge>
-                        Expires: {u.plan_expiry_date ? new Date(u.plan_expiry_date).toLocaleDateString() : 'N/A'}
+                      Current Plan: <Badge variant="outline" className="mr-2">{u.plan || 'Free'}</Badge>
+                      Expires: {u.plan_expiry_date ? new Date(u.plan_expiry_date).toLocaleDateString() : 'N/A'}
                     </CardDescription>
                   </Card>
                 ))}
