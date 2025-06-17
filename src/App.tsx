@@ -21,6 +21,7 @@ import Admin5 from '@/pages/Admin5';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import Terms from '@/pages/Terms';
+import VerifyEmail from '@/pages/VerifyEmail';
 // import PrivacyPolicy from '@/pages/privacypolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
@@ -28,7 +29,6 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
-import VerifyEmail from '@/pages/VerifyEmail';
 // import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
 
@@ -70,7 +70,7 @@ function App() {
 {/*               <Route path="/privacypolicy" element={<PrivacyPolicy />} /> */}
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
-               <Route path="/verify-email" element={<VerifyEmail />} /> 
+              <Route path="/verify-email" element={<VerifyEmail />} />
 {/*               <Route path="/terms" element={<TermsAndConditions />} /> */}
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
