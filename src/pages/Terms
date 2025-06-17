@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'; // Assuming this path is correc
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
-// import remarkGfm from 'remark-gfm'; // Removed due to compilation error
+import remarkGfm from 'remark-gfm';
+// Removed due to compilation error
 
 const TermsAndConditions = () => {
     const { theme, setTheme } = useTheme();
