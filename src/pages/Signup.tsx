@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client'; // Still needed for profile creation via signUp
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ const Signup = () => {
 
   const [formData, setFormData] = useState({
     email: '',
-    username: '',
+    // username: '', // Removed: Username input is no longer part of signup form
     fullName: '',
     password: '',
     confirmPassword: ''
@@ -26,83 +26,29 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [emailExists, setEmailExists] = useState(false); // This is not used for pre-checking as per security best practices
-  const [usernameExists, setUsernameExists] = useState(false);
-  const [checkingEmail, setCheckingEmail] = useState(false);
-  const [checkingUsername, setCheckingUsername] = useState(false);
+  // Removed username-related state variables as they are no longer needed for pre-checking
+  // const [emailExists, setEmailExists] = useState(false); // This is not used for pre-checking as per security best practices
+  // const [usernameExists, setUsernameExists] = useState(false);
+  // const [checkingEmail, setCheckingEmail] = useState(false);
+  // const [checkingUsername, setCheckingUsername] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/dashboard'); // User is already logged in, go to dashboard
     }
   }, [user, navigate]);
 
-  // Email validation and availability check
-  useEffect(() => {
-    const checkEmail = async () => {
-      if (formData.email && formData.email.includes('@') && formData.email.length > 5) {
-        setCheckingEmail(true);
-        // For security and privacy, you generally don't expose if an email exists on signup.
-        // Supabase's `signUp` function will return an error if the email is already registered,
-        // which is the recommended way to handle this on the frontend.
-        setEmailExists(false); // Reset this as we are not actively checking for existence here
-        setCheckingEmail(false);
-      } else {
-        setEmailExists(false);
-      }
-    };
+  // Removed: Email validation and availability check useEffect
+  // Removed: Username validation and availability check useEffect
 
-    const timeoutId = setTimeout(checkEmail, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [formData.email]);
-
-  // Username validation and availability check
-  useEffect(() => {
-    const checkUsername = async () => {
-      if (formData.username && formData.username.length >= 3) {
-        setCheckingUsername(true);
-        try {
-          const { data, error } = await supabase
-            .from('profiles') // Assuming 'profiles' table stores usernames
-            .select('username')
-            .eq('username', formData.username)
-            .maybeSingle(); // Use maybeSingle to get null if no row found
-
-          setUsernameExists(!!data && !error);
-        } catch (error) {
-          console.error('Error checking username:', error);
-          setUsernameExists(false);
-        }
-        setCheckingUsername(false);
-      } else {
-        setUsernameExists(false);
-      }
-    };
-
-    const timeoutId = setTimeout(checkUsername, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [formData.username]);
-
-  // Real-time validation
+  // Real-time validation (updated for removed username)
   useEffect(() => {
     const errors: Record<string, string> = {};
 
     // Email validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
-    }
-
-    // Username validation
-    if (formData.username) {
-        if (formData.username.length < 3) {
-            errors.username = 'Username must be at least 3 characters';
-        } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-            errors.username = 'Username can only contain letters, numbers, and underscores';
-        }
-    }
-    if (usernameExists) {
-        errors.username = 'This username is already taken';
     }
 
     // Full name validation
@@ -126,9 +72,8 @@ const Signup = () => {
         errors.confirmPassword = 'Please enter your password first';
     }
 
-
     setValidationErrors(errors);
-  }, [formData, usernameExists]);
+  }, [formData]); // Dependencies reduced as username-related states are removed
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -141,7 +86,7 @@ const Signup = () => {
     e.preventDefault();
 
     // Check for validation errors
-    if (Object.keys(validationErrors).length > 0 || usernameExists) { // Include usernameExists in pre-submit check
+    if (Object.keys(validationErrors).length > 0) { // usernameExists check removed
       toast({
         title: "Validation Error",
         description: "Please fix the errors before submitting",
@@ -151,7 +96,8 @@ const Signup = () => {
     }
 
     // Ensure all required fields have data before attempting signup
-    if (!formData.email || !formData.username || !formData.fullName || !formData.password || !formData.confirmPassword) {
+    // Removed !formData.username as it's no longer collected on this form
+    if (!formData.email || !formData.fullName || !formData.password || !formData.confirmPassword) {
         toast({
             title: "Missing Information",
             description: "Please fill in all required fields.",
@@ -160,33 +106,30 @@ const Signup = () => {
         return;
     }
 
-
     setLoading(true);
 
     try {
       console.log('Submitting signup with data:', {
         email: formData.email,
         fullName: formData.fullName,
-        username: formData.username
+        // username is NOT sent here; it will be NULL by default in Supabase
       });
 
       const { data, error } = await signUp(formData.email, formData.password, {
         fullName: formData.fullName,
-        username: formData.username
+        // username: null // Explicitly pass null, or omit it if useAuth handles default null
+                        // Assuming `useAuth`'s signUp properly handles optional fields.
       });
 
       if (!error && data) {
         // For email/password signup, Supabase typically sends a verification email.
-        // The user isn't logged in immediately until they click the verification link.
         toast({
           title: "Account Created!",
           description: "Please check your email to verify your account.",
-          duration: 7000, // Give user time to read this important instruction
+          duration: 7000,
         });
-        // Redirect to a new page asking the user to check their inbox
-        navigate('/verify-email');
+        navigate('/verify-email'); // Redirect to a new page asking the user to check their inbox
       } else if (error) {
-          // Handle specific Supabase errors, e.g., email already registered
           if (error.message.includes("already registered")) {
               toast({
                   title: "Signup Failed",
@@ -194,7 +137,7 @@ const Signup = () => {
                   variant: "destructive",
               });
           } else {
-              throw error; // Re-throw other errors to be caught by the outer catch
+              throw error; // Re-throw other errors
           }
       }
     } catch (error: any) {
@@ -213,20 +156,17 @@ const Signup = () => {
     setLoading(true);
     try {
       await signInWithGoogle();
-      // The signInWithGoogle function (in useAuth) will handle the redirect
-      // to Google and then back to your app, so no explicit navigation here.
+      // The signInWithGoogle function will handle the redirect
     } catch (error) {
       console.error('Error signing up with Google:', error);
-      // The useAuth hook should already be toasting errors, but you can add more here if needed.
     } finally {
       setLoading(false);
     }
   };
 
   const getInputIcon = (fieldName: string, isChecking: boolean, hasError: boolean, hasValue: boolean) => {
-    if (isChecking) {
-      return <div className="animate-spin w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full" />;
-    }
+    // isChecking parameter is now unused for email as we removed its check.
+    // If you plan to add real-time email validity checks (not existence), you can use it.
     if (hasValue && !hasError) {
       return <CheckCircle className="w-4 h-4 text-green-500" />;
     }
@@ -269,7 +209,7 @@ const Signup = () => {
                     required
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {getInputIcon('email', checkingEmail, !!validationErrors.email, !!formData.email)}
+                    {getInputIcon('email', false, !!validationErrors.email, !!formData.email)}
                   </div>
                 </div>
                 {validationErrors.email && (
@@ -277,6 +217,8 @@ const Signup = () => {
                 )}
               </div>
 
+              {/* Removed Username Input Section */}
+              {/*
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -297,6 +239,7 @@ const Signup = () => {
                   <p className="text-red-500 text-sm">{validationErrors.username}</p>
                 )}
               </div>
+              */}
 
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
@@ -382,11 +325,10 @@ const Signup = () => {
                 </Link>.
               </p>
 
-
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                disabled={loading || Object.keys(validationErrors).length > 0 || usernameExists}
+                disabled={loading || Object.keys(validationErrors).length > 0} // usernameExists removed from disabled condition
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
@@ -409,7 +351,7 @@ const Signup = () => {
                 disabled={loading}
             >
                 <div className="flex items-center justify-center space-x-2">
-                    <img src="../../public/googlelogo.svg"
+                    <img src="/lovable-uploads/googlelogo.svg" // Corrected path to be relative from public folder if it is in root
                     alt="Google Logo"
                     className="w-4 h-4" />
                     <span className="text-gray-900 dark:text-white">Sign up with Google</span>
