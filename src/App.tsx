@@ -32,6 +32,7 @@ import Classroom from '@/pages/Classroom';
 import VerifyEmail from '@/pages/VerifyEmail'; 
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
+import AllSetPage from './pages/AllSetPage'; 
 
 // import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
@@ -81,6 +82,7 @@ function App() {
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
               <Route path="/all-set" element={<AllSetPage />} />
+              <Route path="/settings/username" element={<UsernamePage />} /> {/* New Route */}
 
               <Route path="*" element={<NotFound />} />
             </Routes>
