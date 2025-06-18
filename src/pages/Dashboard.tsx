@@ -21,20 +21,22 @@ import {
   Instagram, // New icon for Instagram
   Construction // Icon for maintenance message
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useTheme } from 'next-themes';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { LeaderboardPreview } from '@/components/dashboard/LeaderboardPreview';
 import { StudyAnalytics } from '@/components/dashboard/StudyAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react'; // Import useEffect
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Get user profile data
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -56,7 +58,7 @@ const Dashboard = () => {
   });
 
   // Get user statistics
-  const { data: userStats } = useQuery({
+  const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['user-stats', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -129,6 +131,21 @@ const Dashboard = () => {
     },
     enabled: !!user?.id
   });
+
+  // Effect for redirection based on user profile
+  useEffect(() => {
+    // Only proceed if user is logged in and profile data has been loaded
+    if (user && !profileLoading) {
+      const hasValidProfile = profile?.full_name && profile?.username;
+      const isPlaceholderUsername = profile?.username === user?.email?.split('@')[0];
+
+      // Redirect if profile is null, or if full_name/username are missing/placeholder
+      if (!profile || !hasValidProfile || isPlaceholderUsername) {
+        navigate('/welcome-new-user');
+      }
+    }
+  }, [user, profile, profileLoading, navigate]);
+
 
   // Quick Actions - now with Mock Test and new additions
   const quickActions = [
@@ -310,7 +327,7 @@ const Dashboard = () => {
   // Get the color classes for the current plan
   const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
 
-
+  // Show a loading state or redirect immediately if not authenticated
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -323,6 +340,19 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  // Optionally, show a loading spinner while profile data is being fetched
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-gray-600 dark:text-gray-300">Loading user profile...</p>
+      </div>
+    );
+  }
+
+  // If we reach here, user is authenticated and profile has been fetched.
+  // The useEffect hook will handle the redirection for invalid profiles.
+  // So, if the user is still on this page, their profile is considered valid.
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
