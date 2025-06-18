@@ -29,6 +29,10 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
+import VerifyEmail from '@/pages/VerifyEmail'; 
+import UsernamePage from '@/pages/UsernamePage';
+import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
+
 // import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
 
@@ -74,6 +78,10 @@ function App() {
 {/*               <Route path="/terms" element={<TermsAndConditions />} /> */}
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
+              <Route path="/all-set" element={<AllSetPage />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
