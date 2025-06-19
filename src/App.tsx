@@ -33,8 +33,6 @@ import VerifyEmail from '@/pages/VerifyEmail';
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
 import AllSetPage from '@/pages/AllSetPage'; 
-
-// import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
 
 const queryClient = new QueryClient();
