@@ -9,7 +9,7 @@ import Dashboard from '@/pages/Dashboard';
 import MCQs from '@/pages/MCQs';
 import Battle from '@/pages/Battle';
 import AI from '@/pages/AI';
-import StudyMaterials from '@/pages/StudyMaterials';
+// import StudyMaterials from '@/pages/StudyMaterials';
 import AITestGeneratorPage from '@/pages/AITestGenerator';
 import AIChatbotPage from '@/pages/AIChatbot';
 import Leaderboard from '@/pages/Leaderboard';
@@ -72,7 +72,7 @@ function App() {
               <Route path="/profile/upgrade" element={<Profile />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
-              <Route path="/study-materials" element={<StudyMaterials />} />
+{/*               <Route path="/study-materials" element={<StudyMaterials />} /> */}
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
