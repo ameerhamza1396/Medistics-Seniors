@@ -35,8 +35,21 @@ const Dashboard = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate(); // Initialize useNavigate
 
+  // Define the profile type to include the optional plan property
+  type Profile = {
+    avatar_url: string;
+    created_at: string;
+    full_name: string;
+    id: string;
+    medical_school: string;
+    updated_at: string;
+    username: string;
+    year_of_study: number;
+    plan?: string; // Add plan as optional
+  };
+
   // Get user profile data
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery<Profile | null>({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -172,26 +185,40 @@ const Dashboard = () => {
       tagColor: 'bg-red-500 text-white animate-pulse'
     },
     {
-      title: 'Study Materials',
-      description: 'Access notes, videos, and resources',
-      icon: Book,
-      link: '/study-materials',
-      type: 'internal',
-      gradient: 'from-orange-500 to-rose-500',
-      bgGradient: 'from-orange-50 to-rose-50',
-      darkBgGradient: 'from-orange-900/20 to-amber-900/10'
-    },
-    {
-      title: 'Classrooms',
-      description: 'Join or create study groups (Under Maintenance)', // Updated description
-      icon: Users,
-      link: '/classroom',
-      type: 'internal',
-      gradient: 'from-indigo-500 to-purple-500',
-      bgGradient: 'from-indigo-50 to-purple-50',
-      darkBgGradient: 'from-purple-900/20 to-orange-900/20',
-      disabled: true
-    },
+    title: 'Mock Test Results',
+    description: 'View your past test performance',
+    icon: Award, // Changed icon to Award for results
+    link: '/results', // Updated link to the new results page
+    type: 'internal',
+    gradient: 'from-purple-500 to-indigo-500', // Adjusted gradient for results
+    bgGradient: 'from-purple-800/50 to-indigo-50',
+    darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
+    tag: 'Live Now',
+    tagColor: 'bg-red-500 text-white animate-pulse'
+  },
+    // {
+    //   title: 'Study Materials',
+    //   description: 'Access notes, videos, and resources',
+    //   icon: Book,
+    //   link: '/study-materials',
+    //   type: 'internal',
+    //   gradient: 'from-orange-500 to-rose-500',
+    //   bgGradient: 'from-orange-50 to-rose-50',
+    //   darkBgGradient: 'from-orange-900/20 to-amber-900/10'
+    // },
+
+    
+    // {
+    //   title: 'Classrooms',
+    //   description: 'Join or create study groups (Under Maintenance)', // Updated description
+    //   icon: Users,
+    //   link: '/classroom',
+    //   type: 'internal',
+    //   gradient: 'from-indigo-500 to-purple-500',
+    //   bgGradient: 'from-indigo-50 to-purple-50',
+    //   darkBgGradient: 'from-purple-900/20 to-orange-900/20',
+    //   disabled: true
+    // },
     {
       title: 'Battle Arena',
       description: 'Under Maintenance', // Updated description
