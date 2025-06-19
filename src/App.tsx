@@ -32,7 +32,8 @@ import Classroom from '@/pages/Classroom';
 import VerifyEmail from '@/pages/VerifyEmail'; 
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
-import AllSetPage from './pages/AllSetPage'; 
+import AllSetPage from '@/pages/AllSetPage'; 
+import TermsAndConditions from '@/pages/Terms';
 
 // import TermsAndConditions from '@/pages/TermsAndConditions.tsx';
 import './App.css';
@@ -76,7 +77,7 @@ function App() {
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
-{/*               <Route path="/terms" element={<TermsAndConditions />} /> */}
+              <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
