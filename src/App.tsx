@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard';
 import MCQs from '@/pages/MCQs';
 import Battle from '@/pages/Battle';
 import AI from '@/pages/AI';
+import StudyMaterials from '@/pages/StudyMaterials';
 import AITestGeneratorPage from '@/pages/AITestGenerator';
 import AIChatbotPage from '@/pages/AIChatbot';
 import Leaderboard from '@/pages/Leaderboard';
@@ -21,7 +22,6 @@ import Admin5 from '@/pages/Admin5';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions'; // Or '@/pages/TermsAndConditions.tsx' if it's a .tsx file
-import VerifyEmail from '@/pages/VerifyEmail';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
@@ -33,6 +33,7 @@ import VerifyEmail from '@/pages/VerifyEmail';
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
 import AllSetPage from '@/pages/AllSetPage'; 
+import MockTestResults from '@/pages/MockTestResults';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ function App() {
               <Route path="/profile/upgrade" element={<Profile />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
+              <Route path="/study-materials" element={<StudyMaterials />} />
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
@@ -81,6 +83,7 @@ function App() {
               <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
               <Route path="/all-set" element={<AllSetPage />} />
               <Route path="/settings/username" element={<UsernamePage />} /> {/* New Route */}
+              <Route path="/results" element={<MockTestResults />} /> {/* New Route */}
 
               <Route path="*" element={<NotFound />} />
             </Routes>
