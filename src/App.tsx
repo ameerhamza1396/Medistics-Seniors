@@ -20,7 +20,7 @@ import Admin4 from '@/pages/Admin4';
 import Admin5 from '@/pages/Admin5';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
-import Terms from '@/pages/Terms';
+import Terms from '@/pages/Terms2';
 import VerifyEmail from '@/pages/VerifyEmail';
 // import PrivacyPolicy from '@/pages/privacypolicy';
 import Checkout from '@/pages/Checkout';
