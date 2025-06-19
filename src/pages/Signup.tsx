@@ -351,7 +351,7 @@ const Signup = () => {
                 disabled={loading}
             >
                 <div className="flex items-center justify-center space-x-2">
-                    <img src="/lovable-uploads/googlelogo.svg" // Corrected path to be relative from public folder if it is in root
+                    <img src="/googlelogo.svg" // Corrected path to be relative from public folder if it is in root
                     alt="Google Logo"
                     className="w-4 h-4" />
                     <span className="text-gray-900 dark:text-white">Sign up with Google</span>
