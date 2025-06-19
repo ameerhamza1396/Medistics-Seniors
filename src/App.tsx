@@ -22,7 +22,7 @@ import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions'; // Or '@/pages/TermsAndConditions.tsx' if it's a .tsx file
 import VerifyEmail from '@/pages/VerifyEmail';
-// import PrivacyPolicy from '@/pages/privacypolicy';
+import PrivacyPolicy from '@/pages/privacypolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
 import ChangePassword from '@/pages/ChangePassword';
@@ -72,7 +72,7 @@ function App() {
               <Route path="/profile/password" element={<ChangePassword />} />
               <Route path="/profile/upgrade" element={<Profile />} />
               <Route path="/pricing" element={<Pricing />} />
-{/*               <Route path="/privacypolicy" element={<PrivacyPolicy />} /> */}
+              <Route path="/privacypolicy" element={<PrivacyPolicy />} />
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
