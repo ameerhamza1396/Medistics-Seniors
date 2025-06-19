@@ -1,233 +1,194 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button'; // Assuming this path is correct for shadcn/ui button
+import { Button } from '@/components/ui/button';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
-// import remarkGfm from 'remark-gfm'; // Removed due to compilation error
+// If you are using react-markdown
+// import ReactMarkdown from 'react-markdown';
 
 const TermsAndConditions = () => {
-    const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
-    // Markdown content for Terms and Conditions
-    const termsAndConditionsContent = `
-# Terms and Conditions for Medistics.App
+  // Markdown content for the Terms and Conditions (replace with the content above)
+  const termsAndConditionsContent = `
+# Terms and Conditions
 
-**Last Updated:** June 16, 2025
+**Last updated:** June 12, 2025
 
-Please read these Terms and Conditions ("Terms", "Terms and Conditions") carefully before using the [Your Website Name] website (the "Service") operated by [Your Company Name/Your Name] ("us", "we", or "our").
+These Terms and Conditions outline the rules and regulations for the use of Medistics.app's Website, an MCAT Learning platform integrated with Artificial Intelligence.
 
-Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.
-
-By accessing or using the Service, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the Service.
+By accessing this website we assume you accept these terms and conditions. Do not continue to use Medistics.app if you do not agree to take all of the terms and conditions stated on this page.
 
 ---
 
-## 1. Introduction and Agreement to Terms
+## Interpretation and Definitions
 
-Welcome to [Your Website Name], a platform designed to assist students preparing for the Medical and Dental College Admission Test (MDCAT). Our Service offers comprehensive educational resources, including study materials, practice tests, video lectures, and other tools. While some resources may be available for free, access to the majority of our premium content and features requires a paid subscription.
+### Interpretation
 
-By registering for an account, accessing, or using our Service, you confirm that you have read, understood, and agree to be bound by these Terms, along with our Privacy Policy, which is incorporated herein by reference. If you do not agree with any of these Terms, you are prohibited from using or accessing this site.
+The words of which the initial letter is capitalized have meanings defined
+under the following conditions. The following definitions shall have the same
+meaning regardless of whether they appear in singular or in plural.
 
----
+### Definitions
 
-## 2. Definitions
+For the purposes of these Terms and Conditions:
 
-* **Service:** Refers to the website [Your Website Name] and all its associated content, features, and functionality provided by [Your Company Name/Your Name].
+* **Account** means a unique account created for You to access our Service or
+    parts of our Service.
 
-* **User/You:** Refers to any individual accessing or using the Service.
+* **Affiliate** means an entity that controls, is controlled by or is under
+    common control with a party, where "control" means ownership of 50% or
+    more of the shares, equity interest or other securities entitled to vote
+    for election of directors or other managing authority.
 
-* **Student:** Refers to a User who registers for an account on the Service.
+* **Company** (referred to as either "the Company", "We", "Us" or "Our" in this
+    Agreement) refers to Medistics.app, L13, KDA Flats, Sector 5E Surjani
+    Town, Karachi.
 
-* **Account:** Refers to the personal account created by a Student to access the Service.
+* **Country** refers to: Pakistan
 
-* **Content:** Refers to all information, data, text, software, music, sound, photographs, graphics, video, messages, tags, or other materials available through the Service, including free and paid resources.
+* **Device** means any device that can access the Service such as a computer, a
+    cellphone or a digital tablet.
 
-* **Subscription/Paid Model:** Refers to the paid access granted to premium Content and features of the Service for a specified period, upon payment of the applicable fees.
+* **Service** refers to the Website, specifically the MCAT Learning platform integrated with Artificial Intelligence.
 
-* **MDCAT:** Medical and Dental College Admission Test.
+* **Service Provider** means any natural or legal person who processes the data
+    on behalf of the Company. It refers to third-party companies or
+    individuals employed by the Company to facilitate the Service, to provide
+    the Service on behalf of the Company, to perform services related to the
+    Service or to assist the Company in analyzing how the Service is used.
 
----
+* **Third-party Social Media Service** refers to any website or any social
+    network website through which a User can log in or create an account to
+    use the Service.
 
-## 3. User Accounts
+* **Website** refers to Medistics.app, accessible from
+    [medistics.app](medistics.app)
 
-* **Registration:** To access certain features of the Service, you must register for an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete.
-
-* **Account Security:** You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password, whether your password is with our Service or a third-party service. You agree not to disclose your password to any third party. You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.
-
-* **Eligibility:** By creating an account, you represent and warrant that you are at least 13 years of age. If you are under 18, you must have the permission of a parent or legal guardian to use the Service, and your parent or guardian must agree to these Terms on your behalf.
-
-* **Single User Account:** Each account is intended for use by a single individual. Sharing your account credentials with others is strictly prohibited and may lead to immediate suspension or termination of your account without refund.
-
----
-
-## 4. Payment and Subscriptions
-
-* **Paid Model:** [Your Website Name] operates on a paid subscription model. While limited free resources may be available, access to our comprehensive study materials, practice tests, video lectures, and advanced features requires a valid paid subscription.
-
-* **Subscription Plans:** We offer various subscription plans, each with different durations, features, and pricing. Details of these plans are available on the Service. We reserve the right to modify our subscription plans and pricing at any time.
-
-* **Payment:** All payments are processed through secure third-party payment gateways. You agree to pay all fees and applicable taxes associated with your chosen subscription plan. You authorize us to charge your selected payment method for all amounts due.
-
-* **Auto-Renewal:** Unless you cancel your subscription before the end of the current billing period, your subscription will automatically renew for the same duration, and you authorize us to charge the applicable subscription fees to your payment method.
-
-* **Free Trial:** From time to time, we may offer a free trial period. At the end of the free trial, your subscription will automatically convert to a paid subscription unless you cancel before the trial period expires.
+* **You** means the individual accessing or using the Service, or the company,
+    or other legal entity on behalf of which such individual is accessing or
+    using the Service, as applicable.
 
 ---
 
-## 5. Refund Policy
+## Cookies
 
-* **General Policy:** Due to the digital nature of our Content and the immediate access granted upon subscription, all subscription fees are generally non-refundable.
-
-* **Exceptional Circumstances:** Refunds may be considered in exceptional circumstances, such as proven technical issues preventing access to the Service for an extended period, or as required by applicable consumer protection laws. Any such requests must be submitted in writing to [Your Contact Email] within [Number] days of the subscription purchase, detailing the issue. Each request will be reviewed on a case-by-case basis.
-
-* **No Partial Refunds:** We do not offer partial refunds for unused portions of a subscription period.
-
-* **Chargebacks:** Any chargebacks initiated by you without prior communication and resolution attempts with us may result in immediate and permanent termination of your account and access to the Service.
+We employ the use of cookies. By accessing Medistics.app, you agreed to use cookies in agreement with the Medistics.app's Privacy Policy.
 
 ---
 
-## 6. Intellectual Property
+## License
 
-* **Ownership:** The Service and its original Content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of [Your Company Name/Your Name] and its licensors. The Service is protected by copyright, trademark, and other laws of both Pakistan and foreign countries. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of [Your Company Name/Your Name].
+Unless otherwise stated, Medistics.app and/or its licensors own the intellectual property rights for all material on Medistics.app. All intellectual property rights are reserved. You may access this from Medistics.app for your own personal use subject to restrictions set in these terms and conditions.
 
-* **Limited License:** We grant you a limited, non-exclusive, non-transferable, revocable license to access and use the Service and its Content solely for your personal, non-commercial MDCAT preparation purposes, subject to these Terms.
+You must not:
 
-* **Prohibitions:** You agree not to reproduce, duplicate, copy, sell, resell, or exploit any portion of the Service, use of the Service, or access to the Service or any Content on the Service without express written permission from us. This includes, but is not limited to, downloading, printing, distributing, sharing, or creating derivative works of our paid Content.
+* Republish material from Medistics.app
+* Sell, rent or sub-license material from Medistics.app
+* Reproduce, duplicate or copy material from Medistics.app
+* Redistribute content from Medistics.app
 
-* **User-Generated Content:** If the Service allows you to post, link, store, share, and otherwise make available certain information, text, graphics, videos, or other material ("User Content"), you are responsible for the User Content that you post on or through the Service, including its legality, reliability, and appropriateness. By posting User Content, you grant us a non-exclusive, worldwide, royalty-free, perpetual, irrevocable, and sublicensable right to use, reproduce, modify, adapt, publish, translate, create derivative works from, distribute, and display such User Content in any media. You represent and warrant that you own or have the necessary licenses, rights, consents, and permissions to publish User Content that you submit.
+Specifically, regarding the AI integration:
 
----
-
-## 7. User Conduct
-
-You agree to use the Service only for lawful purposes and in a way that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the Service. Prohibited behavior includes:
-
-* Engaging in any conduct that is unlawful, harmful, threatening, abusive, harassing, defamatory, vulgar, obscene, libelous, invasive of another's privacy, hateful, or racially, ethnically, or otherwise objectionable.
-
-* Impersonating any person or entity or falsely stating or otherwise misrepresenting your affiliation with a person or entity.
-
-* Uploading, posting, emailing, or otherwise transmitting any Content that you do not have a right to transmit under any law or under contractual or fiduciary relationships.
-
-* Uploading, posting, emailing, or otherwise transmitting any unsolicited or unauthorized advertising, promotional materials, "junk mail," "spam," "chain letters," "pyramid schemes," or any other form of solicitation.
-
-* Uploading, posting, emailing, or otherwise transmitting any material that contains software viruses or any other computer code, files, or programs designed to interrupt, destroy, or limit the functionality of any computer software or hardware or telecommunications equipment.
-
-* Interfering with or disrupting the Service or servers or networks connected to the Service.
-
-* Attempting to gain unauthorized access to any portion of the Service, other accounts, computer systems, or networks connected to the Service, through hacking, password mining, or any other means.
-
-* Selling, transferring, or otherwise disclosing your account password or other authentication information to any third party.
+* You must not reverse engineer, decompile, or disassemble any part of the AI models, algorithms, or underlying systems.
+* You must not attempt to extract data, training sets, or intellectual property from the AI models.
 
 ---
 
-## 8. Disclaimers and Limitation of Liability
+## Hyperlinking to our Content
 
-* **As Is Basis:** Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis. The Service is provided without warranties of any kind, whether express or implied, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, non-infringement, or course of performance.
+The following organizations may link to our Website without prior written approval:
 
-* **No Guarantee of Success:** While we strive to provide high-quality educational content, we do not guarantee any specific outcomes or success in the MDCAT examination by using our Service. MDCAT results depend on various factors, including individual effort, aptitude, and external examination conditions, over which we have no control.
+* Government agencies
+* Search engines
 
-* **Accuracy of Content:** While we endeavor to keep the information on the Service up to date and correct, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability, or availability with respect to the Service or the information, products, services, or related graphics contained on the Service for any purpose. Any reliance you place on such information is therefore strictly at your own risk.
-
-* **Limitation of Liability:** In no event shall [Your Company Name/Your Name], nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory, whether or not we have been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.
-
----
-
-## 9. Indemnification
-
-You agree to defend, indemnify, and hold harmless [Your Company Name/Your Name] and its licensee and licensors, and their employees, contractors, agents, officers, and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees), resulting from or arising out of a) your use and access of the Service, by you or any person using your account and password; b) a breach of these Terms; or c) User Content posted by you on the Service.
+Anyone can link to Medistics.app. The link must not be in any way deceptive and must not falsely imply sponsorship, endorsement or approval of the linking party and its products or services, and must fit within the context of the linking party’s site.
 
 ---
 
-## 10. Termination
+## Content Liability
 
-We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the Service will immediately cease. If you wish to terminate your account, you may simply discontinue using the Service.
-
-All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity, and limitations of liability.
+We shall not be held responsible for any content that appears on your Website. You agree to protect and defend us against all claims that is rising on your Website. No link(s) should appear on any Website that may be interpreted as libelous, obscene or criminal, or which infringes, otherwise violates, or advocates the infringement or other violation of, any third party rights.
 
 ---
 
-## 11. Governing Law
+## Reservation of Rights
 
-These Terms shall be governed and construed in accordance with the laws of Pakistan, without regard to its conflict of law provisions.
-
-Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect. These Terms constitute the entire agreement between us regarding our Service and supersede and replace any prior agreements we might have between us regarding the Service.
+We reserve the right to request that you remove all links or any particular link to our Website. You approve to immediately remove all links to our Website upon request. We also reserve the right to amend these terms and conditions and its linking policy at any time. By continuously linking to our Website, you agree to be bound to and follow these linking terms and conditions.
 
 ---
 
-## 12. Changes to Terms
+## Removal of links from our website
 
-We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.
-
-By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Service.
+If you find any link on our Website that is offensive for any reason, you are free to contact and inform us any moment. We will consider requests to remove links but we are not obligated to or so or to respond to you directly.
 
 ---
 
-## 13. Contact Information
+## Disclaimer
 
-If you have any questions about these Terms, please contact us:
+To the maximum extent permitted by applicable law, we exclude all representations, warranties and conditions relating to our website and the use of this website. Nothing in this disclaimer will:
 
-* By email: medistics@dr.com
-    `;
+* limit or exclude our or your liability for death or personal injury;
+* limit or exclude our or your liability for fraud or fraudulent misrepresentation;
+* limit any of our or your liabilities in any way that is not permitted under applicable law; or
+* exclude any of our or your liabilities that may not be excluded under applicable law.
 
-    return (
-        <div className="min-h-screen w-full bg-white dark:bg-gray-900 font-inter"> {/* Apply Inter font */}
-            {/* Header */}
-            <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50 rounded-b-lg shadow-sm">
-                <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
-                    <Link to="/" className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors p-2 rounded-full hover:bg-purple-50 dark:hover:bg-gray-800">
-                        <ArrowLeft className="w-5 h-5" /> {/* Slightly larger icon */}
-                    </Link>
+The limitations and prohibitions of liability set in this Section and elsewhere in this disclaimer: (a) are subject to the preceding paragraph; and (b) govern all liabilities arising under the disclaimer, including liabilities arising in contract, in tort and for breach of statutory duty.
 
-                    <div className="flex items-center space-x-3">
-                        {/* Placeholder image if the provided URL doesn't work */}
-                        <img
-                            src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-                            alt="Medistics Logo"
-                            className="w-9 h-9 object-contain rounded-full shadow"
-                            onError={(e) => {
-                                e.currentTarget.onerror = null; // prevents infinite loop
-                                e.currentTarget.src = "https://placehold.co/36x36/8b5cf6/ffffff?text=Logo";
-                            }}
-                        />
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">MedisticsApp</span>
-                    </div>
+While we strive to provide accurate and up-to-date information through Medistics.app, we do not warrant the completeness or accuracy of the information presented on this website. We also do not guarantee that the website will remain available or that the material on the website will be kept up to date. The MCAT learning content and AI-generated insights are provided for educational purposes only and should not be considered a substitute for professional advice or comprehensive study resources. Your reliance on any information provided by the Service is solely at your own risk. As long as the website and the information and services on the website are provided free of charge, we will not be liable for any loss or damage of any nature.
 
-                    <div className="flex items-center space-x-3">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                            className="w-10 h-10 p-0 rounded-full hover:scale-110 transition-transform duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        >
-                            {theme === "dark" ? <Sun className="h-5 w-5 text-yellow-400" /> : <Moon className="h-5 w-5 text-purple-600" />}
-                        </Button>
-                    </div>
-                </div>
-            </header>
+---
 
-            <div className="container mx-auto px-4 lg:px-8 py-8 max-w-4xl">
-                {/* Terms and Conditions Content */}
-                <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg animate-fade-in border border-purple-100 dark:border-gray-700">
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 text-center leading-tight">
-                        Terms and Conditions
-                    </h1>
-                    <div className="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 prose dark:prose-invert max-w-none">
-                        {/* ReactMarkdown is used here to render the markdown content */}
-                        <ReactMarkdown> {/* remarkPlugins removed */}
-                            {termsAndConditionsContent}
-                        </ReactMarkdown>
-                    </div>
-                </div>
-            </div>
+## Contact Us
 
-            {/* Footer */}
-            <footer className="bg-gray-100 dark:bg-gray-900 border-t border-purple-200 dark:border-purple-800 py-6 mt-8 rounded-t-lg">
-                <div className="container mx-auto px-4 lg:px-8 text-center text-gray-600 dark:text-gray-400 text-sm">
-                    &copy; {new Date().getFullYear()} MedisticsApp. All rights reserved.
-                </div>
-            </footer>
+If you have any questions about these Terms and Conditions, you can contact us:
+
+* By email: [medistics@dr.com](mailto:medistics@dr.com)
+
+* By visiting this page on our website:
+    [instagram.com/medistics.app](https://instagram.com/medistics.app)
+`;
+
+  return (
+    <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
+        <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
+          <Link to="/" className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+
+          <div className="flex items-center space-x-3">
+            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">MedisticsApp</span>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <Button variant="ghost" size="sm" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
-    );
+      </header>
+
+      <div className="container mx-auto px-4 lg:px-8 py-8 max-w-4xl">
+        {/* Terms and Conditions Content */}
+        <div className="mb-8 animate-fade-in">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+            Terms and Conditions
+          </h1>
+          <div className="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+            {/* The raw markdown content is inserted here. For proper rendering (headings, lists, bold text, etc.),
+              you would typically use a library like 'react-markdown'.
+              Example: <ReactMarkdown>{termsAndConditionsContent}</ReactMarkdown>
+              For now, it will appear as plain text unless parsed.
+            */}
+            <pre className="whitespace-pre-wrap text-sm">{termsAndConditionsContent}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default TermsAndConditions;
