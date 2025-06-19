@@ -22,7 +22,7 @@ import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions'; // Or '@/pages/TermsAndConditions.tsx' if it's a .tsx file
 import VerifyEmail from '@/pages/VerifyEmail';
-import PrivacyPolicy from '@/pages/privacypolicy';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
 import ChangePassword from '@/pages/ChangePassword';
