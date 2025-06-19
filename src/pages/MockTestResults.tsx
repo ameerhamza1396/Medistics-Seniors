@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// IMPORTANT: Updated Profile type (assuming 'plan' might be nullable)
 type Profile = {
   avatar_url: string | null;
   created_at: string;
@@ -16,14 +17,15 @@ type Profile = {
   id: string;
   medical_school: string | null;
   updated_at: string;
-  username: string | null;
-  year_of_study: number | null;
-  plan?: string | null;
+  username: string | null; // username can be null if not set
+  year_of_study: number | null; // year_of_study can be null if not set
+  plan?: string | null; // Plan can be nullable
 };
 
+// IMPORTANT: Updated UserTestResult type to reflect 'user_id' from database
 type UserTestResult = {
   id: string;
-  userId: string;
+  userId: string; // Changed from 'username' to 'userId' to match DB column 'user_id'
   score: number;
   total_questions: number;
   completed_at: string;
@@ -31,8 +33,9 @@ type UserTestResult = {
 
 const MockTestResults = () => {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user } = useAuth(); // Assuming useAuth provides the Supabase user object
 
+  // --- Debugging: Check the user object ---
   console.log("MockTestResults Component Rendered.");
   console.log("Current user object from useAuth:", user);
   if (user) {
@@ -41,6 +44,7 @@ const MockTestResults = () => {
   } else {
     console.log("User object is null or undefined. Authentication might be pending or failed.");
   }
+  // --- End Debugging ---
 
   // Get user profile data
   const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery<Profile | null>({
@@ -64,9 +68,9 @@ const MockTestResults = () => {
       console.log("Profile data fetched:", data);
       return data;
     },
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    enabled: !!user?.id, // Only run this query if user.id is available
+    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
   });
 
   // Get user test results
@@ -77,12 +81,17 @@ const MockTestResults = () => {
         console.log("User test results query skipped: user.id is not available.");
         return [];
       }
+      // IMPORTANT: Updated log to reflect 'user_id' as the column used for filtering
       console.log("Attempting to fetch test results for user ID (used as 'user_id' in DB):", user.id);
 
+      // @ts-ignore: 'user_test_results' is not in the generated Supabase types.
+      // IMPORTANT: Changed .eq('username', user.id) to .eq('user_id', user.id)
       const { data, error } = await (supabase
-        .from('user_test_results' as any)
+        .from('user_test_results' as any) // Make sure 'user_test_results' is the actual table name
         .select('*')
-        .eq('user_id', user.id));
+        .eq('user_id', user.id) // Using 'user_id' as per your Supabase RLS policy
+        .order('completed_at', { ascending: false }) // Order by most recent test if multiple
+        .limit(1)); // Only fetch the most recent one if you intend to show only one card
 
       if (error) {
         console.error('Error fetching test results:', error);
@@ -91,11 +100,13 @@ const MockTestResults = () => {
 
       console.log('Raw data from "user_test_results":', data);
 
+      // Filter and map to ensure data types match UserTestResult
       const validatedData: UserTestResult[] = (data ?? [])
         .filter((item: any) => {
+          // IMPORTANT: Check for 'user_id' property in the raw item
           const isValid =
             typeof item.id === 'string' &&
-            typeof item.user_id === 'string' &&
+            typeof item.user_id === 'string' && // Checking for 'user_id' from DB
             typeof item.score === 'number' &&
             typeof item.total_questions === 'number' &&
             typeof item.completed_at === 'string';
@@ -106,7 +117,7 @@ const MockTestResults = () => {
         })
         .map((item: any) => ({
           id: item.id,
-          userId: item.user_id,
+          userId: item.user_id, // IMPORTANT: Map 'user_id' from DB to 'userId' in your type
           score: item.score,
           total_questions: item.total_questions,
           completed_at: item.completed_at
@@ -115,9 +126,9 @@ const MockTestResults = () => {
       console.log('Processed and validated test results:', validatedData);
       return validatedData;
     },
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    enabled: !!user?.id, // Only run this query if user.id is available
+    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Data stays in cache for 10 minutes
   });
 
   // Define plan color schemes
@@ -166,6 +177,7 @@ const MockTestResults = () => {
           </Link>
 
           <div className="flex items-center space-x-3">
+            {/* Ensure this path to your logo is correct and accessible */}
             <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold text-gray-900 dark:text-white">Mock Test Results</span>
           </div>
@@ -192,10 +204,10 @@ const MockTestResults = () => {
       <div className="container mx-auto px-4 lg:px-8 py-8 max-w-7xl">
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            📊 Your Mock Test Results
+            📊 Your Latest Mock Test Result
           </h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Review your performance and track your progress over time.
+            Review your performance and use these insights to focus on areas needing improvement.
           </p>
         </div>
 
@@ -213,35 +225,38 @@ const MockTestResults = () => {
           <div className="text-center text-gray-600 dark:text-gray-400">Loading your test results...</div>
         ) : error ? (
           <div className="text-center text-red-500">Error fetching test results: {error.message}. Please try again.</div>
-        ) : testResults?.length === 0 ? (
-          <div className="text-center text-gray-600 dark:text-gray-400">No mock test results found. Take a test to see your results here!</div>
+        ) : !testResults || testResults.length === 0 ? ( // Corrected conditional logic
+          <div className="text-center text-gray-600 dark:text-gray-400">
+            No mock test results found. Take a test to see your results here!
+          </div>
         ) : (
           // IMPORTANT: Centering the single card and making it more prominent
-          <div className="flex justify-center items-center py-4"> {/* Flexbox for centering */}
-            {/* Using testResults[0] since we're assuming only one card will be displayed */}
+          // We are now confident testResults[0] exists here
+          <div className="flex justify-center items-center py-4 animate-fade-in">
+            {/* Accessing testResults[0] directly now that its existence is guaranteed */}
             <Card key={testResults[0].id}
                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
                              hover:shadow-xl transition-shadow duration-300
-                             w-full max-w-md p-6 sm:p-8 animate-fade-in
+                             w-full max-w-md p-6 sm:p-8
                              shadow-lg ring-2 ring-purple-500/50 dark:ring-purple-400/50"> {/* Added prominence styling */}
-              <CardHeader className="pb-4"> {/* Increased padding slightly */}
-                <CardTitle className="text-gray-900 dark:text-white text-3xl flex items-center mb-2"> {/* Increased font size */}
-                  <Award className="h-8 w-8 mr-3 text-yellow-500" /> {/* Larger icon */}
+              <CardHeader className="pb-4">
+                <CardTitle className="text-gray-900 dark:text-white text-3xl flex items-center mb-2">
+                  <Award className="h-8 w-8 mr-3 text-yellow-500" />
                   Score: {testResults[0].score} / {testResults[0].total_questions}
-                  <span className="ml-auto text-lg text-gray-500 dark:text-gray-400 font-bold"> {/* Increased font size and bold */}
+                  <span className="ml-auto text-lg text-gray-500 dark:text-gray-400 font-bold">
                     ({((testResults[0].score / testResults[0].total_questions) * 100).toFixed(1)}%)
                   </span>
                 </CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400 text-base mt-1"> {/* Increased font size */}
-                  <Clock className="inline-block h-5 w-5 mr-2" /> {/* Larger icon */}
+                <CardDescription className="text-gray-600 dark:text-gray-400 text-base mt-1">
+                  <Clock className="inline-block h-5 w-5 mr-2" />
                   Completed on: {new Date(testResults[0].completed_at).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-4"> {/* Increased padding slightly */}
-                <p className="text-xl md:text-2xl font-bold text-purple-700 dark:text-purple-300"> {/* Increased font size for remark */}
+              <CardContent className="pt-4">
+                <p className="text-xl md:text-2xl font-bold text-purple-700 dark:text-purple-300">
                   Remark: {getRemark(testResults[0].score, testResults[0].total_questions)}
                 </p>
-                {/* Removed the "View Details" button */}
+                {/* Removed the "View Details" button as requested */}
               </CardContent>
             </Card>
           </div>
@@ -253,7 +268,7 @@ const MockTestResults = () => {
             <div>
               <p className="font-medium mb-2">Understanding your results:</p>
               <ul className="space-y-1 text-xs">
-                <li>• Each card represents a mock test you've completed.</li>
+                <li>• This card shows your *latest* mock test result.</li>
                 <li>• Your score and total questions give you a clear picture of your performance.</li>
                 <li>• The remark offers a quick summary of your test outcome.</li>
                 <li>• Use these insights to focus on areas needing improvement.</li>
