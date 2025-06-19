@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-const import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
