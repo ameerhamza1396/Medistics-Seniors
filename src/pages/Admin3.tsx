@@ -23,7 +23,7 @@ const Admin3 = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null); // The user currently being edited
   const [selectedPlanName, setSelectedPlanName] = useState('free'); // 'free', 'iconic', 'premium', 'custom'
-  const [selectedDurationOption, setSelectedDurationOption] = useState('30_day'); // '24_day', '30_day', '365_day', 'custom_date'
+  const [selectedDurationOption, setSelectedDurationOption] = useState('30_day'); // '24_hour', '3_day', '7_day', '30_day', '365_day', 'custom_date'
   const [customExpiryDate, setCustomExpiryDate] = useState('');
 
   // --- Fetch User Profile to Check Role ---
@@ -118,7 +118,7 @@ const Admin3 = () => {
 
     let expiryDate = new Date();
 
-    if (planType === 'custom') {
+    if (planType === 'custom' && customDate) {
       const parsedDate = new Date(customDate);
       if (!isNaN(parsedDate.getTime())) { // Use getTime() for robust date validation
         return parsedDate.toISOString();
@@ -132,13 +132,18 @@ const Admin3 = () => {
       }
     }
 
-    if (durationOption === '24_day') {
-      expiryDate.setDate(expiryDate.getDate() + 24);
+    // Handle duration options for 'iconic' and 'premium'
+    if (durationOption === '24_hour') {
+      expiryDate.setHours(expiryDate.getHours() + 24);
+    } else if (durationOption === '3_day') {
+      expiryDate.setDate(expiryDate.getDate() + 3);
+    } else if (durationOption === '7_day') {
+      expiryDate.setDate(expiryDate.getDate() + 7);
     } else if (durationOption === '30_day') {
       expiryDate.setDate(expiryDate.getDate() + 30);
     } else if (durationOption === '365_day') {
       expiryDate.setDate(expiryDate.getDate() + 365);
-    } else if (durationOption === 'custom_date') {
+    } else if (durationOption === 'custom_date' && customDate) {
       const parsedDate = new Date(customDate);
       if (!isNaN(parsedDate.getTime())) {
         expiryDate = parsedDate;
@@ -151,6 +156,7 @@ const Admin3 = () => {
         return null;
       }
     } else {
+      // Default to 30 days if no specific duration option is selected or custom date is invalid
       expiryDate.setDate(expiryDate.getDate() + 30);
     }
 
@@ -177,7 +183,7 @@ const Admin3 = () => {
     }
 
     if (newExpiry === null && selectedPlanName !== 'free') {
-      return;
+      return; // Stop if expiry date calculation failed for a paid plan
     }
 
     updatePlanMutation.mutate({
@@ -191,7 +197,7 @@ const Admin3 = () => {
     if (selectedUser) {
       let initialPlan = selectedUser.plan || 'free';
       // Map existing plan types to the UI radio buttons
-      if (['24_day', '30_day'].includes(initialPlan)) {
+      if (['24_hour', '3_day', '7_day', '30_day'].includes(initialPlan)) {
         initialPlan = 'iconic';
       } else if (['365_day'].includes(initialPlan)) {
         initialPlan = 'premium';
@@ -200,8 +206,8 @@ const Admin3 = () => {
 
       // Set initial duration option based on current plan or default
       if (['iconic', 'premium'].includes(initialPlan)) {
-        // If the user's plan is actually a specific duration (e.g., '24_day'), pre-select it
-        if (['24_day', '30_day', '365_day'].includes(selectedUser.plan)) {
+        // If the user's plan is actually a specific duration (e.g., '24_hour'), pre-select it
+        if (['24_hour', '3_day', '7_day', '30_day', '365_day'].includes(selectedUser.plan)) {
             setSelectedDurationOption(selectedUser.plan);
         } else {
             setSelectedDurationOption('30_day'); // Default for iconic/premium if no specific duration is set
@@ -402,7 +408,9 @@ const Admin3 = () => {
                         <SelectValue placeholder="Select a duration" />
                       </SelectTrigger>
                       <SelectContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white">
-                        <SelectItem value="24_day">24 Days</SelectItem>
+                        <SelectItem value="24_hour">24 Hours</SelectItem>
+                        <SelectItem value="3_day">3 Days</SelectItem>
+                        <SelectItem value="7_day">7 Days</SelectItem>
                         <SelectItem value="30_day">30 Days (Default)</SelectItem>
                         <SelectItem value="365_day">365 Days</SelectItem>
                         <SelectItem value="custom_date">Custom Date Input</SelectItem>
