@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu } from 'lucide-react';
+import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'; // Added PanelLeftClose, PanelLeftOpen
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -80,12 +80,15 @@ const DrSultanChat: React.FC = () => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
 
-  // Drawer state for mobile
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  // Drawer state for mobile (controlled by Menu icon)
+  const [isDrawerOpenMobile, setIsDrawerOpenMobile] = useState(false);
   const [touchStartX, setTouchStartX] = useState(0);
   const [currentTranslateX, setCurrentTranslateX] = useState(-256); // Initial position for closed drawer (w-64 is 256px)
   const drawerRef = useRef<HTMLDivElement>(null);
   const drawerWidth = 256; // Corresponds to w-64
+
+  // Drawer state for desktop (controlled by new PanelLeftClose/Open button)
+  const [isDrawerOpenDesktop, setIsDrawerOpenDesktop] = useState(true); // Open by default on desktop
 
   // Function to show notification
   const showTemporaryNotification = (message: string, type: 'success' | 'error') => {
@@ -195,7 +198,7 @@ const DrSultanChat: React.FC = () => {
   const loadSavedChat = (chat: SavedChat) => {
     setMessages(chat.messages);
     setError(null);
-    closeDrawer(); // Close drawer after loading chat on mobile
+    closeDrawerMobile(); // Close mobile drawer after loading chat
   };
 
   // Scroll to bottom on new messages
@@ -203,21 +206,26 @@ const DrSultanChat: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]); // Also scroll when loading state changes (for typing indicator)
 
-  // Handle drawer open/close
-  const toggleDrawer = () => {
-    setIsDrawerOpen(prev => {
+  // Handle mobile drawer open/close
+  const toggleDrawerMobile = () => {
+    setIsDrawerOpenMobile(prev => {
       const newState = !prev;
       setCurrentTranslateX(newState ? 0 : -drawerWidth);
       return newState;
     });
   };
 
-  const closeDrawer = () => {
-    setIsDrawerOpen(false);
+  const closeDrawerMobile = () => {
+    setIsDrawerOpenMobile(false);
     setCurrentTranslateX(-drawerWidth);
   };
 
-  // Touch event handlers for draggable drawer
+  // Handle desktop drawer open/close
+  const toggleDrawerDesktop = () => {
+    setIsDrawerOpenDesktop(prev => !prev);
+  };
+
+  // Touch event handlers for draggable mobile drawer
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       setTouchStartX(e.touches[0].clientX);
@@ -251,22 +259,22 @@ const DrSultanChat: React.FC = () => {
     const threshold = drawerWidth * 0.3; // If dragged more than 30% of its width
     if (currentTranslateX > -threshold) {
       // If opened more than threshold, open fully
-      setIsDrawerOpen(true);
+      setIsDrawerOpenMobile(true);
       setCurrentTranslateX(0);
     } else {
       // Otherwise, close fully
-      setIsDrawerOpen(false);
+      setIsDrawerOpenMobile(false);
       setCurrentTranslateX(-drawerWidth);
     }
     setTouchStartX(0); // Reset touch start X
   };
 
-  // Effect to apply initial transform and react to isDrawerOpen changes from button
+  // Effect to apply initial transform and react to isDrawerOpenMobile changes from button
   useEffect(() => {
     if (drawerRef.current) {
-      drawerRef.current.style.transform = `translateX(${isDrawerOpen ? 0 : -drawerWidth}px)`;
+      drawerRef.current.style.transform = `translateX(${isDrawerOpenMobile ? 0 : -drawerWidth}px)`;
     }
-  }, [isDrawerOpen]); // Only react when isDrawerOpen changes by button
+  }, [isDrawerOpenMobile]); // Only react when isDrawerOpenMobile changes by button
 
   // Send a message
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -348,7 +356,7 @@ const DrSultanChat: React.FC = () => {
 
 
   // Loading & auth states
-  if (isAuthLoading || isProfileLoading) { // Removed isHistoryLoading from here
+  if (isAuthLoading || isProfileLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white"><p>Loading…</p></div>;
   }
   if (!user) {
@@ -386,10 +394,10 @@ const DrSultanChat: React.FC = () => {
       {/* Sidebar / Draggable Drawer */}
       <aside
         ref={drawerRef}
-        // Increased z-index to appear on top of header
+        // Controls mobile drawer visibility
         className={`fixed inset-y-0 left-0 z-[60] w-64 bg-white dark:bg-gray-800 border-r border-purple-200 dark:border-purple-800 p-4 overflow-y-auto transform transition-transform duration-300 ease-in-out
-          ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:relative lg:translate-x-0 lg:flex lg:flex-col lg:z-auto`}
+          ${isDrawerOpenMobile ? 'translate-x-0' : '-translate-x-full'}
+          ${isDrawerOpenDesktop ? 'lg:translate-x-0' : 'lg:-translate-x-full'} lg:relative lg:flex lg:flex-col lg:z-auto`}
         onTouchStart={hasAccess ? handleTouchStart : undefined} // Only enable drag if hasAccess
         onTouchMove={hasAccess ? handleTouchMove : undefined} // Only enable drag if hasAccess
         onTouchEnd={hasAccess ? handleTouchEnd : undefined} // Only enable drag if hasAccess
@@ -405,12 +413,12 @@ const DrSultanChat: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={closeDrawer} // Close the drawer
+              onClick={closeDrawerMobile} // Close the mobile drawer
               className="lg:hidden w-9 h-9 p-0 hover:scale-110 transition-transform duration-200" // Show only on small screens
             >
               <X className="h-4 w-4" />
             </Button>
-            {/* "Go to Dashboard" button (ArrowLeft) for larger screens */}
+            {/* "Go to Dashboard" button (ArrowLeft) for larger screens in sidebar */}
             <Link to="/ai" className="hidden lg:block"> {/* Hide Link on small screens */}
               <Button variant="ghost" size="sm" className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
                 <ArrowLeft className="w-4 h-4" />
@@ -419,7 +427,9 @@ const DrSultanChat: React.FC = () => {
           </div>
         </div>
         {hasAccess ? ( // Only show history if user has access
-          chatHistory && chatHistory.length > 0 ? (
+          isHistoryLoading ? (
+            <p className="text-gray-500">Loading chat history...</p>
+          ) : chatHistory && chatHistory.length > 0 ? (
             chatHistory.map(chat => (
               <button
                 key={chat.id}
@@ -433,15 +443,15 @@ const DrSultanChat: React.FC = () => {
             <p className="text-gray-500">No chats yet.</p>
           )
         ) : (
-          <p className="text-gray-500">Current plan is not compatible with this feature. Consider Upgrading your Plan.</p>
+          <p className="text-gray-500">Upgrade for chat history.</p>
         )}
       </aside>
 
       {/* Backdrop for mobile drawer */}
-      {isDrawerOpen && (
+      {isDrawerOpenMobile && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" // z-40 is below drawer's z-index
-          onClick={closeDrawer}
+          onClick={closeDrawerMobile}
         ></div>
       )}
 
@@ -450,31 +460,35 @@ const DrSultanChat: React.FC = () => {
         // This container now takes up the entire remaining screen width and height
         // and centers its content (the Card) within itself.
         <div className="flex-1 flex items-center justify-center w-full h-full p-4 lg:p-8">
-          <Card className="w-full max-w-lg p-6 text-center bg-white border border-purple-200 text-gray-900 shadow-lg">
-            <CardHeader><CardTitle className="text-xl font-bold text-gray-900">Upgrade Required</CardTitle></CardHeader>
+          <Card className="w-full max-w-lg p-6 text-center bg-white border border-purple-200 text-gray-900 shadow-lg dark:bg-gray-800 dark:border-purple-800 dark:text-white"> {/* Added dark mode styles */}
+            <CardHeader><CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Upgrade Required</CardTitle></CardHeader> {/* Added dark mode text */}
             <CardContent>
-              <p className="text-gray-700 mb-4">
+              <p className="text-gray-700 mb-4 dark:text-gray-300">
                 Dr. Sultan Chat is a premium feature. Please upgrade your plan to access.
               </p>
               <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button onClick={() => window.location.href = '/pricing'} className="bg-purple-600 hover:bg-purple-700 text-white">Upgrade Plan</Button>
                 <Link to="/dashboard">
-                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">Go to Dashboard</Button>
+                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900 dark:hover:text-purple-100">Go to Dashboard</Button>
                 </Link>
               </div>
             </CardContent>
           </Card>
         </div>
       ) : (
-        /* Chat panel - now explicitly h-full to fit parent, and flex-1 to take horizontal space */
-        <div className="flex-1 flex flex-col items-center h-full lg:ml-64"> {/* Added lg:ml-64 back here to push chat content over */}
+        // This container holds BOTH the header and the main chat content
+        <div className={`flex-1 flex flex-col h-full transition-all duration-300 ease-in-out ${isDrawerOpenDesktop ? 'lg:ml-64' : 'lg:ml-0'}`}>
           {/* Header */}
           <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50 w-full">
             <div className="w-full p-4 lg:p-8 flex justify-between items-center max-w-4xl mx-auto">
-              {/* Left side: Menu for mobile */}
+              {/* Left side: Menu for mobile and Drawer Toggle for desktop */}
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" onClick={toggleDrawer} className="lg:hidden w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
+                <Button variant="ghost" size="sm" onClick={toggleDrawerMobile} className="lg:hidden w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
                   <Menu className="h-4 w-4" />
+                </Button>
+                {/* Desktop drawer toggle button */}
+                <Button variant="ghost" size="sm" onClick={toggleDrawerDesktop} className="hidden lg:block w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
+                  {isDrawerOpenDesktop ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
                 </Button>
               </div>
 
@@ -505,19 +519,19 @@ const DrSultanChat: React.FC = () => {
 
           {/* Main chat panel content */}
           <main className="flex-1 min-h-0 w-full flex flex-col p-4 lg:p-8 max-w-4xl mx-auto">
-            <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white border border-purple-200"> {/* Ensured bg-white and border for light theme */}
-              <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200"> {/* Ensured border-purple-200 for light theme */}
+            <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800"> {/* Added dark mode bg and border */}
+              <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200 dark:border-purple-800"> {/* Added dark mode border */}
                 {/* This div now holds the ArrowLeft (mobile only) and the CardTitle */}
                 <div className="flex items-center space-x-2">
                   <Link to="/ai" className="lg:hidden"> {/* Visible only on mobile */}
-                    <Button variant="ghost" size="sm" className="w-9 h-9 p-0 text-gray-600 hover:bg-gray-100"> {/* Adjusted text and hover for light theme */}
+                    <Button variant="ghost" size="sm" className="w-9 h-9 p-0 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"> {/* Adjusted dark mode text/hover */}
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
                   </Link>
-                  <CardTitle className="text-gray-900 text-lg">Dr. Sultan Chat</CardTitle> {/* Ensured text color for light theme */}
+                  <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Sultan Chat</CardTitle> {/* Added dark mode text */}
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setMessages([]); setError(null); }} className="p-2 w-9 h-9 text-gray-600 hover:bg-gray-100"> {/* Adjusted text and hover for light theme */}
+                  <Button variant="ghost" size="sm" onClick={() => { setMessages([]); setError(null); }} className="p-2 w-9 h-9 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"> {/* Adjusted dark mode text/hover */}
                     <PlusSquare className="w-4 h-4" />
                   </Button>
                   <Button
@@ -525,19 +539,19 @@ const DrSultanChat: React.FC = () => {
                     size="sm"
                     onClick={() => saveChatMutation.mutate()}
                     disabled={!messages.length || saveChatMutation.isPending}
-                    className="p-2 w-9 h-9 text-gray-600 hover:bg-gray-100"
-                    // Adjusted text and hover for light theme
+                    // Adjusted dark mode text/hover
+                    className="p-2 w-9 h-9 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                   >
                     <Save className="w-4 h-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(100vh-250px)] bg-white"> {/* Ensured bg-white for light theme */}
+              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(100vh-250px)] bg-white dark:bg-gray-800"> {/* Added dark mode bg */}
                 {messages.length === 0 && !isAITyping && (
                   <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 italic">
                     <MessageSquare className="w-16 h-16 mb-4 text-purple-400" />
-                    <p className="text-lg text-gray-700">Start a new conversation with Dr. Sultan!</p> {/* Ensured text color for light theme */}
-                    <p className="text-sm text-gray-500">Ask about medical conditions, treatments, and more.</p> {/* Ensured text color for light theme */}
+                    <p className="text-lg text-gray-700 dark:text-gray-300">Start a new conversation with Dr. Sultan!</p> {/* Added dark mode text */}
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Ask about medical conditions, treatments, and more.</p> {/* Added dark mode text */}
                   </div>
                 )}
                 {messages.map((msg, i) => {
@@ -551,11 +565,11 @@ const DrSultanChat: React.FC = () => {
                       )}
                       <div className={`max-w-[70%] p-3 rounded-lg shadow ${isUser
                           ? 'bg-purple-600 text-white rounded-br-none'
-                          : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-100' /* Softer AI message background, added subtle border */
+                          : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600' /* Softer AI message background, added subtle border, and dark mode */
                         }`}>
                         <p className="whitespace-pre-wrap">{msg.text}</p>
                         {msg.time && (
-                          <span className="block text-xs mt-1 text-gray-300 text-right"> {/* Adjusted time text color for light theme */}
+                          <span className="block text-xs mt-1 text-gray-300 text-right dark:text-gray-400"> {/* Adjusted time text color for dark theme */}
                             {msg.time}
                           </span>
                         )}
@@ -573,11 +587,11 @@ const DrSultanChat: React.FC = () => {
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 text-white font-bold text-sm">
                       DS
                     </div>
-                    <div className="max-w-[70%] p-3 rounded-lg shadow bg-gray-50 rounded-bl-none border border-gray-100"> {/* Softer AI typing background, added subtle border */}
+                    <div className="max-w-[70%] p-3 rounded-lg shadow bg-gray-50 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:border-gray-600"> {/* Softer AI typing background, added subtle border, and dark mode */}
                       <div className="flex items-center space-x-1 animate-pulse-dot">
-                        <span className="w-2 h-2 bg-gray-500 rounded-full block"></span> {/* Adjusted dot color for light theme */}
-                        <span className="w-2 h-2 bg-gray-500 rounded-full block"></span> {/* Adjusted dot color for light theme */}
-                        <span className="w-2 h-2 bg-gray-500 rounded-full block"></span> {/* Adjusted dot color for light theme */}
+                        <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span> {/* Adjusted dot color for dark theme */}
+                        <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span> {/* Adjusted dot color for dark theme */}
+                        <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span> {/* Adjusted dot color for dark theme */}
                       </div>
                     </div>
                   </div>
@@ -585,18 +599,18 @@ const DrSultanChat: React.FC = () => {
                 <div ref={messagesEndRef} />
               </CardContent>
               {error && (
-                <div className="p-4 text-red-500 bg-red-100 border-t border-red-200"> {/* Ensured error colors for light theme */}
+                <div className="p-4 text-red-500 bg-red-100 border-t border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"> {/* Adjusted dark mode error colors */}
                   Error: {error}
                 </div>
               )}
               {/* Input + controls */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-purple-200 flex items-center space-x-2"> {/* Ensured border for light theme */}
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-purple-200 flex items-center space-x-2 dark:border-purple-800"> {/* Adjusted dark mode border */}
                 <Input
                   placeholder="Type or speak your medical question..."
                   value={inputMessage}
                   onChange={e => setInputMessage(e.target.value)}
                   disabled={loading || !hasAccess} // Disable if no access
-                  className="flex-1 border-purple-300 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500" // Adjusted input colors for light theme
+                  className="flex-1 border-purple-300 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500 dark:border-purple-700 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400" // Adjusted input colors for dark theme
                 />
                 <Button
                   type="button"
@@ -604,7 +618,7 @@ const DrSultanChat: React.FC = () => {
                   size="icon"
                   onClick={handleMicClick}
                   disabled={loading || !hasAccess} // Disable if no access
-                  className={`w-10 h-10 transition-colors duration-200 ${recording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}`} // Adjusted mic button colors for light theme
+                  className={`w-10 h-10 transition-colors duration-200 ${recording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800'}`} // Adjusted mic button colors for dark theme
                 >
                   {recording ? <X className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </Button>
