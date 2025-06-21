@@ -31,9 +31,12 @@ const MockTest = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showUnattemptedDialog, setShowUnattemptedDialog] = useState(false);
   const [unattemptedCount, setUnattemptedCount] = useState(0);
-  const [userPlan, setUserPlan] = useState<string | null>(null); // New state for user plan
+  const [userPlan, setUserPlan] = useState<string | null>(null);
 
-  // Define plan color schemes
+  // New state for dynamic test times
+  const [dynamicTestUnlockTime, setDynamicTestUnlockTime] = useState<Date | null>(null);
+  const [dynamicTestEndTime, setDynamicTestEndTime] = useState<Date | null>(null);
+
   const planColors = {
     'free': {
       light: 'bg-purple-100 text-purple-800 border-purple-300',
@@ -47,20 +50,18 @@ const MockTest = () => {
       light: 'bg-green-100 text-green-800 border-green-300',
       dark: 'dark:bg-green-900/30 dark:text-green-200 dark:border-green-700'
     },
-    // Add more plans as needed
-    'default': { // Fallback for unknown plans
+    'default': {
       light: 'bg-gray-100 text-gray-800 border-gray-300',
       dark: 'dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
     }
   };
 
-  // Function to get plan badge classes
   const getPlanBadgeClasses = (plan: string) => {
     const colors = planColors[plan as keyof typeof planColors] || planColors.default;
     return `${colors.light} ${colors.dark}`;
   };
 
-  // Fetch user's plan on component mount or when user changes
+  // Fetch user's plan
   useEffect(() => {
     const fetchUserPlan = async () => {
       if (user?.id) {
@@ -72,29 +73,53 @@ const MockTest = () => {
 
         if (error) {
           console.error('Error fetching user plan:', error);
-          setUserPlan('default'); // Fallback to default if there's an error
+          setUserPlan('default');
         } else if (data) {
           setUserPlan(data.plan);
         }
       } else {
-        setUserPlan(null); // Clear plan if user logs out
+        setUserPlan(null);
       }
     };
 
     fetchUserPlan();
-  }, [user]); // Dependency array: re-run when `user` object changes
+  }, [user]);
 
+  // --- New: Query to fetch test configuration from Supabase ---
+  const { data: testConfig, isLoading: isLoadingTestConfig, isError: isErrorTestConfig, error: testConfigError } = useQuery({
+    queryKey: ['testConfig'],
+    queryFn: async () => {
+      // Assuming you have only one weekly mock test entry, or you'll need
+      // to query by test_name or some other identifier.
+      const { data, error } = await supabase
+        .from('test_configs')
+        .select('unlock_time, end_time')
+        .eq('test_name', 'Weekly Mock Test') // Filter by test name
+        .single();
 
-  // Define test unlock and end times
-  // IMPORTANT: Set these dates/times in PKT (Pakistan Standard Time)
-  // June 15, 2025, 00:00:00 PKT
-  const testUnlockTime = new Date('2025-06-22T09:00:00+05:00'); // +05:00 for PKT
-  const testEndTime = new Date(testUnlockTime.getTime() + 15 * 60 * 60 * 1000); // 24 hours after unlock
+      if (error) {
+        console.error('Error fetching test configuration:', error);
+        throw new Error(error.message);
+      }
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
+  });
+
+  // Update dynamic test times when testConfig data changes
+  useEffect(() => {
+    if (testConfig) {
+      setDynamicTestUnlockTime(new Date(testConfig.unlock_time));
+      setDynamicTestEndTime(new Date(testConfig.end_time));
+    }
+  }, [testConfig]);
 
   const now = new Date();
-  const isTestActive = now >= testUnlockTime && now < testEndTime;
-  const isTestUpcoming = now < testUnlockTime;
-  const isTestClosed = now >= testEndTime;
+  // Use dynamicTestUnlockTime and dynamicTestEndTime
+  const isTestActive = dynamicTestUnlockTime && dynamicTestEndTime && now >= dynamicTestUnlockTime && now < dynamicTestEndTime;
+  const isTestUpcoming = dynamicTestUnlockTime && now < dynamicTestUnlockTime;
+  const isTestClosed = dynamicTestEndTime && now >= dynamicTestEndTime;
 
   // Query to fetch mock questions
   const { data: mockMcqs, isLoading, isError, error } = useQuery({
@@ -115,7 +140,8 @@ const MockTest = () => {
         correctAnswer: item.correct_answer
       }));
     },
-    enabled: !!user && isTestActive, // Only enable if user is logged in AND test is active
+    // Only enable if user is logged in AND test is active AND we have loaded the test config
+    enabled: !!user && !!dynamicTestUnlockTime && isTestActive,
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
@@ -138,7 +164,7 @@ const MockTest = () => {
       }
       return data;
     },
-    enabled: !!user, // Always check completion status if user is logged in
+    enabled: !!user,
     staleTime: 0,
   });
 
@@ -150,7 +176,7 @@ const MockTest = () => {
   const getLocalStorageKey = () => `mockTestProgress_user_${user?.id}`;
 
   const saveProgress = () => {
-    if (user && mockMcqs && isTestActive) { // Only save if user and questions are loaded and test is active
+    if (user && mockMcqs && isTestActive) {
       const progressData = {
         index: currentQuestionIndex,
         answers: userAnswers,
@@ -297,8 +323,8 @@ const MockTest = () => {
     );
   }
 
-  // Handle loading states for all queries
-  if (isLoading || isLoadingResults) {
+  // Handle loading states for all queries, including the new testConfig
+  if (isLoading || isLoadingResults || isLoadingTestConfig || dynamicTestUnlockTime === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
         <p className="text-xl text-gray-700 dark:text-gray-300">Loading test status...</p>
@@ -306,11 +332,11 @@ const MockTest = () => {
     );
   }
 
-  // Handle error states for all queries
-  if (isError || isErrorResults) {
+  // Handle error states for all queries, including the new testConfig
+  if (isError || isErrorResults || isErrorTestConfig) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-        <p className="text-xl text-red-500">Error loading data: {error?.message || isErrorResults?.message || 'Unknown error'}</p>
+        <p className="text-xl text-red-500">Error loading data: {error?.message || testConfigError?.message || 'Unknown error'}</p>
         <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">Please try again later.</p>
       </div>
     );
@@ -318,6 +344,20 @@ const MockTest = () => {
 
   // Conditional rendering based on test status
   if (isTestUpcoming) {
+    // Format the unlock time for display
+    const formattedUnlockTime = dynamicTestUnlockTime ?
+      dynamicTestUnlockTime.toLocaleString('en-PK', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Karachi',
+        timeZoneName: 'short'// Will show something like GMT+5
+      }) : 'loading...';
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
         <img
@@ -329,7 +369,7 @@ const MockTest = () => {
           Test Upcoming!
         </h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
-          The Weekly Mock Test will be unlocked on Sunday, June 22, 2025 - 09 AM Pakistan Standard Time. Please check back then!
+          The Weekly Mock Test will be unlocked on {formattedUnlockTime} Pakistan Standard Time (PKT). Please check back then!
         </p>
         <Button
           onClick={() => navigate('/dashboard')}
@@ -341,7 +381,7 @@ const MockTest = () => {
     );
   }
 
-  if (isTestClosed && !hasCompletedTest) { // Test closed and user hasn't completed it
+  if (isTestClosed && !hasCompletedTest) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
         <img
@@ -365,7 +405,6 @@ const MockTest = () => {
     );
   }
 
-  // If user has completed the test, display a message (this comes after upcoming/closed checks)
   if (hasCompletedTest) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
@@ -390,7 +429,6 @@ const MockTest = () => {
     );
   }
 
-  // If no mock questions are available, even after loading and not completed
   if (!mockMcqs || mockMcqs.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
@@ -448,7 +486,7 @@ const MockTest = () => {
               <ChevronLeft className="w-6 h-6 mr-2 inline-block" />
               <span className="text-xl font-bold">Mock Test</span>
             </Link>
-            <span className="text-xl font-bold text-gray-900 dark:text-white lg:hidden">Mock Test</span> {/* Title for mobile */}
+            <span className="text-xl font-bold text-gray-900 dark:text-white lg:hidden">Mock Test</span>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -464,7 +502,6 @@ const MockTest = () => {
                 <Moon className="h-4 w-4" />
               )}
             </Button>
-            {/* Dynamically rendered user plan badge */}
             {userPlan ? (
               <Badge className={getPlanBadgeClasses(userPlan)}>
                 {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)} Plan
@@ -502,8 +539,6 @@ const MockTest = () => {
           </div>
         </div>
 
-        {/* Main Content Area (Question Display) */}
-        {/* Removed justify-center to align content to the top */}
         <main className="flex-grow container mx-auto px-4 lg:px-8 py-8 flex flex-col items-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
             <img
