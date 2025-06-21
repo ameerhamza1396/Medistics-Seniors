@@ -354,8 +354,7 @@ const MockTest = () => {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true,
-        timeZone: 'Asia/Karachi',
-        timeZoneName: 'short'// Will show something like GMT+5
+        timeZone: 'Asia/Karachi',// Will show something like GMT+5
       }) : 'loading...';
 
     return (
