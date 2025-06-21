@@ -329,7 +329,7 @@ const MockTest = () => {
           Test Upcoming!
         </h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
-          The Weekly Mock Test will be unlocked on Sunday, June 15, 2025 - 09 AM Pakistan Standard Time. Please check back then!
+          The Weekly Mock Test will be unlocked on Sunday, June 22, 2025 - 09 AM Pakistan Standard Time. Please check back then!
         </p>
         <Button
           onClick={() => navigate('/dashboard')}
