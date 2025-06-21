@@ -2,31 +2,58 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, Search, CalendarDays, Lock, Loader2 } from 'lucide-react'; // Import Lock icon
+import { ArrowLeft, Moon, Sun, Upload, Loader2, Lock, Users, BookOpen, Clock, Trash2, ChevronDown, ChevronUp, CalendarIcon, Save } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Papa from 'papaparse';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const Admin3 = () => {
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+
+// Shadcn Date Picker components
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const Admin2 = () => {
   const { theme, setTheme } = useTheme();
-  const { user, isLoading: isUserLoading } = useAuth(); // Destructure isLoading from useAuth
+  const { user, isLoading: isUserLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null); // The user currently being edited
-  const [selectedPlanName, setSelectedPlanName] = useState('free'); // 'free', 'iconic', 'premium', 'custom'
-  const [selectedDurationOption, setSelectedDurationOption] = useState('30_day'); // '24_hour', '3_day', '7_day', '30_day', '365_day', 'custom_date'
-  const [customExpiryDate, setCustomExpiryDate] = useState('');
+  const [file, setFile] = useState(null);
+  const [isImportLoading, setIsImportLoading] = useState(false);
 
-  // --- Fetch User Profile to Check Role ---
+  // New state for test configuration dates
+  const [unlockTime, setUnlockTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
+  // --- Data Fetching Queries ---
+
+  // Fetch user profile to check role
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -35,214 +62,124 @@ const Admin3 = () => {
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .maybeSingle(); // Use maybeSingle to handle cases where no profile is found
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
-        // Optionally toast an error, but don't prevent loading if it's just no profile
         return null;
       }
       return data;
     },
-    enabled: !!user?.id, // Only run this query if a user is logged in
+    enabled: !!user?.id,
   });
 
-  // Determine if the current user is an admin
-  const isAdmin = profile?.role === 'admin';
-
-  // --- Search Users Query ---
-  const { data: users, isLoading: isSearching, refetch: refetchUsers } = useQuery({
-    queryKey: ['adminUsers', searchTerm],
+  // Fetch total questions in mock_test_questions
+  const { data: totalMockTestQuestions, isLoading: isTotalQuestionsLoading, refetch: refetchTotalQuestions } = useQuery({
+    queryKey: ['totalMockTestQuestions'],
     queryFn: async () => {
-      if (!searchTerm) return []; // Don't search if no term is entered
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, plan, plan_expiry_date')
-        .ilike('username', `%${searchTerm}%`);
+      const { count, error } = await supabase
+        .from('mock_test_questions')
+        .select('*', { count: 'exact' });
 
       if (error) {
-        toast({
-          title: "Error searching users",
-          description: error.message,
-          variant: "destructive",
-        });
-        throw error;
+        console.error('Error fetching total mock test questions:', error);
+        return 0;
       }
-      return data;
-    },
-    // Only enable this query if a search term is present AND the user is an admin
-    enabled: !!searchTerm.length && isAdmin,
-    staleTime: 0,
-  });
-
-  // --- Update User Plan Mutation ---
-  const updatePlanMutation = useMutation({
-    mutationFn: async ({ userId, newPlan, newExpiryDate }) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          plan: newPlan,
-          plan_expiry_date: newExpiryDate,
-        })
-        .eq('id', userId);
-
-      if (error) {
-        throw error;
-      }
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Plan Updated",
-        description: `User plan successfully updated.`,
-        variant: "success",
-      });
-      queryClient.invalidateQueries(['adminUsers', searchTerm]);
-      setSelectedUser(null);
-      setSearchTerm('');
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to Update Plan",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      return count;
     },
   });
 
-  // --- Plan Expiry Date Calculation ---
-  const calculateExpiryDate = (planType, durationOption, customDate = null) => {
-    if (planType === 'free') {
-      return null;
-    }
+  // Fetch last created question timestamp
+  const { data: lastCreatedQuestion, isLoading: isLastCreatedLoading } = useQuery({
+    queryKey: ['lastCreatedQuestion'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mock_test_questions')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-    let expiryDate = new Date();
-
-    if (planType === 'custom' && customDate) {
-      const parsedDate = new Date(customDate);
-      if (!isNaN(parsedDate.getTime())) { // Use getTime() for robust date validation
-        return parsedDate.toISOString();
-      } else {
-        toast({
-          title: "Invalid Custom Date",
-          description: "Please enter a valid date for the custom plan.",
-          variant: "destructive",
-        });
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error('Error fetching last created question:', error);
         return null;
       }
-    }
+      return data ? new Date(data.created_at).toLocaleString() : 'N/A';
+    },
+  });
 
-    // Handle duration options for 'iconic' and 'premium'
-    if (durationOption === '24_hour') {
-      expiryDate.setHours(expiryDate.getHours() + 24);
-    } else if (durationOption === '3_day') {
-      expiryDate.setDate(expiryDate.getDate() + 3);
-    } else if (durationOption === '7_day') {
-      expiryDate.setDate(expiryDate.getDate() + 7);
-    } else if (durationOption === '30_day') {
-      expiryDate.setDate(expiryDate.getDate() + 30);
-    } else if (durationOption === '365_day') {
-      expiryDate.setDate(expiryDate.getDate() + 365);
-    } else if (durationOption === 'custom_date' && customDate) {
-      const parsedDate = new Date(customDate);
-      if (!isNaN(parsedDate.getTime())) {
-        expiryDate = parsedDate;
-      } else {
-        toast({
-          title: "Invalid Custom Date",
-          description: "Please enter a valid date for the custom duration.",
-          variant: "destructive",
-        });
+  // Fetch total students attempted (from user_test_results)
+  const { data: studentsAttempted, isLoading: isStudentsAttemptedLoading } = useQuery({
+    queryKey: ['studentsAttempted'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('user_test_results')
+        .select('*', { count: 'exact' });
+
+      if (error) {
+        console.error('Error fetching students attempted:', error);
+        return 0;
+      }
+      return count;
+    },
+  });
+
+  // Fetch all questions for display
+  const { data: allQuestions, isLoading: isAllQuestionsLoading, refetch: refetchAllQuestions } = useQuery({
+    queryKey: ['allMockTestQuestions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mock_test_questions')
+        .select('id, question, option_a, option_b, option_c, option_d, correct_answer')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all questions:', error);
+        return [];
+      }
+      return data;
+    },
+  });
+
+  // NEW: Fetch test configuration (unlock_time, end_time) from 'test_configs'
+  const { data: testConfig, isLoading: isTestConfigLoading, refetch: refetchTestConfig } = useQuery({
+    queryKey: ['testConfig'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('test_configs') // CORRECTED: Changed to 'test_configs'
+        .select('unlock_time, end_time')
+        .maybeSingle(); // Assuming a single config row
+
+      if (error) {
+        console.error('Error fetching test configuration:', error);
         return null;
       }
-    } else {
-      // Default to 30 days if no specific duration option is selected or custom date is invalid
-      expiryDate.setDate(expiryDate.getDate() + 30);
-    }
+      return data;
+    },
+  });
 
-    return expiryDate.toISOString();
-  };
-
-  const handleUpdatePlan = () => {
-    if (!selectedUser) {
-      toast({
-        title: "No User Selected",
-        description: "Please select a user to update their plan.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    let newExpiry = null;
-    if (selectedPlanName === 'free') {
-      newExpiry = null;
-    } else if (selectedPlanName === 'custom') {
-      newExpiry = calculateExpiryDate('custom', null, customExpiryDate);
-    } else {
-      newExpiry = calculateExpiryDate(selectedPlanName, selectedDurationOption, customExpiryDate);
-    }
-
-    if (newExpiry === null && selectedPlanName !== 'free') {
-      return; // Stop if expiry date calculation failed for a paid plan
-    }
-
-    updatePlanMutation.mutate({
-      userId: selectedUser.id,
-      newPlan: selectedPlanName,
-      newExpiryDate: newExpiry,
-    });
-  };
-
+  // Effect to set initial state once testConfig is loaded
   useEffect(() => {
-    if (selectedUser) {
-      let initialPlan = selectedUser.plan || 'free';
-      // Map existing plan types to the UI radio buttons
-      if (['24_hour', '3_day', '7_day', '30_day'].includes(initialPlan)) {
-        initialPlan = 'iconic';
-      } else if (['365_day'].includes(initialPlan)) {
-        initialPlan = 'premium';
-      }
-      setSelectedPlanName(initialPlan);
-
-      // Set initial duration option based on current plan or default
-      if (['iconic', 'premium'].includes(initialPlan)) {
-        // If the user's plan is actually a specific duration (e.g., '24_hour'), pre-select it
-        if (['24_hour', '3_day', '7_day', '30_day', '365_day'].includes(selectedUser.plan)) {
-            setSelectedDurationOption(selectedUser.plan);
-        } else {
-            setSelectedDurationOption('30_day'); // Default for iconic/premium if no specific duration is set
-        }
-      } else if (initialPlan === 'custom' && selectedUser.plan_expiry_date) {
-        setSelectedDurationOption('custom_date');
-      } else {
-        setSelectedDurationOption('30_day');
-      }
-
-      if (selectedUser.plan_expiry_date) {
-        setCustomExpiryDate(new Date(selectedUser.plan_expiry_date).toISOString().split('T')[0]);
-      } else {
-        setCustomExpiryDate('');
-      }
-    } else {
-      setSelectedPlanName('free');
-      setSelectedDurationOption('30_day');
-      setCustomExpiryDate('');
+    if (testConfig) {
+      setUnlockTime(testConfig.unlock_time ? new Date(testConfig.unlock_time) : null);
+      setEndTime(testConfig.end_time ? new Date(testConfig.end_time) : null);
     }
-  }, [selectedUser]);
+  }, [testConfig]);
 
 
-  // --- Render Logic for Access Control ---
-  // Display a loading screen while user and profile data are being fetched
-  if (isUserLoading || isProfileLoading) {
+  // --- Access Control Logic (Expanded to include new query loading states) ---
+  if (isUserLoading || isProfileLoading || isTotalQuestionsLoading || isLastCreatedLoading || isStudentsAttemptedLoading || isAllQuestionsLoading || isTestConfigLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-        <Loader2 className="h-8 w-8 animate-spin mr-2" /> Loading admin panel...
+        Loading admin panel...
       </div>
     );
   }
 
-  // If no user is logged in, show access denied
+  const isAdmin = profile?.role === 'admin';
+
   if (!user) {
+    // Not logged in
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
         <Lock className="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" />
@@ -253,22 +190,298 @@ const Admin3 = () => {
     );
   }
 
-  // If user is logged in but not an admin, show unauthorized access
   if (!isAdmin) {
+    // Logged in but not an admin
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
         <Lock className="w-16 h-16 text-red-500 dark:text-red-400 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Unauthorized Access</h1>
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
         <p className="text-lg mb-4">You do not have administrative privileges to view this page.</p>
         <Link to="/dashboard" className="text-blue-500 hover:underline">Go to Dashboard</Link>
       </div>
     );
   }
 
-  // --- Main Component Render (only if authorized and data loaded) ---
+  // Helper function to generate time options (e.g., "09:00", "10:30")
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) { // Increments of 30 minutes
+        const hour = h.toString().padStart(2, '0');
+        const minute = m.toString().padStart(2, '0');
+        times.push(`${hour}:${minute}`);
+      }
+    }
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
+
+  // --- CSV Import Handlers ---
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    } else {
+      setFile(null);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      toast({
+        title: "No file selected",
+        description: "Please select a CSV file to upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImportLoading(true);
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const questionsToInsert = [];
+        const errors = [];
+
+        results.data.forEach((row, index) => {
+          const cleanedRow = {};
+          for (const key in row) {
+            cleanedRow[key.toLowerCase().replace(/\s/g, '_')] = row[key];
+          }
+
+          const questionData = {
+            question: cleanedRow.question,
+            option_a: cleanedRow.option_a || cleanedRow.option_1,
+            option_b: cleanedRow.option_b || cleanedRow.option_2,
+            option_c: cleanedRow.option_c || cleanedRow.option_3,
+            option_d: cleanedRow.option_d || cleanedRow.option_4,
+            correct_answer: cleanedRow.correct_answer || cleanedRow.answer,
+          };
+
+          if (
+            !questionData.question ||
+            !questionData.option_a ||
+            !questionData.option_b ||
+            !questionData.option_c ||
+            !questionData.option_d ||
+            !questionData.correct_answer
+          ) {
+            errors.push(`Row ${index + 2}: Missing required fields.`);
+          } else if (![
+            questionData.option_a,
+            questionData.option_b,
+            questionData.option_c,
+            questionData.option_d
+          ].includes(questionData.correct_answer)) {
+            errors.push(`Row ${index + 2}: Correct answer '${questionData.correct_answer}' not found in options.`);
+          } else {
+            questionsToInsert.push(questionData);
+          }
+        });
+
+        if (errors.length > 0) {
+          toast({
+            title: "CSV Import Warnings/Errors",
+            description: (
+              <div>
+                <p>Some rows had issues and were skipped:</p>
+                <ul className="list-disc pl-5 mt-2 max-h-40 overflow-y-auto">
+                  {errors.map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+              </div>
+            ),
+            variant: "destructive",
+            duration: 9000,
+          });
+        }
+
+        if (questionsToInsert.length === 0) {
+          toast({
+            title: "No valid questions to import",
+            description: "Please check your CSV file for correct formatting and data.",
+            variant: "destructive",
+          });
+          setIsImportLoading(false);
+          return;
+        }
+
+        try {
+          const { error: insertError } = await supabase
+            .from('mock_test_questions')
+            .insert(questionsToInsert);
+
+          if (insertError) {
+            console.error('Supabase insert error:', insertError.message);
+            toast({
+              title: "Import Failed",
+              description: `Error inserting questions: ${insertError.message}`,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Import Successful!",
+              description: `${questionsToInsert.length} questions imported successfully.`,
+              variant: "success",
+            });
+            setFile(null);
+            queryClient.invalidateQueries({ queryKey: ['totalMockTestQuestions'] });
+            queryClient.invalidateQueries({ queryKey: ['lastCreatedQuestion'] });
+            queryClient.invalidateQueries({ queryKey: ['allMockTestQuestions'] });
+          }
+        } catch (err) {
+          console.error('Unexpected error during Supabase insert:', err.message);
+          toast({
+            title: "Error",
+            description: `An unexpected error occurred: ${err.message}`,
+            variant: "destructive",
+          });
+        } finally {
+          setIsImportLoading(false);
+        }
+      },
+      error: (err) => {
+        console.error('PapaParse error:', err);
+        toast({
+          title: "CSV Parsing Error",
+          description: `Failed to parse CSV file: ${err.message}`,
+          variant: "destructive",
+        });
+        setIsImportLoading(false);
+      }
+    });
+  };
+
+  // --- Delete All Questions Handler ---
+  const handleDeleteAllQuestions = async () => {
+    try {
+      const { error } = await supabase
+        .from('mock_test_questions')
+        .delete()
+        .neq('id', '0'); // Deletes all records where id is not '0' (effectively all)
+
+      if (error) {
+        console.error('Error deleting all questions:', error);
+        toast({
+          title: "Deletion Failed",
+          description: `Error deleting questions: ${error.message}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Deletion Successful!",
+          description: "All mock test questions have been deleted.",
+          variant: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ['totalMockTestQuestions'] });
+        queryClient.invalidateQueries({ queryKey: ['lastCreatedQuestion'] });
+        queryClient.invalidateQueries({ queryKey: ['allMockTestQuestions'] });
+      }
+    } catch (err) {
+      console.error('Unexpected error during deletion:', err.message);
+      toast({
+        title: "Error",
+        description: `An unexpected error occurred during deletion: ${err.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // NEW: Handle saving test configuration dates using 'test_configs'
+  const handleSaveTestConfig = async () => {
+    if (!unlockTime || !endTime) {
+      toast({
+        title: "Missing Dates",
+        description: "Please select both unlock time and end time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (unlockTime >= endTime) {
+        toast({
+            title: "Invalid Dates",
+            description: "Unlock time must be before end time.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    setIsSavingConfig(true);
+    try {
+      // Fetch the current config to get its ID. Assuming only one row, we'll upsert or update the first.
+      const { data: existingConfig, error: fetchError } = await supabase
+        .from('test_configs') // CORRECTED: Changed to 'test_configs'
+        .select('id')
+        .limit(1)
+        .maybeSingle(); // Use maybeSingle for zero or one row
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is 'no rows found'
+          console.error('Error fetching existing config:', fetchError);
+          toast({
+              title: "Error",
+              description: `Failed to retrieve current config: ${fetchError.message || 'Unknown error'}`,
+              variant: "destructive",
+          });
+          setIsSavingConfig(false);
+          return;
+      }
+
+      let operationError;
+      if (existingConfig) {
+        console.log('Updating existing config with ID:', existingConfig.id);
+        const { error: updateError } = await supabase
+          .from('test_configs') // CORRECTED: Changed to 'test_configs'
+          .update({
+            unlock_time: unlockTime.toISOString(),
+            end_time: endTime.toISOString(),
+          })
+          .eq('id', existingConfig.id);
+        operationError = updateError;
+      } else {
+        console.log('Inserting new config:', { unlock_time: unlockTime.toISOString(), end_time: endTime.toISOString() });
+        const { error: insertError } = await supabase
+          .from('test_configs') // CORRECTED: Changed to 'test_configs'
+          .insert({
+            unlock_time: unlockTime.toISOString(),
+            end_time: endTime.toISOString(),
+          });
+        operationError = insertError;
+      }
+
+      if (operationError) {
+        console.error('Supabase operation error object:', operationError);
+        console.error('Error message:', operationError.message);
+        toast({
+          title: "Save Failed",
+          description: `Error saving test configuration: ${operationError.message || 'Unknown error'}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Configuration Saved!",
+          description: "Mock test dates updated successfully.",
+          variant: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ['testConfig'] }); // Invalidate to refetch updated data
+      }
+    } catch (err) {
+      console.error('Unexpected error during config save:', err);
+      toast({
+        title: "Error",
+        description: `An unexpected error occurred: ${err.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
+
+
+  // --- Main Component Render (only if authorized) ---
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
-      {/* Header - Consistent with Dashboard and other Admin pages */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
           <Link to="/dashboard" className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
@@ -282,10 +495,32 @@ const Admin3 = () => {
               alt="Medistics Logo"
               className="w-8 h-8 object-contain"
             />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">User Plan Management</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Mock Test Importer</span>
           </div>
 
           <div className="flex items-center space-x-3">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="hidden sm:inline-flex">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete All MCQs
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete ALL mock test questions from your database.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAllQuestions} className="bg-red-500 hover:bg-red-600">
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <Button
               variant="ghost"
               size="sm"
@@ -311,147 +546,281 @@ const Admin3 = () => {
       </header>
 
       <div className="container mx-auto px-4 lg:px-8 py-8 max-w-7xl">
-        {/* Hero Section */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            👤 User Plan Management
+            📊 Upload & Manage Mock Test Questions
           </h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Search for users and update their subscription plans and expiry dates.
+            Use this panel to import, review, and manage mock test questions via CSV.
           </p>
         </div>
 
-        {/* User Search Card */}
-        <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all duration-300 animate-slide-up mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8">
+          <Card className="text-center bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:scale-105 transition-transform duration-300 animate-fade-in">
+            <CardHeader className="pb-2">
+              <BookOpen className="h-5 md:h-6 w-5 md:w-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+              <CardTitle className="text-xs md:text-sm text-gray-900 dark:text-white">Total Mock Test Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {totalMockTestQuestions !== null ? totalMockTestQuestions : '...'}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:scale-105 transition-transform duration-300 animate-fade-in">
+            <CardHeader className="pb-2">
+              <Clock className="h-5 md:h-6 w-5 md:w-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
+              <CardTitle className="text-xs md:text-sm text-gray-900 dark:text-white">Last Question Created</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xs md:text-sm font-bold text-green-600 dark:text-green-400">
+                {lastCreatedQuestion}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 hover:scale-105 transition-transform duration-300 animate-fade-in">
+            <CardHeader className="pb-2">
+              <Users className="h-5 md:h-6 w-5 md:w-6 mx-auto mb-2 text-orange-600 dark:text-orange-400" />
+              <CardTitle className="text-xs md:text-sm text-gray-900 dark:text-white">Students Attempted</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {studentsAttempted !== null ? studentsAttempted : '...'}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* NEW: Mock Test Date Configuration Card */}
+        <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:shadow-lg transition-all duration-300 animate-slide-up mb-8">
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-white">Search Users</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" /> Mock Test Schedule
+            </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              Enter a username (or part of it) to find users.
+              Set the global unlock and end times for the mock test.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex space-x-2">
-              <Input
-                type="text"
-                placeholder="Search by username..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-grow dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              />
-              <Button onClick={refetchUsers} disabled={!searchTerm || isSearching} className="bg-gradient-to-r from-blue-600 to-teal-600 text-white hover:from-blue-700 hover:to-teal-700">
-                <Search className="w-4 h-4 mr-2" />
-                Search
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Unlock Time */}
+              <div className="space-y-2">
+                <Label htmlFor="unlock-time">Test Unlock Time</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={`w-full justify-start text-left font-normal ${!unlockTime && "text-muted-foreground"
+                        }`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {unlockTime ? format(unlockTime, "PPP HH:mm") : <span>Pick a date and time</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={unlockTime}
+                      onSelect={(date) => {
+                        if (date) {
+                          const newTime = unlockTime || new Date(); // Use existing time or current time
+                          date.setHours(newTime.getHours());
+                          date.setMinutes(newTime.getMinutes());
+                          setUnlockTime(date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                      <Select
+                        value={unlockTime ? format(unlockTime, "HH:mm") : ""}
+                        onValueChange={(timeString) => {
+                          const [hours, minutes] = timeString.split(':').map(Number);
+                          const newDate = unlockTime || new Date();
+                          newDate.setHours(hours);
+                          newDate.setMinutes(minutes);
+                          setUnlockTime(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Time" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {timeOptions.map((time) => (
+                            <SelectItem key={time} value={time}>{time}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* End Time */}
+              <div className="space-y-2">
+                <Label htmlFor="end-time">Test End Time</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={`w-full justify-start text-left font-normal ${!endTime && "text-muted-foreground"
+                        }`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endTime ? format(endTime, "PPP HH:mm") : <span>Pick a date and time</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endTime}
+                      onSelect={(date) => {
+                        if (date) {
+                          const newTime = endTime || new Date(); // Use existing time or current time
+                          date.setHours(newTime.getHours());
+                          date.setMinutes(newTime.getMinutes());
+                          setEndTime(date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                      <Select
+                        value={endTime ? format(endTime, "HH:mm") : ""}
+                        onValueChange={(timeString) => {
+                          const [hours, minutes] = timeString.split(':').map(Number);
+                          const newDate = endTime || new Date();
+                          newDate.setHours(hours);
+                          newDate.setMinutes(minutes);
+                          setEndTime(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Time" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {timeOptions.map((time) => (
+                            <SelectItem key={time} value={time}>{time}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <Button
+              onClick={handleSaveTestConfig}
+              className="mt-4 w-full bg-gradient-to-r from-emerald-600 to-green-600 text-white hover:from-emerald-700 hover:to-green-700 transition-all duration-300"
+              disabled={isSavingConfig || !unlockTime || !endTime}
+            >
+              {isSavingConfig ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Test Schedule
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Existing CSV Upload Card */}
+        <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all duration-300 animate-slide-up mb-8">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">Upload Mock Test CSV</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Select a CSV file containing your mock test questions to upload them directly to Supabase.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="csv-file">Choose CSV File</Label>
+                <Input
+                  id="csv-file"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="dark:file:text-white dark:file:bg-gray-700 dark:bg-gray-800 dark:border-gray-700"
+                />
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Expected columns: `question`, `option_a`, `option_b`, `option_c`, `option_d`, `correct_answer`.
+                  (Variations like `option_1`, `answer` are also supported.)
+                </p>
+              </div>
+              <Button
+                onClick={handleUpload}
+                className="w-full bg-gradient-to-r from-blue-600 to-teal-600 text-white hover:from-blue-700 hover:to-teal-700 transition-all duration-300"
+                disabled={isImportLoading || !file}
+              >
+                {isImportLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Questions
+                  </>
+                )}
               </Button>
             </div>
-            {isSearching && <p className="text-center text-gray-500 dark:text-gray-400 mt-4">Searching...</p>}
-            {users && users.length > 0 && (
-              <div className="mt-6 space-y-4 max-h-96 overflow-y-auto">
-                <p className="text-gray-800 dark:text-gray-200 font-semibold">Search Results:</p>
-                {users.map((u) => (
-                  <Card key={u.id} className={`p-4 cursor-pointer ${selectedUser?.id === u.id ? 'bg-purple-100 dark:bg-purple-800/50 border-purple-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700'}`}
-                    onClick={() => setSelectedUser(u)}>
-                    <CardTitle className="text-lg">{u.username}</CardTitle>
-                    <CardDescription className="text-sm">
-                      Current Plan: <Badge variant="outline" className="mr-2">{u.plan || 'Free'}</Badge>
-                      Expires: {u.plan_expiry_date ? new Date(u.plan_expiry_date).toLocaleDateString() : 'N/A'}
-                    </CardDescription>
-                  </Card>
+          </CardContent>
+        </Card>
+
+        {/* Display All Questions Section */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 animate-slide-up">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white">All Mock Test Questions</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Review all questions currently stored in the mock test database.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allQuestions && allQuestions.length > 0 ? (
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {allQuestions.map((q, index) => (
+                  <Collapsible key={q.id} className="border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 p-3 shadow-sm">
+                    <CollapsibleTrigger asChild>
+                      <div className="flex justify-between items-center cursor-pointer text-left text-gray-800 dark:text-gray-200 font-medium">
+                        <span>{index + 1}. {q.question}</span>
+                        <div className="ml-auto">
+                          <ChevronDown className="h-4 w-4 data-[state=open]:hidden" />
+                          <ChevronUp className="h-4 w-4 data-[state=closed]:hidden" />
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <ul className="space-y-1">
+                        <li><span className="font-semibold">A:</span> {q.option_a}</li>
+                        <li><span className="font-semibold">B:</span> {q.option_b}</li>
+                        <li><span className="font-semibold">C:</span> {q.option_c}</li>
+                        <li><span className="font-semibold">D:</span> {q.option_d}</li>
+                        <li className="mt-2 text-green-600 dark:text-green-400 font-bold">
+                          <span className="text-gray-900 dark:text-white">Correct Answer:</span> {q.correct_answer}
+                        </li>
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
                 ))}
               </div>
-            )}
-            {users && users.length === 0 && searchTerm && !isSearching && (
-              <p className="text-center text-gray-500 dark:text-gray-400 mt-4">No users found for "{searchTerm}".</p>
+            ) : (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-4">No mock test questions found. Upload some!</p>
             )}
           </CardContent>
         </Card>
 
-        {/* Plan Update Card (shown only when a user is selected) */}
-        {selectedUser && (
-          <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-300 animate-slide-up">
-            <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-white">Update Plan for {selectedUser.username}</CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
-                Set a new subscription plan and expiry date for this user.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Plan Type Selection (Free, Iconic, Premium, Custom) */}
-                <div>
-                  <Label htmlFor="plan-type" className="mb-2 block">Select Plan Type:</Label>
-                  <RadioGroup value={selectedPlanName} onValueChange={setSelectedPlanName} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="free" id="plan-free" />
-                      <Label htmlFor="plan-free">Free Plan</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="iconic" id="plan-iconic" />
-                      <Label htmlFor="plan-iconic">Iconic Plan</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="premium" id="plan-premium" />
-                      <Label htmlFor="plan-premium">Premium Plan</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="custom" id="plan-custom" />
-                      <Label htmlFor="plan-custom">Custom Plan</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Duration Options (for Iconic/Premium Plans) */}
-                {(selectedPlanName === 'iconic' || selectedPlanName === 'premium') && (
-                  <div>
-                    <Label htmlFor="duration-option" className="mb-2 block">Select Duration:</Label>
-                    <Select value={selectedDurationOption} onValueChange={setSelectedDurationOption}>
-                      <SelectTrigger id="duration-option" className="w-full dark:bg-gray-800 dark:border-gray-700 dark:text-white">
-                        <SelectValue placeholder="Select a duration" />
-                      </SelectTrigger>
-                      <SelectContent className="dark:bg-gray-800 dark:border-gray-700 dark:text-white">
-                        <SelectItem value="24_hour">24 Hours</SelectItem>
-                        <SelectItem value="3_day">3 Days</SelectItem>
-                        <SelectItem value="7_day">7 Days</SelectItem>
-                        <SelectItem value="30_day">30 Days (Default)</SelectItem>
-                        <SelectItem value="365_day">365 Days</SelectItem>
-                        <SelectItem value="custom_date">Custom Date Input</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Custom Date Input (shown for 'custom' plan or 'custom_date' duration) */}
-                {(selectedPlanName === 'custom' || selectedDurationOption === 'custom_date') && (
-                  <div>
-                    <Label htmlFor="custom-date" className="mb-2 block">
-                      <CalendarDays className="inline-block w-4 h-4 mr-2" /> Custom Expiry Date:
-                    </Label>
-                    <Input
-                      type="date"
-                      id="custom-date"
-                      value={customExpiryDate}
-                      onChange={(e) => setCustomExpiryDate(e.target.value)}
-                      className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                    />
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Enter the exact date for plan expiry.
-                    </p>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleUpdatePlan}
-                  disabled={updatePlanMutation.isPending}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
-                >
-                  {updatePlanMutation.isPending ? 'Updating...' : 'Update Plan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
 };
 
-export default Admin3;
+export default Admin2;
