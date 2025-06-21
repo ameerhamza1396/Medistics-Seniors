@@ -85,13 +85,12 @@ const MockTestResults = () => {
       console.log("Attempting to fetch test results for user ID (used as 'user_id' in DB):", user.id);
 
       // @ts-ignore: 'user_test_results' is not in the generated Supabase types.
-      // IMPORTANT: Changed .eq('username', user.id) to .eq('user_id', user.id)
+      // IMPORTANT: Removed .limit(1) to fetch all results
       const { data, error } = await (supabase
         .from('user_test_results' as any) // Make sure 'user_test_results' is the actual table name
         .select('*')
         .eq('user_id', user.id) // Using 'user_id' as per your Supabase RLS policy
-        .order('completed_at', { ascending: false }) // Order by most recent test if multiple
-        .limit(1)); // Only fetch the most recent one if you intend to show only one card
+        .order('completed_at', { ascending: false })); // Order by most recent test first
 
       if (error) {
         console.error('Error fetching test results:', error);
@@ -168,6 +167,26 @@ const MockTestResults = () => {
     return "Keep Practicing!";
   };
 
+  // Function to format date to DD/MM/YYYY
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Number of empty cards to add for UI balance
+  const emptyCardCount = 3 - ((testResults?.length || 0) % 3);
+  const emptyCards = emptyCardCount > 0 && emptyCardCount !== 3 // Only add if not a full row already
+    ? Array.from({ length: emptyCardCount }).map((_, index) => (
+        <Card key={`empty-${index}`}
+            className="bg-white dark:bg-gray-800 border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center p-6 sm:p-8 text-gray-400 dark:text-gray-500">
+          <p>No more tests yet</p>
+        </Card>
+      ))
+    : [];
+
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -204,11 +223,20 @@ const MockTestResults = () => {
       <div className="container mx-auto px-4 lg:px-8 py-8 max-w-7xl">
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            📊 Your Latest Mock Test Result
+            📊 Your Mock Test Results
           </h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Review your performance and use these insights to focus on areas needing improvement.
           </p>
+          {isLoading ? (
+             <p className="text-gray-500 dark:text-gray-400 mt-2">Loading test count...</p>
+          ) : error ? (
+            <p className="text-red-500 mt-2">Error loading test count.</p>
+          ) : (
+            <p className="text-xl font-semibold text-purple-600 dark:text-purple-400 mt-2">
+              You've attempted: <span className="font-bold">{testResults?.length || 0}</span> mock tests!
+            </p>
+          )}
         </div>
 
         {isLoadingProfile ? (
@@ -225,40 +253,39 @@ const MockTestResults = () => {
           <div className="text-center text-gray-600 dark:text-gray-400">Loading your test results...</div>
         ) : error ? (
           <div className="text-center text-red-500">Error fetching test results: {error.message}. Please try again.</div>
-        ) : !testResults || testResults.length === 0 ? ( // Corrected conditional logic
+        ) : !testResults || testResults.length === 0 ? (
           <div className="text-center text-gray-600 dark:text-gray-400">
             No mock test results found. Take a test to see your results here!
           </div>
         ) : (
-          // IMPORTANT: Centering the single card and making it more prominent
-          // We are now confident testResults[0] exists here
-          <div className="flex justify-center items-center py-4 animate-fade-in">
-            {/* Accessing testResults[0] directly now that its existence is guaranteed */}
-            <Card key={testResults[0].id}
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                             hover:shadow-xl transition-shadow duration-300
-                             w-full max-w-md p-6 sm:p-8
-                             shadow-lg ring-2 ring-purple-500/50 dark:ring-purple-400/50"> {/* Added prominence styling */}
-              <CardHeader className="pb-4">
-                <CardTitle className="text-gray-900 dark:text-white text-3xl flex items-center mb-2">
-                  <Award className="h-8 w-8 mr-3 text-yellow-500" />
-                  Score: {testResults[0].score} / {testResults[0].total_questions}
-                  <span className="ml-auto text-lg text-gray-500 dark:text-gray-400 font-bold">
-                    ({((testResults[0].score / testResults[0].total_questions) * 100).toFixed(1)}%)
-                  </span>
-                </CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400 text-base mt-1">
-                  <Clock className="inline-block h-5 w-5 mr-2" />
-                  Completed on: {new Date(testResults[0].completed_at).toLocaleDateString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-xl md:text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  Remark: {getRemark(testResults[0].score, testResults[0].total_questions)}
-                </p>
-                {/* Removed the "View Details" button as requested */}
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-4 animate-fade-in">
+            {testResults.map((result) => (
+              <Card key={result.id}
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                           hover:shadow-xl transition-shadow duration-300
+                           p-6 sm:p-8
+                           shadow-lg ring-2 ring-purple-500/50 dark:ring-purple-400/50">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-gray-900 dark:text-white text-3xl flex items-center mb-2">
+                    <Award className="h-8 w-8 mr-3 text-yellow-500" />
+                    Score: {result.score} / {result.total_questions}
+                    <span className="ml-auto text-lg text-gray-500 dark:text-gray-400 font-bold">
+                      ({((result.score / result.total_questions) * 100).toFixed(1)}%)
+                    </span>
+                  </CardTitle>
+                  <CardDescription className="text-gray-600 dark:text-gray-400 text-base mt-1">
+                    <Clock className="inline-block h-5 w-5 mr-2" />
+                    Completed on: <span className="font-semibold">{formatDate(result.completed_at)}</span>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-xl md:text-2xl font-bold text-purple-700 dark:text-purple-300">
+                    Remark: {getRemark(result.score, result.total_questions)}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+            {emptyCards} {/* Render empty cards here */}
           </div>
         )}
 
@@ -268,10 +295,10 @@ const MockTestResults = () => {
             <div>
               <p className="font-medium mb-2">Understanding your results:</p>
               <ul className="space-y-1 text-xs">
-                <li>• This card shows your *latest* mock test result.</li>
-                <li>• Your score and total questions give you a clear picture of your performance.</li>
-                <li>• The remark offers a quick summary of your test outcome.</li>
-                <li>• Use these insights to focus on areas needing improvement.</li>
+                <li>• This page now shows *all* your mock test results, ordered from most recent.</li>
+                <li>• Your score and total questions give you a clear picture of your performance for each attempt.</li>
+                <li>• The remark offers a quick summary of each test outcome.</li>
+                <li>• Use these insights to track your progress and focus on areas needing improvement.</li>
               </ul>
             </div>
           </div>
