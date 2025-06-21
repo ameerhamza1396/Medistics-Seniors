@@ -88,7 +88,7 @@ const MockTest = () => {
   // Define test unlock and end times
   // IMPORTANT: Set these dates/times in PKT (Pakistan Standard Time)
   // June 15, 2025, 00:00:00 PKT
-  const testUnlockTime = new Date('2025-06-15T09:00:00+05:00'); // +05:00 for PKT
+  const testUnlockTime = new Date('2025-06-22T09:00:00+05:00'); // +05:00 for PKT
   const testEndTime = new Date(testUnlockTime.getTime() + 15 * 60 * 60 * 1000); // 24 hours after unlock
 
   const now = new Date();
