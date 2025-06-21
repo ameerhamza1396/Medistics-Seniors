@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, Upload, Loader2, Lock, Users, BookOpen, Clock, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Upload, Loader2, Lock, Users, BookOpen, Clock, Trash2, ChevronDown, ChevronUp, CalendarIcon, Save } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -31,6 +31,12 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
+// Shadcn Date Picker components
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 const Admin2 = () => {
   const { theme, setTheme } = useTheme();
   const { user, isLoading: isUserLoading } = useAuth();
@@ -39,6 +45,11 @@ const Admin2 = () => {
 
   const [file, setFile] = useState(null);
   const [isImportLoading, setIsImportLoading] = useState(false);
+
+  // New state for test configuration dates
+  const [unlockTime, setUnlockTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
 
   // --- Data Fetching Queries ---
 
@@ -89,7 +100,7 @@ const Admin2 = () => {
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
         console.error('Error fetching last created question:', error);
         return null;
       }
@@ -130,9 +141,34 @@ const Admin2 = () => {
     },
   });
 
+  // NEW: Fetch test configuration (unlock_time, end_time) from 'test_configs'
+  const { data: testConfig, isLoading: isTestConfigLoading, refetch: refetchTestConfig } = useQuery({
+    queryKey: ['testConfig'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('test_configs') // CORRECTED: Changed to 'test_configs'
+        .select('unlock_time, end_time')
+        .maybeSingle(); // Assuming a single config row
+
+      if (error) {
+        console.error('Error fetching test configuration:', error);
+        return null;
+      }
+      return data;
+    },
+  });
+
+  // Effect to set initial state once testConfig is loaded
+  useEffect(() => {
+    if (testConfig) {
+      setUnlockTime(testConfig.unlock_time ? new Date(testConfig.unlock_time) : null);
+      setEndTime(testConfig.end_time ? new Date(testConfig.end_time) : null);
+    }
+  }, [testConfig]);
+
 
   // --- Access Control Logic (Expanded to include new query loading states) ---
-  if (isUserLoading || isProfileLoading || isTotalQuestionsLoading || isLastCreatedLoading || isStudentsAttemptedLoading || isAllQuestionsLoading) {
+  if (isUserLoading || isProfileLoading || isTotalQuestionsLoading || isLastCreatedLoading || isStudentsAttemptedLoading || isAllQuestionsLoading || isTestConfigLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
         Loading admin panel...
@@ -165,6 +201,21 @@ const Admin2 = () => {
       </div>
     );
   }
+
+  // Helper function to generate time options (e.g., "09:00", "10:30")
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) { // Increments of 30 minutes
+        const hour = h.toString().padStart(2, '0');
+        const minute = m.toString().padStart(2, '0');
+        times.push(`${hour}:${minute}`);
+      }
+    }
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
 
   // --- CSV Import Handlers ---
   const handleFileChange = (e) => {
@@ -219,11 +270,11 @@ const Admin2 = () => {
           ) {
             errors.push(`Row ${index + 2}: Missing required fields.`);
           } else if (![
-              questionData.option_a,
-              questionData.option_b,
-              questionData.option_c,
-              questionData.option_d
-            ].includes(questionData.correct_answer)) {
+            questionData.option_a,
+            questionData.option_b,
+            questionData.option_c,
+            questionData.option_d
+          ].includes(questionData.correct_answer)) {
             errors.push(`Row ${index + 2}: Correct answer '${questionData.correct_answer}' not found in options.`);
           } else {
             questionsToInsert.push(questionData);
@@ -308,7 +359,7 @@ const Admin2 = () => {
       const { error } = await supabase
         .from('mock_test_questions')
         .delete()
-        .neq('id', '0');
+        .neq('id', '0'); // Deletes all records where id is not '0' (effectively all)
 
       if (error) {
         console.error('Error deleting all questions:', error);
@@ -334,6 +385,96 @@ const Admin2 = () => {
         description: `An unexpected error occurred during deletion: ${err.message}`,
         variant: "destructive",
       });
+    }
+  };
+
+  // NEW: Handle saving test configuration dates using 'test_configs'
+  const handleSaveTestConfig = async () => {
+    if (!unlockTime || !endTime) {
+      toast({
+        title: "Missing Dates",
+        description: "Please select both unlock time and end time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (unlockTime >= endTime) {
+        toast({
+            title: "Invalid Dates",
+            description: "Unlock time must be before end time.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    setIsSavingConfig(true);
+    try {
+      // Fetch the current config to get its ID. Assuming only one row, we'll upsert or update the first.
+      const { data: existingConfig, error: fetchError } = await supabase
+        .from('test_configs') // CORRECTED: Changed to 'test_configs'
+        .select('id')
+        .limit(1)
+        .maybeSingle(); // Use maybeSingle for zero or one row
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is 'no rows found'
+          console.error('Error fetching existing config:', fetchError);
+          toast({
+              title: "Error",
+              description: `Failed to retrieve current config: ${fetchError.message || 'Unknown error'}`,
+              variant: "destructive",
+          });
+          setIsSavingConfig(false);
+          return;
+      }
+
+      let operationError;
+      if (existingConfig) {
+        console.log('Updating existing config with ID:', existingConfig.id);
+        const { error: updateError } = await supabase
+          .from('test_configs') // CORRECTED: Changed to 'test_configs'
+          .update({
+            unlock_time: unlockTime.toISOString(),
+            end_time: endTime.toISOString(),
+          })
+          .eq('id', existingConfig.id);
+        operationError = updateError;
+      } else {
+        console.log('Inserting new config:', { unlock_time: unlockTime.toISOString(), end_time: endTime.toISOString() });
+        const { error: insertError } = await supabase
+          .from('test_configs') // CORRECTED: Changed to 'test_configs'
+          .insert({
+            unlock_time: unlockTime.toISOString(),
+            end_time: endTime.toISOString(),
+          });
+        operationError = insertError;
+      }
+
+      if (operationError) {
+        console.error('Supabase operation error object:', operationError);
+        console.error('Error message:', operationError.message);
+        toast({
+          title: "Save Failed",
+          description: `Error saving test configuration: ${operationError.message || 'Unknown error'}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Configuration Saved!",
+          description: "Mock test dates updated successfully.",
+          variant: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ['testConfig'] }); // Invalidate to refetch updated data
+      }
+    } catch (err) {
+      console.error('Unexpected error during config save:', err);
+      toast({
+        title: "Error",
+        description: `An unexpected error occurred: ${err.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingConfig(false);
     }
   };
 
@@ -452,6 +593,145 @@ const Admin2 = () => {
           </Card>
         </div>
 
+        {/* NEW: Mock Test Date Configuration Card */}
+        <Card className="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 hover:shadow-lg transition-all duration-300 animate-slide-up mb-8">
+          <CardHeader>
+            <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-emerald-600 dark:text-emerald-400" /> Mock Test Schedule
+            </CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Set the global unlock and end times for the mock test.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Unlock Time */}
+              <div className="space-y-2">
+                <Label htmlFor="unlock-time">Test Unlock Time</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={`w-full justify-start text-left font-normal ${!unlockTime && "text-muted-foreground"
+                        }`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {unlockTime ? format(unlockTime, "PPP HH:mm") : <span>Pick a date and time</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={unlockTime}
+                      onSelect={(date) => {
+                        if (date) {
+                          const newTime = unlockTime || new Date(); // Use existing time or current time
+                          date.setHours(newTime.getHours());
+                          date.setMinutes(newTime.getMinutes());
+                          setUnlockTime(date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                      <Select
+                        value={unlockTime ? format(unlockTime, "HH:mm") : ""}
+                        onValueChange={(timeString) => {
+                          const [hours, minutes] = timeString.split(':').map(Number);
+                          const newDate = unlockTime || new Date();
+                          newDate.setHours(hours);
+                          newDate.setMinutes(minutes);
+                          setUnlockTime(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Time" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {timeOptions.map((time) => (
+                            <SelectItem key={time} value={time}>{time}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* End Time */}
+              <div className="space-y-2">
+                <Label htmlFor="end-time">Test End Time</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={`w-full justify-start text-left font-normal ${!endTime && "text-muted-foreground"
+                        }`}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endTime ? format(endTime, "PPP HH:mm") : <span>Pick a date and time</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endTime}
+                      onSelect={(date) => {
+                        if (date) {
+                          const newTime = endTime || new Date(); // Use existing time or current time
+                          date.setHours(newTime.getHours());
+                          date.setMinutes(newTime.getMinutes());
+                          setEndTime(date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                      <Select
+                        value={endTime ? format(endTime, "HH:mm") : ""}
+                        onValueChange={(timeString) => {
+                          const [hours, minutes] = timeString.split(':').map(Number);
+                          const newDate = endTime || new Date();
+                          newDate.setHours(hours);
+                          newDate.setMinutes(minutes);
+                          setEndTime(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Time" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {timeOptions.map((time) => (
+                            <SelectItem key={time} value={time}>{time}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <Button
+              onClick={handleSaveTestConfig}
+              className="mt-4 w-full bg-gradient-to-r from-emerald-600 to-green-600 text-white hover:from-emerald-700 hover:to-green-700 transition-all duration-300"
+              disabled={isSavingConfig || !unlockTime || !endTime}
+            >
+              {isSavingConfig ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Test Schedule
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Existing CSV Upload Card */}
         <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all duration-300 animate-slide-up mb-8">
           <CardHeader>
             <CardTitle className="text-gray-900 dark:text-white">Upload Mock Test CSV</CardTitle>
@@ -510,13 +790,11 @@ const Admin2 = () => {
                 {allQuestions.map((q, index) => (
                   <Collapsible key={q.id} className="border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 p-3 shadow-sm">
                     <CollapsibleTrigger asChild>
-                      {/* Only one icon here, positioned to the right */}
                       <div className="flex justify-between items-center cursor-pointer text-left text-gray-800 dark:text-gray-200 font-medium">
                         <span>{index + 1}. {q.question}</span>
-                        {/* Only one Chevron icon group, controlled by Collapsible's state */}
-                        <div className="ml-auto"> {/* Use ml-auto to push to the right */}
-                            <ChevronDown className="h-4 w-4 data-[state=open]:hidden" />
-                            <ChevronUp className="h-4 w-4 data-[state=closed]:hidden" />
+                        <div className="ml-auto">
+                          <ChevronDown className="h-4 w-4 data-[state=open]:hidden" />
+                          <ChevronUp className="h-4 w-4 data-[state=closed]:hidden" />
                         </div>
                       </div>
                     </CollapsibleTrigger>
