@@ -27,15 +27,18 @@ const MockTest = () => {
   const navigate = useNavigate();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState({});
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showUnattemptedDialog, setShowUnattemptedDialog] = useState(false);
   const [unattemptedCount, setUnattemptedCount] = useState(0);
   const [userPlan, setUserPlan] = useState<string | null>(null);
 
-  // New state for dynamic test times
   const [dynamicTestUnlockTime, setDynamicTestUnlockTime] = useState<Date | null>(null);
   const [dynamicTestEndTime, setDynamicTestEndTime] = useState<Date | null>(null);
+
+  // New state to manage the lockout period
+  const [canAttemptAgain, setCanAttemptAgain] = useState<boolean | null>(null);
+  const [nextAttemptTime, setNextAttemptTime] = useState<Date | null>(null);
 
   const planColors = {
     'free': {
@@ -85,16 +88,14 @@ const MockTest = () => {
     fetchUserPlan();
   }, [user]);
 
-  // --- New: Query to fetch test configuration from Supabase ---
+  // Query to fetch test configuration from Supabase
   const { data: testConfig, isLoading: isLoadingTestConfig, isError: isErrorTestConfig, error: testConfigError } = useQuery({
     queryKey: ['testConfig'],
     queryFn: async () => {
-      // Assuming you have only one weekly mock test entry, or you'll need
-      // to query by test_name or some other identifier.
       const { data, error } = await supabase
         .from('test_configs')
-        .select('unlock_time, end_time')
-        .eq('test_name', 'Weekly Mock Test') // Filter by test name
+        .select('id, unlock_time, end_time')
+        .eq('test_name', 'Weekly Mock Test')
         .single();
 
       if (error) {
@@ -103,11 +104,10 @@ const MockTest = () => {
       }
       return data;
     },
-    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
 
-  // Update dynamic test times when testConfig data changes
   useEffect(() => {
     if (testConfig) {
       setDynamicTestUnlockTime(new Date(testConfig.unlock_time));
@@ -116,10 +116,57 @@ const MockTest = () => {
   }, [testConfig]);
 
   const now = new Date();
-  // Use dynamicTestUnlockTime and dynamicTestEndTime
   const isTestActive = dynamicTestUnlockTime && dynamicTestEndTime && now >= dynamicTestUnlockTime && now < dynamicTestEndTime;
   const isTestUpcoming = dynamicTestUnlockTime && now < dynamicTestUnlockTime;
   const isTestClosed = dynamicTestEndTime && now >= dynamicTestEndTime;
+
+  // --- MODIFIED: Query to check user's LAST test completion for THIS testConfig ---
+  const { data: userLastTestResult, isLoading: isLoadingResults, isError: isErrorResults } = useQuery({
+    queryKey: ['userLastTestCompletion', user?.id, testConfig?.id],
+    queryFn: async () => {
+      if (!user || !testConfig?.id) return null;
+
+      const { data, error } = await supabase
+        .from('user_test_results')
+        .select('completed_at') // <--- Select completed_at
+        .eq('user_id', user.id)
+        .eq('test_config_id', testConfig.id)
+        .order('completed_at', { ascending: false }) // Get the most recent one
+        .limit(1)
+        .single(); // Use single as we limit to 1
+
+      // Supabase's .single() will throw an error if no rows are found,
+      // which we handle below. If data exists, it will be an object.
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows found", which is fine here
+        console.error('Error checking user last test completion:', error.message);
+        throw new Error(error.message);
+      }
+      return data;
+    },
+    enabled: !!user && !!testConfig?.id, // Enable only when user and testConfig.id are ready
+    staleTime: 0,
+  });
+
+  // --- New useEffect to determine if user can attempt again ---
+  useEffect(() => {
+    if (isLoadingResults) {
+      setCanAttemptAgain(null); // Still loading
+      return;
+    }
+
+    if (!userLastTestResult) {
+      // No record found for this test_config_id, so they can attempt it
+      setCanAttemptAgain(true);
+      setNextAttemptTime(null);
+    } else {
+      const lastCompletionTime = new Date(userLastTestResult.completed_at);
+      const fiveDaysLater = new Date(lastCompletionTime.getTime() + 5 * 24 * 60 * 60 * 1000); // 5 days in milliseconds
+      
+      setNextAttemptTime(fiveDaysLater);
+      setCanAttemptAgain(now >= fiveDaysLater);
+    }
+  }, [userLastTestResult, isLoadingResults, now]); // Add now to dependencies to re-evaluate over time
+
 
   // Query to fetch mock questions
   const { data: mockMcqs, isLoading, isError, error } = useQuery({
@@ -140,43 +187,18 @@ const MockTest = () => {
         correctAnswer: item.correct_answer
       }));
     },
-    // Only enable if user is logged in AND test is active AND we have loaded the test config
-    enabled: !!user && !!dynamicTestUnlockTime && isTestActive,
+    // Only enable if user is logged in, test is active, test config is loaded, and user CAN attempt again
+    enabled: !!user && !!dynamicTestUnlockTime && isTestActive && canAttemptAgain === true,
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
 
-  // New Query to check if the user has already completed a test
-  const { data: userTestResults, isLoading: isLoadingResults, isError: isErrorResults } = useQuery({
-    queryKey: ['userTestCompletion', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-
-      const { data, error } = await supabase
-        .from('user_test_results')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1);
-
-      if (error) {
-        console.error('Error checking user test completion:', error.message);
-        throw new Error(error.message);
-      }
-      return data;
-    },
-    enabled: !!user,
-    staleTime: 0,
-  });
-
-  const hasCompletedTest = userTestResults && userTestResults.length > 0;
-
   const currentQuestion = mockMcqs ? mockMcqs[currentQuestionIndex] : null;
 
-  // --- Local Storage Logic Start ---
-  const getLocalStorageKey = () => `mockTestProgress_user_${user?.id}`;
+  const getLocalStorageKey = () => `mockTestProgress_user_${user?.id}_test_${testConfig?.id}`;
 
   const saveProgress = () => {
-    if (user && mockMcqs && isTestActive) {
+    if (user && mockMcqs && isTestActive && testConfig?.id) {
       const progressData = {
         index: currentQuestionIndex,
         answers: userAnswers,
@@ -186,7 +208,7 @@ const MockTest = () => {
   };
 
   useEffect(() => {
-    if (user && mockMcqs && mockMcqs.length > 0 && isTestActive && !hasCompletedTest) {
+    if (user && mockMcqs && mockMcqs.length > 0 && isTestActive && canAttemptAgain && testConfig?.id) {
       const savedProgress = localStorage.getItem(getLocalStorageKey());
       if (savedProgress) {
         try {
@@ -199,22 +221,21 @@ const MockTest = () => {
         }
       }
     }
-  }, [user, mockMcqs, hasCompletedTest, isTestActive]);
+  }, [user, mockMcqs, isTestActive, canAttemptAgain, testConfig]); // Add canAttemptAgain to dependencies
 
   useEffect(() => {
-    if (user && mockMcqs && mockMcqs.length > 0 && isTestActive && !hasCompletedTest) {
+    if (user && mockMcqs && mockMcqs.length > 0 && isTestActive && canAttemptAgain && testConfig?.id) {
       saveProgress();
     }
-  }, [currentQuestionIndex, userAnswers, user, mockMcqs, isTestActive, hasCompletedTest]);
+  }, [currentQuestionIndex, userAnswers, user, mockMcqs, isTestActive, canAttemptAgain, testConfig]); // Add canAttemptAgain to dependencies
 
   const clearProgress = () => {
     if (user) {
       localStorage.removeItem(getLocalStorageKey());
     }
   };
-  // --- Local Storage Logic End ---
 
-  const handleOptionSelect = (questionId, selectedOption) => {
+  const handleOptionSelect = (questionId: number, selectedOption: string) => {
     setUserAnswers(prevAnswers => ({
       ...prevAnswers,
       [questionId]: selectedOption
@@ -233,12 +254,12 @@ const MockTest = () => {
     }
   };
 
-  const goToQuestion = (index) => {
+  const goToQuestion = (index: number) => {
     setCurrentQuestionIndex(index);
     setIsDrawerOpen(false);
   };
 
-  const isQuestionAnswered = (questionId) => {
+  const isQuestionAnswered = (questionId: number) => {
     return userAnswers.hasOwnProperty(questionId);
   };
 
@@ -254,18 +275,31 @@ const MockTest = () => {
   };
 
   const submitTestToSupabase = async () => {
-    if (!user || !mockMcqs) {
-      console.error("User not logged in or mock questions not loaded. Cannot submit test.");
+    if (!user || !mockMcqs || !testConfig?.id) {
+      console.error("User not logged in, mock questions not loaded, or test configuration ID missing. Cannot submit test.");
       return;
     }
 
     let score = 0;
     const totalQuestions = mockMcqs.length;
+    const questionAttempts = [];
 
     mockMcqs.forEach(mcq => {
-      if (userAnswers[mcq.id] === mcq.correctAnswer) {
+      const userAnswer = userAnswers[mcq.id] || null;
+      const isCorrect = userAnswer === mcq.correctAnswer;
+      const isSkipped = userAnswer === null;
+
+      if (isCorrect) {
         score++;
       }
+
+      questionAttempts.push({
+        question_id: mcq.id,
+        user_answer: userAnswer,
+        correct_answer: mcq.correctAnswer,
+        is_correct: isCorrect,
+        is_skipped: isSkipped,
+      });
     });
 
     const resultData = {
@@ -274,23 +308,50 @@ const MockTest = () => {
       score: score,
       total_questions: totalQuestions,
       completed_at: new Date().toISOString(),
+      test_config_id: testConfig.id,
     };
 
     console.log("Attempting to submit test results to Supabase:", resultData);
 
-    try {
-      const { data, error: insertError } = await supabase
-        .from('user_test_results')
-        .insert([resultData]);
+    let testResultId = null;
 
-      if (insertError) {
-        console.error('Error inserting test results:', insertError.message);
-      } else {
-        console.log('Test results successfully submitted to Supabase:', data);
-        clearProgress();
-        navigate('/test-completed');
+    try {
+      const { data: insertedResult, error: insertResultError } = await supabase
+        .from('user_test_results')
+        .insert([resultData])
+        .select('id')
+        .single();
+
+      if (insertResultError) {
+        console.error('Error inserting overall test result:', insertResultError.message);
+        return;
       }
-    } catch (err) {
+      testResultId = insertedResult.id;
+      console.log('Overall test result successfully submitted. ID:', testResultId);
+
+      const detailedAttemptsToInsert = questionAttempts.map(attempt => ({
+        ...attempt,
+        test_result_id: testResultId,
+        user_id: user.id,
+      }));
+
+      const { error: insertAttemptsError } = await supabase
+        .from('user_question_attempts')
+        .insert(detailedAttemptsToInsert);
+
+      if (insertAttemptsError) {
+        console.error('Error inserting detailed question attempts:', insertAttemptsError.message);
+      } else {
+        console.log('Detailed question attempts successfully submitted.');
+        clearProgress();
+        // Manually invalidate the userLastTestResult query to re-fetch completion status
+        // so the UI updates correctly after submission.
+        // queryClient.invalidateQueries(['userLastTestCompletion', user?.id, testConfig.id]);
+        // Instead of manually invalidating, we can rely on navigate which unmounts/remounts.
+        console.log('Navigating to:', `/test-completed/${testResultId}`);
+        navigate(`/test-completed`);
+      }
+    } catch (err: any) {
       console.error('Unexpected error during test submission to Supabase:', err.message);
     }
   };
@@ -323,8 +384,9 @@ const MockTest = () => {
     );
   }
 
-  // Handle loading states for all queries, including the new testConfig
-  if (isLoading || isLoadingResults || isLoadingTestConfig || dynamicTestUnlockTime === null) {
+  // Handle loading states for all queries
+  // Added check for canAttemptAgain being null (initial loading state)
+  if (isLoading || isLoadingResults || isLoadingTestConfig || dynamicTestUnlockTime === null || !testConfig?.id || canAttemptAgain === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
         <p className="text-xl text-gray-700 dark:text-gray-300">Loading test status...</p>
@@ -332,7 +394,7 @@ const MockTest = () => {
     );
   }
 
-  // Handle error states for all queries, including the new testConfig
+  // Handle error states for all queries
   if (isError || isErrorResults || isErrorTestConfig) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
@@ -344,84 +406,59 @@ const MockTest = () => {
 
   // Conditional rendering based on test status
   if (isTestUpcoming) {
-    // Format the unlock time for display
     const formattedUnlockTime = dynamicTestUnlockTime ?
       dynamicTestUnlockTime.toLocaleString('en-PK', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Karachi',// Will show something like GMT+5
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi',
       }) : 'loading...';
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
-        <img
-          src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-          alt="Medistics Logo"
-          className="w-24 h-24 object-contain mb-6 animate-bounce-in"
-        />
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">
-          Test Upcoming!
-        </h1>
+        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">Test Upcoming!</h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
           The Weekly Mock Test will be unlocked on {formattedUnlockTime} Pakistan Standard Time (PKT). Please check back then!
         </p>
-        <Button
-          onClick={() => navigate('/dashboard')}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300 px-8 py-3 text-lg animate-fade-in-up delay-200"
-        >
+        <Button onClick={() => navigate('/dashboard')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300 px-8 py-3 text-lg animate-fade-in-up delay-200">
           Go to Dashboard
         </Button>
       </div>
     );
   }
 
-  if (isTestClosed && !hasCompletedTest) {
+  if (isTestClosed && canAttemptAgain) { // Test window closed, but user can re-attempt (after lockout) if it reopens
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
-        <img
-          src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-          alt="Medistics Logo"
-          className="w-24 h-24 object-contain mb-6 animate-bounce-in"
-        />
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">
-          Test Window Closed
-        </h1>
+        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">Test Window Closed</h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
           The Weekly Mock Test window has now closed.
         </p>
-        <Button
-          onClick={() => navigate('/dashboard')}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300 px-8 py-3 text-lg animate-fade-in-up delay-200"
-        >
+        <Button onClick={() => navigate('/dashboard')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300 px-8 py-3 text-lg animate-fade-in-up delay-200">
           Go to Dashboard
         </Button>
       </div>
     );
   }
 
-  if (hasCompletedTest) {
+  // --- MODIFIED: Conditional rendering for lockout state ---
+  if (!canAttemptAgain) { // User has completed THIS test and is within lockout period
+    const formattedNextAttemptTime = nextAttemptTime ?
+      nextAttemptTime.toLocaleString('en-PK', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Karachi',
+      }) : 'soon';
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
-        <img
-          src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-          alt="Medistics Logo"
-          className="w-24 h-24 object-contain mb-6 animate-bounce-in"
-        />
+        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">
-          Test Already Completed!
+          Test Already Completed
         </h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
           You have already completed the Weekly Mock Test. You can go back to your dashboard.
         </p>
-        <Button
-          onClick={() => navigate('/dashboard')}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300 px-8 py-3 text-lg animate-fade-in-up delay-200"
-        >
+        <Button onClick={() => navigate('/dashboard')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-300 px-8 py-3 text-lg animate-fade-in-up delay-200">
           Go to Dashboard
         </Button>
       </div>
@@ -429,9 +466,19 @@ const MockTest = () => {
   }
 
   if (!mockMcqs || mockMcqs.length === 0) {
+    if (isTestActive) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+          <p className="text-xl text-gray-700 dark:text-gray-300">No mock test questions available for the current active test.</p>
+          <Link to="/dashboard" className="mt-4">
+            <Button>Go to Dashboard</Button>
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-        <p className="text-xl text-gray-700 dark:text-gray-300">No mock test questions available at the moment.</p>
+        <p className="text-xl text-gray-700 dark:text-gray-300">Test not active or no questions available.</p>
         <Link to="/dashboard" className="mt-4">
           <Button>Go to Dashboard</Button>
         </Link>
