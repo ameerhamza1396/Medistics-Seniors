@@ -86,7 +86,6 @@ function App() {
               <Route path="/settings/username" element={<UsernamePage />} /> {/* New Route */}
               <Route path="/results" element={<MockTestResults />} /> {/* New Route */}
               <Route path="/test-summary" element={<TestCompletion />}
-
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
