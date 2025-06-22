@@ -34,6 +34,7 @@ import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
 import AllSetPage from '@/pages/AllSetPage'; 
 import MockTestResults from '@/pages/MockTestResults';
+import TestCompletion from '@/pages/TestResults';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ function App() {
               <Route path="/all-set" element={<AllSetPage />} />
               <Route path="/settings/username" element={<UsernamePage />} /> {/* New Route */}
               <Route path="/results" element={<MockTestResults />} /> {/* New Route */}
+              <Route path="/test-summary" element={<TestCompletion />}
 
               <Route path="*" element={<NotFound />} />
             </Routes>
