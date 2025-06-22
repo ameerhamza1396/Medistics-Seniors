@@ -172,6 +172,7 @@ const Dashboard = () => {
       bgGradient: 'from-blue-50 to-cyan-50',
       darkBgGradient: 'from-blue-900/30 to-cyan-900/30'
     },
+    
     {
       title: 'Mock Test',
       description: 'New Test Unlocks on every Sunday',
@@ -184,17 +185,19 @@ const Dashboard = () => {
       tag: 'Limited Time Free', // Added tag for Mock Test
       tagColor: 'bg-red-500 text-white animate-pulse'
     },
+    
     {
     title: 'Mock Test Results',
     description: 'View your past test performance',
     icon: Award, // Changed icon to Award for results
-    link: '/results', // Updated link to the new results page
+    link: '/test-summary', // Updated link to the new results page
     type: 'internal',
     gradient: 'from-purple-500 to-indigo-500', // Adjusted gradient for results
     bgGradient: 'from-purple-800/50 to-indigo-50',
     darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
-    tag: 'Live Now',
-    tagColor: 'bg-red-500 text-white animate-pulse'
+    tag: 'Will be availiable soon',
+    tagColor: 'bg-red-500 text-white animate-pulse',
+    disabled: true
   },
     // {
     //   title: 'Study Materials',
@@ -208,17 +211,18 @@ const Dashboard = () => {
     // },
 
     
-    // {
-    //   title: 'Classrooms',
-    //   description: 'Join or create study groups (Under Maintenance)', // Updated description
-    //   icon: Users,
-    //   link: '/classroom',
-    //   type: 'internal',
-    //   gradient: 'from-indigo-500 to-purple-500',
-    //   bgGradient: 'from-indigo-50 to-purple-50',
-    //   darkBgGradient: 'from-purple-900/20 to-orange-900/20',
-    //   disabled: true
-    // },
+    {
+      title: 'Classrooms',
+      description: 'Join or create study groups (Under Maintenance)', // Updated description
+      icon: Users,
+      link: '/classroom',
+      type: 'internal',
+      gradient: 'from-indigo-500 to-purple-500',
+      bgGradient: 'from-indigo-50 to-purple-50',
+      darkBgGradient: 'from-purple-900/20 to-orange-900/20',
+      disabled: true
+    },
+    
     {
       title: 'Battle Arena',
       description: 'Under Maintenance', // Updated description
