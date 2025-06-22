@@ -533,7 +533,7 @@ const Dashboard = () => {
           <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 p-4 mb-6 flex items-center space-x-3">
             <Construction className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
             <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-              Battle Arena is currently undergoing maintenance. We appreciate your patience and will re-enable them soon!
+              Battle Arena and Classrooms are currently undergoing maintenance. We appreciate your patience and will re-enable them soon!
             </p>
           </Card>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
