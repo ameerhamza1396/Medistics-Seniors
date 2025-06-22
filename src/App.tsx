@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/toaster'; // Assuming Toaster is still used elsewhere
+import { Toaster } from '@/components/ui/toaster';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -21,7 +21,7 @@ import Admin4 from '@/pages/Admin4';
 import Admin5 from '@/pages/Admin5';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
-import TermsAndConditions from '@/pages/TermsAndConditions'; // Or '@/pages/TermsAndConditions.tsx' if it's a .tsx file
+import TermsAndConditions from '@/pages/TermsAndConditions';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
@@ -29,12 +29,12 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
-import VerifyEmail from '@/pages/VerifyEmail'; 
+import VerifyEmail from '@/pages/VerifyEmail';
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
-import AllSetPage from '@/pages/AllSetPage'; 
+import AllSetPage from '@/pages/AllSetPage';
 import MockTestResults from '@/pages/MockTestResults';
-import TestCompletion from '@/pages/TestResults';
+import TestCompletion from '@/pages/TestResults'; // Assuming this is correct
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -73,19 +73,19 @@ function App() {
               <Route path="/profile/upgrade" element={<Profile />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
-{/*               <Route path="/study-materials" element={<StudyMaterials />} /> */}
+              {/* <Route path="/study-materials" element={<StudyMaterials />} /> */}
               <Route path="/mock-test" element={<MockTest />} />
               <Route path="/test-completed" element={<TestCompletionPage />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
+              {/* NOTE: You have two /verify-email routes. Keep the one you intend to use. */}
               <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
               <Route path="/all-set" element={<AllSetPage />} />
-              <Route path="/settings/username" element={<UsernamePage />} /> {/* New Route */}
-              <Route path="/results" element={<MockTestResults />} /> {/* New Route */}
-              <Route path="/test-summary" element={<TestCompletion />}
+              <Route path="/settings/username" element={<UsernamePage />} />
+              <Route path="/results" element={<MockTestResults />} />
+              <Route path="/test-summary" element={<TestCompletion />} /> {/* <-- FIX IS HERE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
