@@ -197,7 +197,6 @@ const Dashboard = () => {
     darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
     tag: 'Will be availiable soon',
     tagColor: 'bg-red-500 text-white animate-pulse',
-    disabled: true
   },
     // {
     //   title: 'Study Materials',
