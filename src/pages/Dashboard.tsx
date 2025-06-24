@@ -195,7 +195,7 @@ const Dashboard = () => {
     gradient: 'from-purple-500 to-indigo-500', // Adjusted gradient for results
     bgGradient: 'from-purple-800/50 to-indigo-50',
     darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
-    tag: 'Will be availiable soon',
+    tag: 'Live Now',
     tagColor: 'bg-red-500 text-white animate-pulse',
   },
     // {
