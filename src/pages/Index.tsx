@@ -219,12 +219,6 @@ const testimonials = [
   },
   {
     avatar: "/images/user.png",
-    name: "Emad ul islam",
-    title: "PUNJAB (UHS) MDCAT: 157",
-    quote: "Best platform i have ever seen",
-  },
-  {
-    avatar: "/images/user.png",
     name: "Zonain asad",
     title: "PUNJAB (UHS) MDCAT: 179",
     quote: "Educational Spot",
@@ -237,39 +231,27 @@ const testimonials = [
   },
   {
     avatar: "/images/user.png",
-    name: "madan lal",
-    title: "SINDH MDCAT: 150",
-    quote: "Educational Spot",
-  },
-  {
-    avatar: "/images/user.png",
-    name: "Rida Fatima",
-    title: "PUNJAB (UHS) MDCAT: 142",
-    quote: "I think it is best opportunity for students for mdcat but if students are serious",
-  },
-  {
-    avatar: "/images/user.png",
-    name: "Khizra Tayyab",
-    title: "PUNJAB (UHS) MDCAT: 148",
-    quote: "Its good platform 👍",
-  },
-  {
-    avatar: "/images/user.png",
-    name: "Shafaat farooq",
+    name: "Shehzaf farooq",
     title: "PUNJAB (SZAMBU) MDCAT: 177",
     quote: "Proved to be very helpful and informative.",
   },
   {
     avatar: "/images/user.png",
-    name: "Aqsa Shahid",
-    title: "SINDH MDCAT: 120",
-    quote: "Very good effort to help mdcat aspirants",
+    name: "Rabia gull",
+    title: "PUNJAB (SZAMBU) MDCAT: 188",
+    quote: "Educational Spot",
   },
   {
     avatar: "/images/user.png",
-    name: "Abdullah Rahmat taunsvi",
-    title: "PUNJAB (UHS) MDCAT: 179",
-    quote: "In education spot group only useful data is provided by admin + motivation thanks",
+    name: "Kalsoom Shahadat",
+    title: "PUNJAB (UHS) MDCAT: 170",
+    quote: "Everything was good and top notch",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "Medical phsyco",
+    title: "KPK MDCAT: 157",
+    quote: "Educational Spot",
   },
   {
     avatar: "/images/user.png",
@@ -285,9 +267,21 @@ const testimonials = [
   },
   {
     avatar: "/images/user.png",
+    name: "Afsheen zulfiqar",
+    title: "PUNJAB (UHS) MDCAT: 161",
+    quote: "No",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "M. Imran",
+    title: "PUNJAB (UHS) MDCAT: 178",
+    quote: "No",
+  },
+  {
+    avatar: "/images/user.png",
     name: "Tayyaba",
     title: "PUNJAB (UHS) MDCAT: 114",
-    quote: "I m satisfied from this group...it's really helpful during mcat journey.....",
+    quote: "I'm satisfied from this group...",
   },
   {
     avatar: "/images/user.png",
@@ -297,21 +291,27 @@ const testimonials = [
   },
   {
     avatar: "/images/user.png",
-    name: "Muhammad umar farooq",
-    title: "PUNJAB (UHS) MDCAT: 134",
-    quote: "Impressive",
+    name: "Hassaan Mustafa",
+    title: "PUNJAB (UHS) MDCAT: 179",
+    quote: "Everything good just carry on...",
   },
   {
     avatar: "/images/user.png",
-    name: "Hassaan Mustafa",
-    title: "PUNJAB (UHS) MDCAT: 179",
-    quote: "Everything good just carry on the upward slope ❤️",
+    name: "Danish Ahmad",
+    title: "KPK MDCAT: 148",
+    quote: "Nothing",
   },
   {
     avatar: "/images/user.png",
     name: "Muhammad Jamal",
     title: "PUNJAB (UHS) MDCAT: 175",
-    quote: "This group proved was very beneficial for me , I learnt alot from it.Keep it flourishing 🎈",
+    quote: "This group proved was very beneficial...",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "Dr Neuro",
+    title: "KPK MDCAT: 125",
+    quote: "No",
   },
   {
     avatar: "/images/user.png",
@@ -363,21 +363,39 @@ const testimonials = [
   },
   {
     avatar: "/images/user.png",
+    name: "Saman Aslam",
+    title: "PUNJAB (UHS) MDCAT: 105",
+    quote: "No",
+  },
+  {
+    avatar: "/images/user.png",
     name: "Muhammad Hasnain",
     title: "PUNJAB (UHS) MDCAT: 165",
     quote: "Best platform",
   },
   {
     avatar: "/images/user.png",
+    name: "Muhammad Younas",
+    title: "PUNJAB (SZAMBU) MDCAT: 169",
+    quote: "I am admin of educational spot 😁",
+  },
+  {
+    avatar: "/images/user.png",
     name: "Shehryar Khan",
     title: "PUNJAB (UHS) MDCAT: 183",
-    quote: "",
+    quote: "None",
   },
   {
     avatar: "/images/user.png",
     name: "Kiran Fatima",
     title: "PUNJAB (UHS) MDCAT: 138",
-    quote: "Educational spot is a good source for mcat preparation. It helped me to prepare a lot in limited time.It is a best source, especially for those students who cannot afford academies.",
+    quote: "Educational spot is a good source for mcat preparation...",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "Esha Umair",
+    title: "PUNJAB (UHS) MDCAT: 141",
+    quote: "No",
   },
   {
     avatar: "/images/user.png",
@@ -389,7 +407,13 @@ const testimonials = [
     avatar: "/images/user.png",
     name: "Zara Gull",
     title: "PUNJAB (UHS) MDCAT: 168",
-    quote: "Thank you for being so supportive , i really loved all test sessions and guidance that were so helpful",
+    quote: "Thank you for being so supportive...",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "Khizra Tayyab",
+    title: "PUNJAB (UHS) MDCAT: 148",
+    quote: "No",
   },
   {
     avatar: "/images/user.png",
@@ -401,7 +425,7 @@ const testimonials = [
     avatar: "/images/user.png",
     name: "No name",
     title: "SINDH MDCAT: 161",
-    quote: "Hum pa bhra Zulum hua test k. Agli Raat ko paper leak Kara k aur key lackho rupees mn bhejh kar bs Mera ya feedback h hamari lei awaz uthai aur MDCAT reconduct karai",
+    quote: "Hum pa bhra Zulum hua test k. Agli Raat...", // Quote is very long and cut off
   },
   {
     avatar: "/images/user.png",
@@ -483,6 +507,24 @@ const testimonials = [
   },
   {
     avatar: "/images/user.png",
+    name: "Samreen Imtiaz",
+    title: "SINDH MDCAT: 129",
+    quote: "No",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "Muhammad Ismail",
+    title: "KPK MDCAT: 145",
+    quote: "ok",
+  },
+  {
+    avatar: "/images/user.png",
+    name: "Sana ullah",
+    title: "PUNJAB (UHS) MDCAT: 153",
+    quote: "Nope",
+  },
+  {
+    avatar: "/images/user.png",
     name: "Aqsa Siddique",
     title: "PUNJAB (UHS) MDCAT: 159",
     quote: "Buhut Alaa tha\nAima appi uh are great\nItne tests kips step stars k fb pr ni mille jitne yhn mille\nDil SE duain",
@@ -521,7 +563,7 @@ const testimonials = [
     avatar: "/images/user.png",
     name: "Naeemullah",
     title: "SINDH MDCAT: 178",
-    quote: "you guys literally helped us at every stage , Thank you",
+    quote: "you guys literally helped us at every stage, Thank you",
   },
   {
     avatar: "/images/user.png",
@@ -587,13 +629,13 @@ const testimonials = [
     avatar: "/images/user.png",
     name: "Aimen aslam",
     title: "SINDH MDCAT: 140",
-    quote: "They are reallly amazing...😍 Share alot of matter helP us in our difficult time...May Alllah blessed u all",
+    quote: "They are reallly amazing... Share a lot of matter help us in our difficult time...May Allah blessed u all",
   },
   {
     avatar: "/images/user.png",
     name: "Iqra",
     title: "SINDH MDCAT: 122",
-    quote: "It's really very helpful , you get the answer and also reason of any querry.",
+    quote: "It's really very helpful , you get the answer and also reason of any query.",
   },
   {
     avatar: "/images/user.png",
@@ -605,16 +647,15 @@ const testimonials = [
     avatar: "/images/user.png",
     name: "Sundas fiza",
     title: "PUNJAB (UHS) MDCAT: 128",
-    quote: "It's a very good platform helping students providing them material.. I'm aslo trying to get benefit from it",
+    quote: "It's a very good platform helping students providing them material.. I'm also trying to get benefit from it",
   },
   {
     avatar: "/images/user.png",
     name: "Tania",
     title: "SINDH MDCAT: 170",
-    quote: "Educational spot group was such a fantastic group and I m thankful to ma'am Aima and other admins for sharing amaizing notes PDF's that help me so much during my preparation and their tests were also very useful to me thanks alot",
+    quote: "Educational spot group was such a fantastic group and I'm thankful to ma'am Aima and other admins for sharing amazing notes PDF's that help me so much during my preparation and their tests were also very useful to me thanks a lot",
   },
 ];
-
 
   // Simplified loading state check: only wait for base mounting and images.
       // Simplified loading state check: only wait for base mounting and images.
@@ -1017,10 +1058,9 @@ const testimonials = [
       </section>
 
 
-{/* New Section: Testimonials */}
 <section id="testimonials" className="min-h-screen flex flex-col justify-center items-center py-16 px-0 lg:px-0
-                                       bg-gradient-to-r from-purple-50 via-white to-pink-50
-                                       dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-white overflow-hidden">
+                                 bg-gradient-to-r from-purple-50 via-white to-pink-50
+                                 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-white overflow-hidden">
   <div className="container mx-auto max-w-7xl text-center mb-12 px-4 lg:px-8">
     <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 animate-fade-in-down">
       What Our Aspirants Say
@@ -1031,19 +1071,30 @@ const testimonials = [
   </div>
 
   {/* Testimonials Carousel Container */}
-  <div className="w-full relative overflow-hidden py-8">
+  {/* The outer div remains overflow-hidden to clip the track */}
+  <div className="w-full relative py-8 overflow-hidden">
     <style>{`
-      @keyframes scroll-right-to-left {
+      @keyframes scroll-infinite {
         0% { transform: translateX(0%); }
-        100% { transform: translateX(-50%); }
+        100% { transform: translateX(-50%); } /* Animate to -50% to show the second set */
       }
 
       .testimonial-track {
         display: flex;
-        animation: scroll-right-to-left 40s linear infinite; /* Adjust duration for speed */
+        /* The trick: the track itself is twice the width of the viewport (or more if needed)
+           and contains two identical sets of testimonials.
+           The animation moves it by half its total width, so the second set aligns perfectly. */
+        width: max-content; /* Allow track to be as wide as its content */
+        animation: scroll-infinite 60s linear infinite; /* Adjust duration for speed */
         white-space: nowrap; /* Keep items on a single line for horizontal scroll */
         will-change: transform; /* Optimize for animation */
       }
+
+      /* Pause animation on hover for user interaction */
+      .testimonial-track-container:hover .testimonial-track {
+        animation-play-state: paused;
+      }
+
       .testimonial-card-wrapper {
         flex-shrink: 0; /* Prevent cards from shrinking */
         width: 380px; /* Increased width for cards to fit text better */
@@ -1059,35 +1110,59 @@ const testimonials = [
           margin-right: 1.5rem; /* Smaller margin */
         }
       }
+
+      /* Container for user scrolling - this is the key addition */
+      .testimonial-track-container {
+        width: 100%;
+        overflow-x: auto; /* Enable user scrolling */
+        -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+        /* Hide scrollbar for aesthetic purposes, but keep functionality */
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+
+      .testimonial-track-container::-webkit-scrollbar {
+        display: none; /* For Chrome, Safari, and Opera */
+      }
     `}</style>
 
-    <div className="testimonial-track">
-      {/* Duplicate content to create infinite scroll illusion. Replace 'testimonials' with your actual data source. */}
-      {testimonials.concat(testimonials).map((testimonial, index) => (
-        <div key={index} className="testimonial-card-wrapper">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 h-full flex flex-col justify-between
-                          border border-purple-200 dark:border-purple-800 transform hover:-translate-y-1
-                          hover:shadow-2xl transition-all duration-300">
-            {/* Image at center top */}
-            <div className="flex flex-col items-center mb-4"> {/* Changed to flex-col and items-center */}
-              <img
-                src={testimonial.avatar}
-                alt={testimonial.name}
-                className="w-16 h-16 rounded-full object-cover mb-2 border-2 border-purple-400 dark:border-pink-500"
-              />
-              <h3 className="text-lg font-semibold text-purple-700 dark:text-pink-400 text-center">
-                {testimonial.name}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                {testimonial.title}
+    {/* This new container handles user scrolling */}
+    <div className="testimonial-track-container">
+      <div className="testimonial-track">
+        {/*
+          Crucially, we duplicate the *entire* `testimonials` array to ensure
+          a seamless loop when `translateX(-50%)` is applied.
+          The `testimonial-track` will contain `[T1, T2, T3, T4, T1, T2, T3, T4]`
+          When the animation moves it by half its width, it transitions from
+          showing `[T1, T2, T3, T4]` to showing `[T1, T2, T3, T4]` (the start of the second set),
+          making it appear infinite.
+        */}
+        {testimonials.concat(testimonials).map((testimonial, index) => (
+          <div key={index} className="testimonial-card-wrapper">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 h-full flex flex-col justify-between
+                                border border-purple-200 dark:border-purple-800 transform hover:-translate-y-1
+                                hover:shadow-2xl transition-all duration-300">
+              {/* Image at center top */}
+              <div className="flex flex-col items-center mb-4">
+                <img
+                  src={testimonial.avatar}
+                  alt={testimonial.name}
+                  className="w-16 h-16 rounded-full object-cover mb-2 border-2 border-purple-400 dark:border-pink-500"
+                />
+                <h3 className="text-lg font-semibold text-purple-700 dark:text-pink-400 text-center">
+                  {testimonial.name}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  {testimonial.title}
+                </p>
+              </div>
+              <p className="text-base text-gray-700 dark:text-gray-300 italic mb-4 text-center">
+                "{testimonial.quote}"
               </p>
             </div>
-            <p className="text-base text-gray-700 dark:text-gray-300 italic mb-4 text-center">
-              "{testimonial.quote}"
-            </p>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   </div>
 
@@ -1096,6 +1171,7 @@ const testimonials = [
     <p>These testimonials are from Educational Spot, the parent setup of Medistics.App.</p>
   </div>
 </section>
+
 {/* New Section: Milestones */}
 <section id="milestones" className="min-h-screen flex flex-col items-center justify-center py-16 px-4 lg:px-8 
                                    bg-gradient-to-tl from-purple-50 via-white to-pink-50
