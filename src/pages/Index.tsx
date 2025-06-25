@@ -131,7 +131,7 @@ const Index = () => {
   
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-  const { user, isLoading: isLoadingAuth } = useAuth();
+  const { user, loading: isLoadingAuth } = useAuth();
 
   // Parallax scroll effect
   useEffect(() => {
@@ -1032,7 +1032,7 @@ const testimonials = [
 
   {/* Testimonials Carousel Container */}
   <div className="w-full relative overflow-hidden py-8">
-    <style jsx>{`
+    <style>{`
       @keyframes scroll-right-to-left {
         0% { transform: translateX(0%); }
         100% { transform: translateX(-50%); }
@@ -1119,7 +1119,7 @@ const testimonials = [
           <div className="w-1/2 md:w-full flex justify-end md:justify-start">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm text-left animate-fade-in-left border border-purple-200 dark:border-purple-800">
               <h3 className="text-xl font-bold text-purple-700 dark:text-pink-400 mb-2">3 March 2025</h3>
-              <p className="text-gray-700 dark:text-gray-300">Medistics.App was officially **Proposed**.</p>
+              <p className="text-gray-700 dark:text-gray-300">Medistics.App was officially <strong className="font-bold">Proposed</strong>.</p>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-600 dark:bg-pink-500 rounded-full shadow-md z-10"></div>
@@ -1130,7 +1130,7 @@ const testimonials = [
           <div className="w-1/2 md:w-full flex justify-start md:justify-end">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm text-left animate-fade-in-right border border-purple-200 dark:border-purple-800">
               <h3 className="text-xl font-bold text-purple-700 dark:text-pink-400 mb-2">19 May 2025</h3>
-              <p className="text-gray-700 dark:text-gray-300">Signed an **MOU between HMACS Studios and Educational Spot**, solidifying our partnership.</p>
+              <p className="text-gray-700 dark:text-gray-300">Signed an <strong className="font-bold">MOU between HMACS Studios and Educational Spot</strong>, solidifying our partnership.</p>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-600 dark:bg-pink-500 rounded-full shadow-md z-10"></div>
@@ -1141,7 +1141,7 @@ const testimonials = [
           <div className="w-1/2 md:w-full flex justify-end md:justify-start">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm text-left animate-fade-in-left border border-purple-200 dark:border-purple-800">
               <h3 className="text-xl font-bold text-purple-700 dark:text-pink-400 mb-2">12 June 2025</h3>
-              <p className="text-gray-700 dark:text-gray-300">**Medistics.App was officially announced** to the world!</p>
+              <p className="text-gray-700 dark:text-gray-300"><strong className="font-bold">Medistics.App was officially announced</strong> to the world!</p>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-600 dark:bg-pink-500 rounded-full shadow-md z-10"></div>
@@ -1152,7 +1152,7 @@ const testimonials = [
           <div className="w-1/2 md:w-full flex justify-start md:justify-end">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm text-left animate-fade-in-right border border-purple-200 dark:border-purple-800">
               <h3 className="text-xl font-bold text-purple-700 dark:text-pink-400 mb-2">15 June 2025</h3>
-              <p className="text-gray-700 dark:text-gray-300">Our **Website went live** and we conducted our **First Mock Test**.</p>
+              <p className="text-gray-700 dark:text-gray-300">Our <strong className="font-bold">Website went live</strong> and we conducted our <strong className="font-bold">First Mock Test</strong>.</p>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-600 dark:bg-pink-500 rounded-full shadow-md z-10"></div>
@@ -1163,7 +1163,7 @@ const testimonials = [
           <div className="w-1/2 md:w-full flex justify-end md:justify-start">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm text-left animate-fade-in-left border border-purple-200 dark:border-purple-800">
               <h3 className="text-xl font-bold text-purple-700 dark:text-pink-400 mb-2">17 June 2025</h3>
-              <p className="text-gray-700 dark:text-gray-300">Our innovative **AI Features made their debut**, empowering smarter learning.</p>
+              <p className="text-gray-700 dark:text-gray-300">Our innovative <strong className="font-bold">AI Features made their debut</strong>, empowering smarter learning.</p>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-600 dark:bg-pink-500 rounded-full shadow-md z-10"></div>
@@ -1174,7 +1174,7 @@ const testimonials = [
           <div className="w-1/2 md:w-full flex justify-start md:justify-end">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm text-left animate-fade-in-right border border-purple-200 dark:border-purple-800">
               <h3 className="text-xl font-bold text-purple-700 dark:text-pink-400 mb-2">23 June 2025</h3>
-              <p className="text-gray-700 dark:text-gray-300">Achieved our first major community goal: **100 Members Completed!**</p>
+              <p className="text-gray-700 dark:text-gray-300">Achieved our first major community goal: <strong className="font-bold">100 Members Completed!</strong></p>
             </div>
           </div>
           <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-600 dark:bg-pink-500 rounded-full shadow-md z-10"></div>
@@ -1184,6 +1184,21 @@ const testimonials = [
     </div>
   </div>
 </section>
+
+{/* Section 6: Generic Call to Action */}
+<section id="cta-generic" className="min-h-screen flex items-center justify-center container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl text-center">
+  <div className="animate-fade-in">
+    <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">Ready to Unlock Your MD CAT Success?</h2>
+    <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+      Join the Medistics community and gain access to cutting-edge AI tools, competitive challenges, and a wealth of practice material. Don't just study, master your exams!
+    </p>
+    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 hover:scale-105 transition-all duration-300 hover:shadow-2xl group" onClick={() => navigate('/signup')}>
+      Sign Up Now and Start Learning 
+      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
+    </Button>
+  </div>
+</section>
+
 
       {/* Section 6: Generic Call to Action */}
       <section id="cta-generic" className="min-h-screen flex items-center justify-center container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl text-center">
