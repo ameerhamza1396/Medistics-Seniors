@@ -1085,7 +1085,7 @@ const testimonials = [
            and contains two identical sets of testimonials.
            The animation moves it by half its total width, so the second set aligns perfectly. */
         width: max-content; /* Allow track to be as wide as its content */
-        animation: scroll-infinite 60s linear infinite; /* Adjust duration for speed */
+        animation: scroll-infinite 200s linear infinite; /* Adjust duration for speed */
         white-space: nowrap; /* Keep items on a single line for horizontal scroll */
         will-change: transform; /* Optimize for animation */
       }
