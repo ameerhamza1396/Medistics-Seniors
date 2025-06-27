@@ -712,23 +712,13 @@ const testimonials = [
               <span className="hidden lg:inline">Our Acheivers</span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></div>
             </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 hover:scale-105 bg-transparent border-none cursor-pointer p-0 relative group">
-                  <span className="hidden lg:inline">Mobile Apps</span>
-                  <ChevronDown className="ml-1 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 animate-scale-in">
-                <DropdownMenuItem disabled className="text-gray-400 dark:text-gray-600 cursor-not-allowed">
-                  Android (Coming Soon)
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled className="text-gray-400 dark:text-gray-600 cursor-not-allowed">
-                  iOS (Coming Soon)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <button
+              onClick={() => scrollToSection('ambassador')}
+              className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 hover:scale-105 bg-transparent border-none cursor-pointer p-0 h-auto relative group"
+            >
+              <span className="hidden lg:inline">Join Us</span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></div>
+            </button>
           </nav>
 
           <div className="flex items-center space-x-3">
@@ -1275,20 +1265,46 @@ const testimonials = [
   </div>
 </section>
 
+{/* Section 7: Ambassador Programme */}
+<section
+  id="ambassador"
+  className="relative overflow-hidden min-h-screen flex items-center justify-center px-4 lg:px-8 py-12 lg:py-20 text-center"
+>
+  {/* Fullscreen animated gradient background */}
+  <div className="absolute inset-0 w-screen h-full z-0">
+    <div className="w-full h-full animate-gradient-wave bg-[radial-gradient(circle_at_20%_20%,rgba(236,72,153,0.2),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(139,92,246,0.2),transparent_40%)] blur-3xl"></div>
+  </div>
 
-      {/* Section 6: Generic Call to Action */}
-      <section id="cta-generic" className="min-h-screen flex items-center justify-center container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl text-center">
-        <div className="animate-fade-in">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">Ready to Unlock Your MD CAT Success?</h2>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join the Medistics community and gain access to cutting-edge AI tools, competitive challenges, and a wealth of practice material. Don't just study, master your exams!
-          </p>
-          <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 hover:scale-105 transition-all duration-300 hover:shadow-2xl group" onClick={() => navigate('/signup')}>
-            Sign Up Now and Start Learning 
-            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
-          </Button>
-        </div>
-      </section>
+  {/* Content inside container */}
+  <div className="relative z-10 container mx-auto max-w-7xl animate-fade-in">
+    <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+      Become a Medistics Ambassador!
+    </h2>
+    <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+      Passionate about education and eager to make an impact? Join our exclusive Ambassador Programme and help shape the future of learning while earning valuable certificates and exciting bonuses!
+    </p>
+    <div className="flex flex-col sm:flex-row justify-center gap-4">
+      <Button
+        size="lg"
+        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 hover:scale-105 transition-all duration-300 hover:shadow-2xl group"
+        onClick={() => navigate('/career')}
+      >
+        Student Ambassadors: Learn More
+        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
+      </Button>
+      <Button
+        size="lg"
+        className="px-8 py-4 hover:scale-105 transition-all duration-300 hover:shadow-2xl group bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white"
+        onClick={() => navigate('/teaching-career')}
+      >
+        Teacher Ambassadors: Explore Opportunities
+        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
+      </Button>
+    </div>
+  </div>
+</section>
+
+
 
       {/* New Section: Contact Us */}
 <section id="contact-us" className="min-h-screen flex flex-col items-center justify-center py-16 px-4 lg:px-8 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">

@@ -19,6 +19,8 @@ import Admin2 from '@/pages/Admin2';
 import Admin3 from '@/pages/Admin3';
 import Admin4 from '@/pages/Admin4';
 import Admin5 from '@/pages/Admin5';
+import Admin6 from '@/pages/Admin6';
+import Admin7 from '@/pages/Admin7';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
@@ -35,6 +37,8 @@ import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
 import AllSetPage from '@/pages/AllSetPage';
 import MockTestResults from '@/pages/MockTestResults';
 import TestCompletion from '@/pages/TestResults'; // Assuming this is correct
+import Career from '@/pages/Career'; // Assuming this is correct
+import TeachingAmbassadors from '@/pages/TeachingAmbassadors'; // Assuming this is correct
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -68,6 +72,8 @@ function App() {
               <Route path="/admin3" element={<Admin3 />} />
               <Route path="/admin4" element={<Admin4 />} />
               <Route path="/admin5" element={<Admin5 />} />
+              <Route path="/admin6" element={<Admin6 />} />
+              <Route path="/admin7" element={<Admin7 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/password" element={<ChangePassword />} />
               <Route path="/profile/upgrade" element={<Profile />} />
@@ -86,6 +92,8 @@ function App() {
               <Route path="/settings/username" element={<UsernamePage />} />
               <Route path="/results" element={<MockTestResults />} />
               <Route path="/test-summary" element={<TestCompletion />} /> {/* <-- FIX IS HERE */}
+              <Route path="/career" element={<Career />} /> {/* <-- FIX IS HERE */}
+              <Route path="/teaching-career" element={<TeachingAmbassadors />} /> {/* <-- FIX IS HERE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
