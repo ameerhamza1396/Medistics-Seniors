@@ -377,7 +377,7 @@ const MyTestResults = () => {
                                             })}
                                         </Accordion>
                                     ) : (
-                                        <p className="text-center text-gray-500">No detailed attempts found for this test.</p>
+                                        <p className="text-center text-gray-500">Questions-wise breakdown is not availiable after 72 hours of releasing results</p>
                                     )}
                                 </div>
                             </ScrollArea>

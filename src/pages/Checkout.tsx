@@ -4,90 +4,77 @@ import { Button } from '@/components/ui/button';
 import {
   Moon,
   Sun,
-  ClipboardCopy, // Icon for copy action
-  CheckCircle, // Icon for success
-  XCircle // Icon for error
 } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom'; // Import useSearchParams
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
-import React, { useState } from 'react'; // Import React and useState for local state
-import { Badge } from '@/components/ui/badge'; // Import Badge component
+import React, { useState } from 'react'; // Import useState for local state
 
 const Checkout = () => {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [searchParams] = useSearchParams(); // Hook to access URL query parameters
-  const [copyStatus, setCopyStatus] = useState<{ id: string | null; success: boolean | null }>({ id: null, success: null });
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false); // New state for loading indicator
+  const [error, setError] = useState<string | null>(null); // New state for errors
 
   // Extract plan details from URL query parameters
   const planName = searchParams.get('planName');
-  const price = searchParams.get('price');
+  const price = searchParams.get('price'); // This price is for display only now
   const duration = searchParams.get('duration');
   const currency = searchParams.get('currency');
 
-  // Payment methods data
-  const paymentMethods = [
-    {
-      name: 'Jazzcash',
-      currency: 'PKR',
-      details: [
-        { label: 'Mobile Number', value: '03166891212', id: 'jazzcash-num' },
-        { label: 'Recipient Name', value: 'Medisticsapp', id: 'jazzcash-name' }
-      ],
-      recommended: true
-    },
-    {
-      name: 'Easypaisa',
-      currency: 'PKR',
-      details: [
-        { label: 'Mobile Number', value: '03166891212', id: 'easypaisa-num' },
-        { label: 'Recipient Name', value: 'Muhammad Ameer Hamza', id: 'easypaisa-name' }
-      ],
-      recommended: false
-    },
-    {
-      name: 'Bank Account',
-      currency: 'PKR',
-      details: [
-        { label: 'Account Number', value: '05130111999931', id: 'bank-account-num' },
-        { label: 'Recipient Name', value: 'Abdul Ahad', id: 'bank-account-name' },
-        { label: 'Bank Name', value: 'Meezan Bank', id: 'bank-name' }
-      ],
-      recommended: false
-    },
-    {
-      name: 'Binance UID',
-      currency: 'USD',
-      details: [
-        { label: 'Binance UID (USDT)', value: '992801941', id: 'binance-uid' }
-      ],
-      recommended: false
-    }
-  ];
+  // --- NEW: Function to handle Stripe Checkout initiation ---
+  const handleStripeCheckout = async () => {
+    setIsLoading(true);
+    setError(null); // Clear any previous errors
 
-  const handleCopyToClipboard = (text: string, id: string) => {
+    // Basic validation of plan details
+    if (!planName || !duration || !currency) {
+      setError("Missing plan details. Please go back and select a plan.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Create a temporary textarea element
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed'; // Prevents scrolling to bottom of page
-      textarea.style.opacity = '0'; // Makes it invisible
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy'); // Execute copy command
-      document.body.removeChild(textarea); // Clean up
-      setCopyStatus({ id, success: true });
-      setTimeout(() => setCopyStatus({ id: null, success: null }), 2000); // Reset status after 2 seconds
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-      setCopyStatus({ id, success: false });
-      setTimeout(() => setCopyStatus({ id: null, success: null }), 2000); // Reset status after 2 seconds
-    }
-  };
+      // Prepare data to send to your backend
+      const checkoutData = {
+        planName,
+        duration,
+        currency,
+        userId: user?.id, // Pass Supabase user ID if available (important for linking)
+        userEmail: user?.email, // Pass user email for pre-filling Stripe checkout
+      };
 
-  const handlePaymentDone = () => {
-    window.open('https://docs.google.com/forms/d/e/1FAIpQLSc67DrKM0JfQ1fnwuqr3aUXFopKnLyD6d3ru79nmXHS9uQ5MA/viewform?usp=header', '_blank');
+      // Make an API call to your backend to create a Stripe Checkout Session
+      // You'll need to create this API endpoint on your separate backend server
+      const response = await fetch('/api/create-stripe-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(checkoutData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create Stripe Checkout session.');
+      }
+
+      const { url } = await response.json();
+
+      // Redirect the user to Stripe's hosted Checkout page
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('Stripe Checkout URL not received.');
+      }
+
+    } catch (err: any) { // Type the error as 'any' for simpler handling
+      console.error('Error initiating Stripe Checkout:', err);
+      setError(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -136,7 +123,7 @@ const Checkout = () => {
             Complete Your Purchase
           </h2>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Review your selected plan and choose a payment method.
+            Review your selected plan and proceed to secure payment.
           </p>
         </div>
 
@@ -156,6 +143,7 @@ const Checkout = () => {
             </div>
             <div className="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
               <span className="text-xl font-bold">Total:</span>
+              {/* NOTE: This 'price' is from your URL params. Stripe will ultimately determine the price based on the Price ID sent from the backend. */}
               <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 {currency === 'PKR' ? 'PKR ' : '$'}{price}
               </span>
@@ -163,72 +151,29 @@ const Checkout = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Methods */}
-        <div className="mb-10">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Payment Methods</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {paymentMethods.filter(method => method.currency === currency).map((method, index) => (
-              <Card key={index} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-shadow duration-300 p-5 rounded-xl animate-fade-in-up">
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                  <CardTitle className="text-lg font-semibold text-blue-700 dark:text-blue-300">{method.name}</CardTitle>
-                  {method.recommended && (
-                    <Badge className="bg-green-500 text-white">Recommended</Badge>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {method.details.map((detail, detailIdx) => (
-                    <div key={detailIdx} className="flex flex-col">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{detail.label}:</span>
-                      <div className="flex items-center justify-between mt-1">
-                        <span id={detail.id} className="font-medium text-gray-900 dark:text-white break-all pr-2">
-                          {detail.value}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="p-1 h-auto"
-                          onClick={() => handleCopyToClipboard(detail.value, detail.id)}
-                        >
-                          {copyStatus.id === detail.id ? (
-                            copyStatus.success ? (
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                            ) : (
-                              <XCircle className="w-4 h-4 text-red-500" />
-                            )
-                          ) : (
-                            <ClipboardCopy className="w-4 h-4 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    Please make the payment to the above details and send a screenshot to our support.
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-            {paymentMethods.filter(method => method.currency !== currency).length > 0 && (
-              <p className="md:col-span-2 text-center text-gray-500 dark:text-gray-400 mt-4">
-                Switch to {currency === 'PKR' ? 'USD' : 'PKR'} to see other payment options.
-              </p>
-            )}
-          </div>
-        </div>
+        {/* Removed the manual payment methods section entirely */}
 
-        {/* Payment Done Button */}
+        {/* Error Display */}
+        {error && (
+          <div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 p-3 rounded-lg mb-6">
+            <p className="font-medium">{error}</p>
+          </div>
+        )}
+
+        {/* NEW: Proceed to Secure Payment Button */}
         <div className="text-center mt-8">
           <Button
-            className="w-full md:w-auto bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-3 px-8 rounded-full text-lg font-semibold"
-            onClick={handlePaymentDone}
+            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-3 px-8 rounded-full text-lg font-semibold"
+            onClick={handleStripeCheckout}
+            disabled={isLoading || !planName || !duration || !currency} // Disable if loading or missing params
           >
-            I am done with my payment
+            {isLoading ? 'Redirecting to Payment...' : 'Proceed to Secure Payment'}
           </Button>
         </div>
 
-        {/* Note about Autopayment */}
+        {/* Note about Autopayment - Removed/Updated for Stripe */}
         <div className="text-center mt-12 text-gray-500 dark:text-gray-400 text-sm italic">
-          <p>Our autopayment approval system is on the way for a seamless experience!</p>
+          <p>Your payment will be securely processed by Stripe.</p>
         </div>
       </section>
 

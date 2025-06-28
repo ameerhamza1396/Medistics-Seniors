@@ -130,7 +130,7 @@ const Admin2 = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mock_test_questions')
-        .select('id, question, option_a, option_b, option_c, option_d, correct_answer')
+        .select('id, question, option_a, option_b, option_c, option_d, correct_answer, explanation') // Add explanation
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -258,6 +258,7 @@ const Admin2 = () => {
             option_c: cleanedRow.option_c || cleanedRow.option_3,
             option_d: cleanedRow.option_d || cleanedRow.option_4,
             correct_answer: cleanedRow.correct_answer || cleanedRow.answer,
+            explanation: cleanedRow.explanation || null, // Add this line
           };
 
           if (
@@ -789,27 +790,36 @@ const Admin2 = () => {
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                 {allQuestions.map((q, index) => (
                   <Collapsible key={q.id} className="border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 p-3 shadow-sm">
-                    <CollapsibleTrigger asChild>
-                      <div className="flex justify-between items-center cursor-pointer text-left text-gray-800 dark:text-gray-200 font-medium">
-                        <span>{index + 1}. {q.question}</span>
-                        <div className="ml-auto">
-                          <ChevronDown className="h-4 w-4 data-[state=open]:hidden" />
-                          <ChevronUp className="h-4 w-4 data-[state=closed]:hidden" />
-                        </div>
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 pt-3">
-                      <ul className="space-y-1">
-                        <li><span className="font-semibold">A:</span> {q.option_a}</li>
-                        <li><span className="font-semibold">B:</span> {q.option_b}</li>
-                        <li><span className="font-semibold">C:</span> {q.option_c}</li>
-                        <li><span className="font-semibold">D:</span> {q.option_d}</li>
-                        <li className="mt-2 text-green-600 dark:text-green-400 font-bold">
-                          <span className="text-gray-900 dark:text-white">Correct Answer:</span> {q.correct_answer}
-                        </li>
-                      </ul>
-                    </CollapsibleContent>
-                  </Collapsible>
+  <CollapsibleTrigger asChild>
+    <div className="flex justify-between items-center cursor-pointer text-left text-gray-800 dark:text-gray-200 font-medium">
+      <span>{index + 1}. {q.question}</span>
+      <div className="ml-auto">
+        <ChevronDown className="h-4 w-4 data-[state=open]:hidden" />
+        <ChevronUp className="h-4 w-4 data-[state=closed]:hidden" />
+      </div>
+    </div>
+  </CollapsibleTrigger>
+  <CollapsibleContent className="mt-3 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 pt-3">
+    <ul className="space-y-1">
+      <li><span className="font-semibold">A:</span> {q.option_a}</li>
+      <li><span className="font-semibold">B:</span> {q.option_b}</li>
+      <li><span className="font-semibold">C:</span> {q.option_c}</li>
+      <li><span className="font-semibold">D:</span> {q.option_d}</li>
+      <li className="mt-2 text-green-600 dark:text-green-400 font-bold">
+        <span className="text-gray-900 dark:text-white">Correct Answer:</span> {q.correct_answer}
+      </li>
+      {/* --- NEW: Explanation Section --- */}
+      {q.explanation && (
+        <li className="mt-2 text-gray-700 dark:text-gray-300">
+          <span className="font-semibold text-gray-900 dark:text-white">Explanation:</span> {q.explanation}
+        </li>
+      )}
+      {/* --- End of NEW Section --- */}
+    </ul>
+  </CollapsibleContent>
+</Collapsible>
+
+
                 ))}
               </div>
             ) : (
