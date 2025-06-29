@@ -203,7 +203,7 @@ const TeachingAmbassadors = () => {
 
                     <div className="flex items-center space-x-3">
                         <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">Become a Medistics Teaching Ambassador</span>
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">Become a Medistics Intern</span>
                     </div>
 
                     <div className="flex items-center space-x-3">
@@ -229,7 +229,7 @@ const TeachingAmbassadors = () => {
                 {/* Hero Section */}
                 <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        🧑‍🏫 Join Our Medistics Teaching Ambassador Program!
+                        🧑‍🏫 Join Our Medistics Teaching Intership Program!
                     </h1>
                     <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                         Share your expertise, mentor students, and gain incredible opportunities with Medistics.
@@ -241,7 +241,7 @@ const TeachingAmbassadors = () => {
                     <CardHeader className="text-center pb-6">
                         <CardTitle className="text-gray-900 dark:text-white text-2xl mb-2">Apply Now</CardTitle>
                         <CardDescription className="text-gray-600 dark:text-gray-400">
-                            Fill out the form below to become a Medistics Teaching Ambassador.
+                            Fill out the form below to apply.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -394,7 +394,7 @@ const TeachingAmbassadors = () => {
                 {/* Perks of Being a Teaching Ambassador */}
                 <div className="mt-12 text-center animate-fade-in">
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                        🌟 Perks of Being a Medistics Teaching Ambassador
+                        🌟 Perks of Being a Medistics Intern.
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                         <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 hover:scale-105 transition-transform duration-300">
@@ -464,7 +464,7 @@ const TeachingAmbassadors = () => {
                     <div className="flex items-start space-x-2">
                         <Bot className="h-5 w-5 mt-0.5 flex-shrink-0" />
                         <div>
-                            <p className="font-medium mb-2">Medistics Teaching Ambassador Program Details:</p>
+                            <p className="font-medium mb-2">Medistics Teaching Intership Program Details:</p>
                             <ul className="space-y-1 text-xs">
                                 <li>• <strong>Share Knowledge:</strong> Help students excel in their studies by providing guidance and teaching.</li>
                                 <li>• <strong>Content Creation:</strong> Contribute to Medistics' educational resources.</li>
