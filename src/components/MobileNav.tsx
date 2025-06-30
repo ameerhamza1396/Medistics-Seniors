@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,15 +10,24 @@ const MobileNav = () => {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
 
+  // Function to scroll to a section. This needs to be defined or passed as a prop if it's external.
+  // For this example, I'm providing a basic implementation.
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const navItems = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-    { href: '/battle', label: 'Battle', icon: Sword },
-    { href: '/mcqs', label: 'Practice', icon: Target },
-    { href: '/ai', label: 'AI Chat', icon: Bot },
+    { href: '/', label: 'Home', icon: Home, type: 'link' },
+    { id: 'milestones', label: 'Our Journey', icon: Trophy, type: 'button' }, // Using Trophy for Our Journey
+    { id: 'pricing', label: 'Pricing', icon: Sword, type: 'button' }, // Using Sword for Pricing
+    { id: 'testimonials', label: 'Our Acheivers', icon: Target, type: 'button' }, // Using Target for Our Acheivers
+    { id: 'ambassador', label: 'Join Us', icon: Bot, type: 'button' }, // Using Bot for Join Us
   ];
 
-  const isActive = (href: string) => location.pathname === href;
+  const isActive = (href) => location.pathname === href;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -57,20 +65,40 @@ const MobileNav = () => {
           
           <nav className="flex-1 space-y-4">
             {navItems.map((item, index) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 animate-fade-in ${
-                  isActive(item.href)
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/30'
-                }`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </Link>
+              item.type === 'link' ? (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 animate-fade-in ${
+                    isActive(item.href)
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    scrollToSection(item.id);
+                    setIsOpen(false); // Close the sheet after clicking
+                  }}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 hover:scale-105 animate-fade-in w-full text-left ${
+                    // Active state for buttons could be handled if you're on the page containing these sections
+                    // and want to highlight the button corresponding to the visible section.
+                    // For now, it's styled similarly to the non-active link items.
+                    'text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {item.icon && <item.icon className="w-5 h-5" />}
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              )
             ))}
           </nav>
           
