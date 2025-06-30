@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, BookOpen, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader2, Lock } from 'lucide-react'; // Removed ArrowRight
 import { fetchChaptersBySubject, fetchMCQsByChapter, Chapter, Subject } from '@/utils/mcqData';
 import { useAuth } from '@/hooks/useAuth';
 import { getAccessibleChapters } from '@/utils/accesscontrol';
@@ -23,7 +23,7 @@ export const ChapterSelectionScreen = ({
   const [allChapters, setAllChapters] = useState<Chapter[]>([]);
   const [accessibleChapters, setAccessibleChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  // Removed selectedChapter state as it's no longer needed for a separate 'Continue' button
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -52,15 +52,14 @@ export const ChapterSelectionScreen = ({
   const handleChapterClick = (chapter: Chapter) => {
     const isAccessible = accessibleChapters.some((c) => c.id === chapter.id);
     if (isAccessible) {
-      setSelectedChapter(chapter);
+      // Directly call onChapterSelect when the card is clicked
+      onChapterSelect(chapter);
     } else {
       navigate('/pricing');
     }
   };
 
-  const handleContinue = () => {
-    if (selectedChapter) onChapterSelect(selectedChapter);
-  };
+  // The handleContinue function is no longer needed
 
   if (loading) {
     return (
@@ -75,14 +74,14 @@ export const ChapterSelectionScreen = ({
 
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4">
-      <Button onClick={onBack} variant="outline" className="mb-4 ...">
-        <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+      <Button onClick={onBack} variant="outline" className="mb-4 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300">
+        <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
         <span>Back to Subjects</span>
       </Button>
 
-      <div className="text-center mb-6 ...">
-        <h1 className="text-2xl ...">Select Chapter – {subject.name}</h1>
-        <p className="text-base ...">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Chapter – {subject.name}</h1>
+        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           {user?.role === 'free'
             ? 'First 2 chapters are free. Unlock the rest with premium.'
             : 'You have access to all chapters.'}
@@ -92,7 +91,8 @@ export const ChapterSelectionScreen = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {allChapters.map((ch, idx) => {
           const isAccessible = accessibleChapters.some((c) => c.id === ch.id);
-          const isSelected = selectedChapter?.id === ch.id;
+          // isSelected check is no longer strictly needed for a 'selected' state, but kept for potential future styling
+          const isSelected = false; // Or remove if no visual 'selected' state is desired after click
 
           return (
             <motion.div
@@ -103,29 +103,40 @@ export const ChapterSelectionScreen = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`w-full ${!isAccessible ? 'opacity-50' : 'cursor-pointer'}`}
-              onClick={() => handleChapterClick(ch)}
+              onClick={() => handleChapterClick(ch)} // Card click handles navigation
             >
-              <Card className={`border-2 h-full transition ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-purple-200 hover:border-purple-300'} ${!isAccessible ? 'bg-gray-100 dark:bg-gray-900' : ''}`}>
+              <Card
+                className={`border-2 h-full transition duration-300 ease-in-out
+                ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700'}
+                ${!isAccessible
+                  ? 'bg-gray-100 dark:bg-gray-900'
+                  : 'bg-gradient-to-br from-green-50/70 via-blue-50/50 to-indigo-50/30 dark:from-green-900/30 dark:via-blue-900/20 dark:to-indigo-900/10 backdrop-blur-sm'
+                }`}
+              >
                 <CardHeader className="px-4 py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg flex items-center justify-center">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center
+                          ${isAccessible
+                            ? 'bg-gradient-to-r from-green-200 to-blue-200 dark:from-green-800 dark:to-blue-800'
+                            : 'bg-gray-200 dark:bg-gray-700'
+                          }`}>
                         {isAccessible ? (
-                          <BookOpen className="w-5 h-5 text-purple-600" />
+                          <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
                         ) : (
-                          <Lock className="w-5 h-5 text-gray-600" />
+                          <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                         )}
                       </div>
                       <div>
                         <CardTitle className="text-lg text-gray-900 dark:text-white">Chapter {ch.chapter_number}</CardTitle>
-                        <CardDescription className="text-sm text-gray-500">{ch.name}</CardDescription>
+                        <CardDescription className="text-sm text-gray-500 dark:text-gray-400">{ch.name}</CardDescription>
                       </div>
                     </div>
-                    <span className="text-xs text-gray-500">{questionCounts[ch.id] || 0} Qs</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{questionCounts[ch.id] || 0} Qs</span>
                   </div>
                 </CardHeader>
                 <CardContent className="px-4 pb-4">
-                  <p className="text-sm text-gray-600">{ch.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{ch.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -133,7 +144,8 @@ export const ChapterSelectionScreen = ({
         })}
       </div>
 
-      {selectedChapter && (
+      {/* The continue button section is completely removed */}
+      {/* {selectedChapter && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
           <Button
             onClick={handleContinue}
@@ -144,7 +156,7 @@ export const ChapterSelectionScreen = ({
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </motion.div>
-      )}
+      )} */}
     </div>
   );
 };
