@@ -17,6 +17,7 @@ import {
   Calendar,
   TrendingUp,
   Award,
+  Briefcase,
   Book, // New icon for Study Materials
   Instagram, // New icon for Instagram
   Construction // Icon for maintenance message
@@ -241,7 +242,19 @@ const Dashboard = () => {
       gradient: 'from-yellow-500 to-amber-500',
       bgGradient: 'from-yellow-50 to-amber-50',
       darkBgGradient: 'from-yellow-900/30 to-amber-900/30'
-    }
+    },
+        {
+      title: 'Summer Internship 2025', // New Card Title
+      description: 'Apply for the Medistics Summer Internship Program!', // Description
+      icon: Briefcase, // A relevant icon, assuming you have it imported from 'lucide-react'
+      link: '/summerinternship2025', // Link to your internship application page
+      type: 'internal',
+      gradient: 'from-blue-500 to-cyan-500', // Unique gradient
+      bgGradient: 'from-blue-50 to-cyan-50',
+      darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
+      tag: 'Open now!', // The requested tag
+      tagColor: 'bg-red-500 text-white animate-pulse' // Eye-catching tag color and animation
+    },
   ];
 
   // New Premium Perks section - filtered for disabled features
