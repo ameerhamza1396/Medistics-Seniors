@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Loader2, Lock } from 'lucide-react'; // Removed ArrowRight
+import { ArrowLeft, BookOpen, Loader2, Lock } from 'lucide-react';
 import { fetchChaptersBySubject, fetchMCQsByChapter, Chapter, Subject } from '@/utils/mcqData';
 import { useAuth } from '@/hooks/useAuth';
 import { getAccessibleChapters } from '@/utils/accesscontrol';
@@ -23,18 +23,18 @@ export const ChapterSelectionScreen = ({
   const [allChapters, setAllChapters] = useState<Chapter[]>([]);
   const [accessibleChapters, setAccessibleChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
-  // Removed selectedChapter state as it's no longer needed for a separate 'Continue' button
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
-  const { user } = useAuth();
+  const { user, profiles } = useAuth(); // Destructure profiles (plural)
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadChapters = async () => {
       setLoading(true);
       const fetched = await fetchChaptersBySubject(subject.id);
-      const role: 'free' | 'premium' | 'iconic' =
-        user?.role === 'premium' || user?.role === 'iconic' ? user.role : 'free';
-      const accessible = getAccessibleChapters(fetched, role);
+      // CORRECTED: Access plan from profiles object
+      const userPlan: 'free' | 'premium' | 'iconic' =
+        profiles?.plan === 'premium' || profiles?.plan === 'iconic' ? profiles.plan : 'free';
+      const accessible = getAccessibleChapters(fetched, userPlan); // Pass userPlan as role
       setAllChapters(fetched);
       setAccessibleChapters(accessible);
 
@@ -47,19 +47,16 @@ export const ChapterSelectionScreen = ({
       setLoading(false);
     };
     loadChapters();
-  }, [subject, user]);
+  }, [subject, user, profiles]); // profiles in dependency array
 
   const handleChapterClick = (chapter: Chapter) => {
     const isAccessible = accessibleChapters.some((c) => c.id === chapter.id);
     if (isAccessible) {
-      // Directly call onChapterSelect when the card is clicked
       onChapterSelect(chapter);
     } else {
       navigate('/pricing');
     }
   };
-
-  // The handleContinue function is no longer needed
 
   if (loading) {
     return (
@@ -82,7 +79,7 @@ export const ChapterSelectionScreen = ({
       <div className="text-center mb-6">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Chapter – {subject.name}</h1>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          {user?.role === 'free'
+          {profiles?.plan === 'free' // CORRECTED: Use profiles.plan here
             ? 'First 2 chapters are free. Unlock the rest with premium.'
             : 'You have access to all chapters.'}
         </p>
@@ -91,8 +88,7 @@ export const ChapterSelectionScreen = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {allChapters.map((ch, idx) => {
           const isAccessible = accessibleChapters.some((c) => c.id === ch.id);
-          // isSelected check is no longer strictly needed for a 'selected' state, but kept for potential future styling
-          const isSelected = false; // Or remove if no visual 'selected' state is desired after click
+          const isSelected = false;
 
           return (
             <motion.div
@@ -103,7 +99,7 @@ export const ChapterSelectionScreen = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`w-full ${!isAccessible ? 'opacity-50' : 'cursor-pointer'}`}
-              onClick={() => handleChapterClick(ch)} // Card click handles navigation
+              onClick={() => handleChapterClick(ch)}
             >
               <Card
                 className={`border-2 h-full transition duration-300 ease-in-out
@@ -143,20 +139,6 @@ export const ChapterSelectionScreen = ({
           );
         })}
       </div>
-
-      {/* The continue button section is completely removed */}
-      {/* {selectedChapter && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <Button
-            onClick={handleContinue}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 hover:scale-105 transition"
-            size="lg"
-          >
-            Continue with {selectedChapter.name}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </motion.div>
-      )} */}
     </div>
   );
 };

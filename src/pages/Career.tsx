@@ -63,7 +63,7 @@ const CareerAmbassador = () => {
             light: 'bg-yellow-100 text-yellow-800 border-yellow-300',
             dark: 'dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700'
         },
-        'pro': {
+        'iconic': {
             light: 'bg-green-100 text-green-800 border-green-300',
             dark: 'dark:bg-green-900/30 dark:text-green-200 dark:border-green-700'
         },
