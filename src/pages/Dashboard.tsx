@@ -220,6 +220,7 @@ const Dashboard = () => {
       gradient: 'from-indigo-500 to-purple-500',
       bgGradient: 'from-indigo-50 to-purple-50',
       darkBgGradient: 'from-purple-900/20 to-orange-900/20',
+      disabled: true
     },
     
     {
