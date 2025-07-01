@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'; // Ensure useNavigate is i
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, User as UserIcon, CheckCircle } from 'lucide-react'; // Added CheckCircle icon
+import { ArrowLeft, Moon, Sun, User as UserIcon, CheckCircle, Edit } from 'lucide-react'; // Added CheckCircle and Edit icon
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +23,9 @@ const UsernamePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [debouncedUsername, setDebouncedUsername] = useState('');
   // New state: Tracks if username was just successfully set/updated in this session
-  const [usernameUpdatedSuccessfully, setUsernameUpdatedSuccessfully] = useState(false); 
+  const [usernameUpdatedSuccessfully, setUsernameUpdatedSuccessfully] = useState(false);
+  // New state: Controls if the username input is editable
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -59,11 +61,14 @@ const UsernamePage = () => {
         setNewUsername(profile.username);
         // If a username already exists, consider it 'updated' for this component's session
         // This ensures the "Go to Dashboard" button appears if they already have a username.
-        setUsernameUpdatedSuccessfully(true); 
+        setUsernameUpdatedSuccessfully(true);
         setUsernameMessage({ type: 'success', text: 'Your username is already set.' }); // Inform user
+        setIsEditingUsername(false); // Initially not editing if username is set
       } else {
+        setNewUsername(''); // Clear username if none exists
         setUsernameUpdatedSuccessfully(false); // No username yet
         setUsernameMessage({ type: '', text: '' }); // Clear message
+        setIsEditingUsername(true); // Allow editing if no username is set
       }
     }
   }, [profile]); // Depend on profile to run when it loads/changes
@@ -76,7 +81,7 @@ const UsernamePage = () => {
     queryKey: ['checkUsernameAvailability', debouncedUsername],
     queryFn: async () => {
       // Only check if it's a new username and not empty
-      if (!debouncedUsername.trim() || debouncedUsername.trim() === profile?.username) return false; 
+      if (!debouncedUsername.trim() || debouncedUsername.trim() === profile?.username) return false;
       const { data, error } = await supabase
         .from('profiles')
         .select('username')
@@ -90,31 +95,34 @@ const UsernamePage = () => {
       debouncedUsername.trim().length >= 3 &&
       /^[a-zA-Z0-9_]*$/.test(debouncedUsername.trim()) &&
       debouncedUsername.trim() !== profile?.username &&
-      !usernameUpdatedSuccessfully, // Disable check if already updated (to prevent unnecessary checks)
+      isEditingUsername, // Only check availability if in editing mode
   });
 
   useEffect(() => {
-    // Only show availability messages if not already updated successfully
-    if (usernameUpdatedSuccessfully) return; 
+    // Only show availability messages if in editing mode
+    if (!isEditingUsername) return;
 
-    if (!debouncedUsername.trim()) {
+    if (!newUsername.trim()) { // Use newUsername here, not debounced, for immediate feedback
       setUsernameMessage({ type: 'error', text: 'Username cannot be empty.' });
-    } else if (debouncedUsername.trim().length < 3) {
+    } else if (newUsername.trim().length < 3) {
       setUsernameMessage({ type: 'error', text: 'Username must be at least 3 characters long.' });
-    } else if (!/^[a-zA-Z0-9_]*$/.test(debouncedUsername.trim())) {
+    } else if (!/^[a-zA-Z0-9_]*$/.test(newUsername.trim())) {
       setUsernameMessage({ type: 'error', text: 'Username can only contain letters, numbers, and underscores.' });
-    } else if (debouncedUsername.trim() === profile?.username) {
+    } else if (newUsername.trim() === profile?.username) {
       setUsernameMessage({ type: 'success', text: 'This is your current username.' }); // More descriptive message
     } else if (usernameCheckError) {
       setUsernameMessage({ type: 'error', text: usernameCheckError.message || 'Error checking username.' });
-    } else if (isUsernameTaken === true) {
+    } else if (isCheckingUsername) {
+      setUsernameMessage({ type: '', text: 'Checking availability...' });
+    }
+    else if (isUsernameTaken === true) {
       setUsernameMessage({ type: 'error', text: 'This username is already taken.' });
     } else if (isUsernameTaken === false) {
       setUsernameMessage({ type: 'success', text: 'Username is available!' });
     } else {
       setUsernameMessage({ type: '', text: '' }); // Clear message for valid, available username
     }
-  }, [isUsernameTaken, usernameCheckError, debouncedUsername, profile?.username, usernameUpdatedSuccessfully]);
+  }, [isUsernameTaken, usernameCheckError, debouncedUsername, newUsername, profile?.username, isCheckingUsername, isEditingUsername]);
 
   const updateUsernameMutation = useMutation<any, Error, string>({
     mutationFn: async (username: string) => {
@@ -131,7 +139,7 @@ const UsernamePage = () => {
       toast.success('Username updated successfully!');
       setUsernameMessage({ type: 'success', text: 'Username updated successfully!' }); // Set success message
       setUsernameUpdatedSuccessfully(true); // Set the flag to true
-      // No automatic navigation here. The "Go to Dashboard" button handles it.
+      setIsEditingUsername(false); // Disable editing after successful update
     },
     onError: (error: Error) => {
       setUsernameMessage({ type: 'error', text: error.message || 'An unexpected error occurred.' });
@@ -139,8 +147,7 @@ const UsernamePage = () => {
       setIsSubmitting(false); // Reset submitting state on error
     },
     onSettled: () => {
-      // isSubmitting is reset in onError or handleSubmit logic
-      // No need to reset it here if onSuccess/onError handle it
+      setIsSubmitting(false); // Ensure submitting state is reset
     }
   });
 
@@ -171,23 +178,10 @@ const UsernamePage = () => {
     const value = e.target.value;
     setNewUsername(value);
     setUsernameUpdatedSuccessfully(false); // Reset this flag if user starts typing again
-
-    if (!value.trim()) {
-      setUsernameMessage({ type: 'error', text: 'Username cannot be empty.' });
-    } else if (value.trim().length < 3) {
-      setUsernameMessage({ type: 'error', text: 'Username must be at least 3 characters long.' });
-    } else if (!/^[a-zA-Z0-9_]*$/.test(value)) {
-      setUsernameMessage({ type: 'error', text: 'Username can only contain letters, numbers, and underscores.' });
-    } else if (value.trim() === profile?.username) {
-      setUsernameMessage({ type: 'success', text: 'This is your current username.' });
-    } else {
-      setUsernameMessage({ type: '', text: '' });
-    }
   };
 
   const isButtonDisabled = () => {
-    // If username is already updated/set, the "Update" button should be replaced
-    if (usernameUpdatedSuccessfully) return false; // The Go to Dashboard button will be enabled
+    if (!isEditingUsername) return false; // If not in editing mode, the button's purpose changes (Go to Dashboard)
 
     const isInvalid = !newUsername.trim() ||
       newUsername.trim().length < 3 ||
@@ -205,12 +199,10 @@ const UsernamePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isButtonDisabled() && !usernameUpdatedSuccessfully) return; // Only prevent if updating
-    
-    // If username is already successfully updated, the button should now navigate
-    if (usernameUpdatedSuccessfully) {
-        navigate('/all-set'); // Go to dashboard if already set
-        return;
+    // If not in editing mode, or if username is already successfully updated, the button should navigate
+    if (!isEditingUsername || usernameUpdatedSuccessfully) {
+      navigate('/all-set'); // Go to dashboard if already set or not in editing mode
+      return;
     }
 
     // Otherwise, proceed with update
@@ -218,14 +210,13 @@ const UsernamePage = () => {
     updateUsernameMutation.mutate(newUsername.trim());
   };
 
-  // Helper to determine if we should show the "Go to Dashboard" button
-  const shouldShowGoToDashboard = () => {
-    // Show if profile loaded and has a username, OR if it was just successfully updated in this session
-    return !isProfileLoading && (profile?.username || usernameUpdatedSuccessfully);
+  // Helper to determine if we should show the "Go to Dashboard" button (or the confirmed username message)
+  const shouldShowConfirmationAndGoToDashboard = () => {
+    return !isProfileLoading && (profile?.username && !isEditingUsername);
   };
 
   const handleGoToDashboard = () => {
-      navigate('/all-set'); // Direct navigation to dashboard
+    navigate('/all-set'); // Direct navigation to dashboard
   };
 
   return (
@@ -283,13 +274,26 @@ const UsernamePage = () => {
                   <Label htmlFor="username" className="text-gray-700 dark:text-gray-300">
                     Current Username: {profile?.username || 'N/A'}
                   </Label>
-                  {/* Conditionally render Input or a confirmation message */}
-                  {shouldShowGoToDashboard() && profile?.username ? (
-                    <div className="mt-2 flex items-center p-3 border rounded-md bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700">
-                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
-                      <span className="text-green-800 dark:text-green-300 font-medium">
-                        Your username is set to **@{profile.username}**.
-                      </span>
+                  {shouldShowConfirmationAndGoToDashboard() ? (
+                    <div className="mt-2 flex items-center justify-between p-3 border rounded-md bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                        <span className="text-green-800 dark:text-green-300 font-medium">
+                          Your username is set to <strong className="font-bold">@{profile.username}</strong>.
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditingUsername(true);
+                          setUsernameMessage({ type: '', text: '' }); // Clear message when entering edit mode
+                        }}
+                        className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400"
+                      >
+                        <Edit className="h-4 w-4 mr-1" /> Edit
+                      </Button>
                     </div>
                   ) : (
                     <Input
@@ -299,19 +303,18 @@ const UsernamePage = () => {
                       onChange={handleUsernameChange}
                       placeholder="Enter new username"
                       className="mt-2 w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                      disabled={isProfileLoading || isSubmitting || usernameUpdatedSuccessfully} // Disable if already updated
+                      disabled={isProfileLoading || isSubmitting || !isEditingUsername} // Disable if not in editing mode
                     />
                   )}
-                  {usernameMessage.text && (
+                  {usernameMessage.text && isEditingUsername && ( // Only show message if editing
                     <p className={`text-sm mt-1 ${usernameMessage.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
                       {usernameMessage.text}
                     </p>
                   )}
                 </div>
-                {/* Conditionally render Update button or Go to Dashboard button */}
-                {shouldShowGoToDashboard() && profile?.username ? (
+                {shouldShowConfirmationAndGoToDashboard() ? (
                   <Button
-                    type="button" // Change to type="button" to prevent form submission
+                    type="button"
                     onClick={handleGoToDashboard}
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                   >
@@ -345,7 +348,7 @@ const UsernamePage = () => {
               <ul className="space-y-1 text-xs">
                 <li>• Your username must be unique.</li>
                 <li>• It can only contain letters, numbers, and underscores.</li>
-                <li>• It must be at least 3 characters long.</li> {/* Added this as it's in validation */}
+                <li>• It must be at least 3 characters long.</li>
                 <li>• Changes to your username will be reflected immediately.</li>
                 <li>• You can change your username at any time.</li>
               </ul>
