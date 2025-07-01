@@ -31,6 +31,7 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
+import ClassroomChat from "./pages/ClassroomChat";
 import VerifyEmail from '@/pages/VerifyEmail';
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
@@ -39,6 +40,7 @@ import MockTestResults from '@/pages/MockTestResults';
 import TestCompletion from '@/pages/TestResults'; // Assuming this is correct
 import Career from '@/pages/Career'; // Assuming this is correct
 import TeachingAmbassadors from '@/pages/TeachingAmbassadors'; // Assuming this is correct
+import InternshipApplication from '@/pages/InternshipApplication'; // Assuming this is correct
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -86,6 +88,7 @@ function App() {
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
+              <Route path="/classroom/:id" element={<ClassroomChat />} />
               {/* NOTE: You have two /verify-email routes. Keep the one you intend to use. */}
               <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
               <Route path="/all-set" element={<AllSetPage />} />
@@ -94,6 +97,7 @@ function App() {
               <Route path="/test-summary" element={<TestCompletion />} /> {/* <-- FIX IS HERE */}
               <Route path="/career" element={<Career />} /> {/* <-- FIX IS HERE */}
               <Route path="/teaching-career" element={<TeachingAmbassadors />} /> {/* <-- FIX IS HERE */}
+              <Route path="/summerinternship2025" element={<InternshipApplication />} /> {/* <-- FIX IS HERE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
