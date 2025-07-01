@@ -31,7 +31,7 @@ import ChangePassword from '@/pages/ChangePassword';
 import MockTest from '@/pages/MockTest';
 import TestCompletionPage from '@/pages/TestCompletion';
 import Classroom from '@/pages/Classroom';
-import ClassroomChat from "./pages/ClassroomChat";
+// import ClassroomChat from "./pages/ClassroomChat";
 import VerifyEmail from '@/pages/VerifyEmail';
 import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
@@ -88,7 +88,7 @@ function App() {
               <Route path="/terms" element={<TermsAndConditions />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
-              <Route path="/classroom/:id" element={<ClassroomChat />} />
+              {/* <Route path="/classroom/:id" element={<ClassroomChat />} /> */}
               {/* NOTE: You have two /verify-email routes. Keep the one you intend to use. */}
               <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
               <Route path="/all-set" element={<AllSetPage />} />
