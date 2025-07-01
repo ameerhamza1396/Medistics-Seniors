@@ -21,6 +21,7 @@ import Admin4 from '@/pages/Admin4';
 import Admin5 from '@/pages/Admin5';
 import Admin6 from '@/pages/Admin6';
 import Admin7 from '@/pages/Admin7';
+import Admin8 from '@/pages/Admin8';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
@@ -76,6 +77,7 @@ function App() {
               <Route path="/admin5" element={<Admin5 />} />
               <Route path="/admin6" element={<Admin6 />} />
               <Route path="/admin7" element={<Admin7 />} />
+              <Route path="/admin8" element={<Admin8 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/password" element={<ChangePassword />} />
               <Route path="/profile/upgrade" element={<Profile />} />

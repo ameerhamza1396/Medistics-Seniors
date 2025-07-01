@@ -183,8 +183,8 @@ const Dashboard = () => {
       gradient: 'from-teal-500 to-green-500',
       bgGradient: 'from-teal-800/50 to-green-50',
       darkBgGradient: 'from-teal-900/30 to-green-900/10',
-      tag: 'Limited Time Free', // Added tag for Mock Test
-      tagColor: 'bg-red-500 text-white animate-pulse'
+      // tag: 'Limited Time Free', // Added tag for Mock Test
+      // tagColor: 'bg-red-500 text-white animate-pulse'
     },
     
     {
