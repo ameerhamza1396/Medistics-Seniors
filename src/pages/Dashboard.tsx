@@ -147,18 +147,19 @@ const Dashboard = () => {
   });
 
   // Effect for redirection based on user profile
-  useEffect(() => {
-    // Only proceed if user is logged in and profile data has been loaded
-    if (user && !profileLoading) {
-      const hasValidProfile = profile?.full_name && profile?.username;
-      const isPlaceholderUsername = profile?.username === user?.email?.split('@')[0];
+  useEffect(() => {
+    // Only proceed if user is logged in and profile data has been loaded
+    if (user && !profileLoading) {
+      // We now only check for the existence of full_name and username.
+      // A username matching the email prefix is now considered valid.
+      const hasValidProfile = profile?.full_name && profile?.username;
 
-      // Redirect if profile is null, or if full_name/username are missing/placeholder
-      if (!profile || !hasValidProfile || isPlaceholderUsername) {
-        navigate('/welcome-new-user');
-      }
-    }
-  }, [user, profile, profileLoading, navigate]);
+      // Redirect if profile is null, or if full_name/username are missing
+      if (!profile || !hasValidProfile) { // <--- REMOVED '|| isPlaceholderUsername'
+        navigate('/welcome-new-user');
+      }
+    }
+  }, [user, profile, profileLoading, navigate]);
 
 
   // Quick Actions - now with Mock Test and new additions
