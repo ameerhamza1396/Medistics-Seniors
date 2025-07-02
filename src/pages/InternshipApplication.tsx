@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react'; // Import useEffect
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const InternshipApplication = () => {
     const { theme, setTheme } = useTheme();
@@ -32,6 +33,7 @@ const InternshipApplication = () => {
     const [captchaVerified, setCaptchaVerified] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null); // 'success', 'error', 'loading'
     const [errorMessage, setErrorMessage] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false); // State for modal visibility
 
     const recaptchaRef = useRef(null);
 
@@ -47,14 +49,14 @@ const InternshipApplication = () => {
         );
     };
 
-    // Get user profile data (for header badge)
+    // Get user profile data (for header badge and pre-filling form)
     const { data: profile } = useQuery({
         queryKey: ['profile', user?.id],
         queryFn: async () => {
             if (!user?.id) return null;
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('role, plan, name') // Select 'name' from profiles table
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -66,6 +68,26 @@ const InternshipApplication = () => {
         },
         enabled: !!user?.id
     });
+
+    // --- NEW: Populate name and email if user is logged in ---
+    useEffect(() => {
+        if (user) {
+            setEmail(user.email || '');
+            // Prioritize name from profile table, then user_metadata, fallback to empty string
+            if (profile?.name) { // Assuming 'name' column in profiles table
+                setName(profile.name);
+            } else if (user.user_metadata?.full_name) { // Fallback to user_metadata
+                setName(user.user_metadata.full_name);
+            } else {
+                setName('');
+            }
+        } else {
+            // Clear fields if user logs out or is not logged in initially
+            setName('');
+            setEmail('');
+        }
+    }, [user, profile]); // Re-run when user or profile data changes
+
 
     // Define plan color schemes (reused from AI.jsx)
     const planColors = {
@@ -91,9 +113,28 @@ const InternshipApplication = () => {
     const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
     const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
 
-    const handleFileChange = (e, setter) => {
+    const handleFileChange = (e, setter, allowedTypes, maxSizeMB) => {
         if (e.target.files.length > 0) {
-            setter(e.target.files[0]);
+            const file = e.target.files[0];
+            const fileType = file.type;
+            const fileSize = file.size; // in bytes
+
+            if (!allowedTypes.includes(fileType)) {
+                setErrorMessage(`Invalid file type. Please upload ${allowedTypes.join(', ')}.`);
+                setter(null);
+                e.target.value = ''; // Clear the input
+                return;
+            }
+
+            if (fileSize > maxSizeMB * 1024 * 1024) { // Convert MB to bytes
+                setErrorMessage(`File size exceeds ${maxSizeMB}MB limit.`);
+                setter(null);
+                e.target.value = ''; // Clear the input
+                return;
+            }
+
+            setErrorMessage(''); // Clear previous file-related errors
+            setter(file);
         }
     };
 
@@ -129,12 +170,14 @@ const InternshipApplication = () => {
         setSubmissionStatus('loading');
         setErrorMessage('');
 
-        if (!captchaVerified) {
+        // CAPTCHA check only for non-signed-in users
+        if (!user && !captchaVerified) {
             setErrorMessage('Please complete the CAPTCHA verification.');
             setSubmissionStatus('error');
             return;
         }
 
+        // Validate required fields (name and email will be pre-filled for logged-in users)
         if (!name || !email || !contactNumber || !gender || !skillExperience || !whyJoinMedistics || selectedSkills.length === 0 || !userSkills || !profilePicture || !cnicOrStudentCard) {
             setErrorMessage('Please fill in all required fields and upload all documents.');
             setSubmissionStatus('error');
@@ -183,9 +226,14 @@ const InternshipApplication = () => {
             }
 
             setSubmissionStatus('success');
+            setShowSuccessModal(true); // Show the success modal
+
             // Optionally clear form fields after successful submission
-            setName('');
-            setEmail('');
+            // Note: Name and Email are not cleared if user is logged in, as they are pre-filled
+            if (!user) {
+                setName('');
+                setEmail('');
+            }
             setContactNumber('');
             setGender('');
             setSkillExperience('');
@@ -265,13 +313,33 @@ const InternshipApplication = () => {
                                     <Label htmlFor="name" className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
                                         <User className="h-4 w-4 mr-2 text-blue-500" /> Full Name
                                     </Label>
-                                    <Input id="name" type="text" placeholder="Your Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                                    <Input
+                                        id="name"
+                                        type="text"
+                                        placeholder="Your Full Name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        readOnly={!!user} // Read-only if user is logged in
+                                        disabled={!!user} // Visually disabled if user is logged in
+                                        required={!user} // Only required if user is NOT logged in
+                                        className={user ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : ''}
+                                    />
                                 </div>
                                 <div>
                                     <Label htmlFor="email" className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
                                         <Mail className="h-4 w-4 mr-2 text-green-500" /> Email
                                     </Label>
-                                    <Input id="email" type="email" placeholder="your@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="your@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        readOnly={!!user} // Read-only if user is logged in
+                                        disabled={!!user} // Visually disabled if user is logged in
+                                        required={!user} // Only required if user is NOT logged in
+                                        className={user ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed' : ''}
+                                    />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -382,34 +450,44 @@ const InternshipApplication = () => {
                                     <Label htmlFor="profilePicture" className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
                                         <ImageIcon className="h-4 w-4 mr-2 text-blue-500" /> Profile Picture
                                     </Label>
-                                    <Input id="profilePicture" type="file" accept="image/*" onChange={(e) => handleFileChange(e, setProfilePicture)} required />
+                                    <Input
+                                        id="profilePicture"
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        onChange={(e) => handleFileChange(e, setProfilePicture, ['image/jpeg', 'image/png', 'image/webp'], 2)}
+                                        required
+                                    />
                                     {profilePicture && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{profilePicture.name}</p>}
                                 </div>
                                 <div>
                                     <Label htmlFor="cnicOrStudentCard" className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
                                         <Shield className="h-4 w-4 mr-2 text-green-500" /> CNIC / Student Card
                                     </Label>
-                                    <Input id="cnicOrStudentCard" type="file" accept="image/*,application/pdf" onChange={(e) => handleFileChange(e, setCnicOrStudentCard)} required />
+                                    <Input
+                                        id="cnicOrStudentCard"
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                                        onChange={(e) => handleFileChange(e, setCnicOrStudentCard, ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], 2)}
+                                        required
+                                    />
                                     {cnicOrStudentCard && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{cnicOrStudentCard.name}</p>}
                                 </div>
                             </div>
 
-                            <div className="flex justify-center">
-                                <ReCAPTCHA
-                                    ref={recaptchaRef}
-                                    sitekey="6LeIhW0rAAAAAL2oxCpELWA74Cb93-x9utqxBAdZ"
-                                    onChange={handleCaptchaChange}
-                                    theme={theme}
-                                />
-                            </div>
+                            {/* Conditional reCAPTCHA */}
+                            {!user && (
+                                <div className="flex justify-center">
+                                    <ReCAPTCHA
+                                        ref={recaptchaRef}
+                                        sitekey="6LeIhW0rAAAAAL2oxCpELWA74Cb93-x9utqxBAdZ"
+                                        onChange={handleCaptchaChange}
+                                        theme={theme}
+                                    />
+                                </div>
+                            )}
 
                             {submissionStatus === 'loading' && (
                                 <p className="text-center text-blue-500 dark:text-blue-400 mt-4">Submitting your application...</p>
-                            )}
-                            {submissionStatus === 'success' && (
-                                <div className="text-center text-green-600 dark:text-green-400 mt-4 flex items-center justify-center">
-                                    <CheckCircle className="h-5 w-5 mr-2" /> Application submitted successfully! We'll be in touch soon.
-                                </div>
                             )}
                             {submissionStatus === 'error' && (
                                 <div className="text-center text-red-600 dark:text-red-400 mt-4 flex items-center justify-center">
@@ -423,6 +501,23 @@ const InternshipApplication = () => {
                         </form>
                     </CardContent>
                 </Card>
+
+                {/* Success Modal */}
+                <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center text-green-600 dark:text-green-400">
+                                <CheckCircle className="h-6 w-6 mr-2" /> Application Submitted!
+                            </DialogTitle>
+                            <DialogDescription className="mt-2 text-gray-700 dark:text-gray-300">
+                                Thank you for your interest in the Medistics Internship Program. Your application has been successfully received. We will review it and get back to you shortly!
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="mt-4">
+                            <Button onClick={() => setShowSuccessModal(false)}>Close</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Perks of Being a Medistics Intern */}
                 <div className="mt-12 text-center animate-fade-in">
