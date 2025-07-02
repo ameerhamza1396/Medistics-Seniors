@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Loader2, Lock } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader2, Lock } from 'lucide-react'; // Loader2 is no longer directly used for main loading, but kept if used elsewhere.
 import { fetchChaptersBySubject, fetchMCQsByChapter, Chapter, Subject } from '@/utils/mcqData';
-import { useAuth } from '@/hooks/useAuth'; // Keep useAuth for 'user' if needed elsewhere, but 'profiles' is not used for plan here
+import { useAuth } from '@/hooks/useAuth';
 import { getAccessibleChapters } from '@/utils/accesscontrol';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,22 +13,52 @@ interface ChapterSelectionScreenProps {
   subject: Subject;
   onChapterSelect: (chapter: Chapter) => void;
   onBack: () => void;
-  // NEW PROP: User profile containing the plan
   userProfile: { plan: 'free' | 'premium' | 'iconic' } | null | undefined;
 }
+
+// Skeleton Card Component for loading state
+const ChapterCardSkeleton = () => (
+  <Card className="border-2 h-full animate-pulse overflow-hidden relative
+                   border-gray-200 dark:border-gray-800
+                   bg-gray-100 dark:bg-gray-900">
+    {/* Shimmer Effect */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-300/30 to-transparent dark:via-gray-700/30
+                    animate-shimmer"
+         style={{ animationDuration: '1.5s', animationIterationCount: 'infinite', animationTimingFunction: 'linear' }}></div>
+
+    <CardHeader className="px-4 py-4">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+            {/* Placeholder for icon */}
+          </div>
+          <div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-1"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          </div>
+        </div>
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+      </div>
+    </CardHeader>
+    <CardContent className="px-4 pb-4">
+      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mb-1"></div>
+      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+    </CardContent>
+  </Card>
+);
+
 
 export const ChapterSelectionScreen = ({
   subject,
   onChapterSelect,
   onBack,
-  userProfile // Destructure the new prop
+  userProfile
 }: ChapterSelectionScreenProps) => {
   const [allChapters, setAllChapters] = useState<Chapter[]>([]);
   const [accessibleChapters, setAccessibleChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
-  // No longer need 'profiles' from useAuth here for plan determination
-  const { user } = useAuth(); // Keep 'user' if you need user.id for something else later, otherwise can remove
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,11 +66,10 @@ export const ChapterSelectionScreen = ({
       setLoading(true);
       const fetched = await fetchChaptersBySubject(subject.id);
       
-      // FIX: Use userProfile prop to determine the plan
       const userPlan: 'free' | 'premium' | 'iconic' =
         userProfile?.plan === 'premium' || userProfile?.plan === 'iconic' ? userProfile.plan : 'free';
       
-      const accessible = getAccessibleChapters(fetched, userPlan); // Pass the correctly determined userPlan
+      const accessible = getAccessibleChapters(fetched, userPlan);
       setAllChapters(fetched);
       setAccessibleChapters(accessible);
 
@@ -52,9 +81,8 @@ export const ChapterSelectionScreen = ({
       setQuestionCounts(counts);
       setLoading(false);
     };
-    // Add userProfile to the dependency array
     loadChapters();
-  }, [subject, userProfile]); // userProfile in dependency array
+  }, [subject, userProfile]);
 
   const handleChapterClick = (chapter: Chapter) => {
     const isAccessible = accessibleChapters.some((c) => c.id === chapter.id);
@@ -65,16 +93,8 @@ export const ChapterSelectionScreen = ({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12 sm:py-16">
-        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-purple-600" />
-        <span className="ml-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          Loading chapters...
-        </span>
-      </div>
-    );
-  }
+  // Define a number of skeleton cards to display while loading
+  const numberOfSkeletons = 6; // Display 6 placeholder cards while loading
 
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4">
@@ -86,7 +106,6 @@ export const ChapterSelectionScreen = ({
       <div className="text-center mb-6">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Chapter – {subject.name}</h1>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          {/* Use userProfile.plan for displaying the message */}
           {userProfile?.plan === 'free'
             ? 'First 2 chapters are free. Unlock the rest with premium.'
             : 'You have access to all chapters.'}
@@ -94,58 +113,66 @@ export const ChapterSelectionScreen = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {allChapters.map((ch, idx) => {
-          const isAccessible = accessibleChapters.some((c) => c.id === ch.id);
-          const isSelected = false; // This 'isSelected' logic is not currently used to determine selection visually, only if chapter.id === selectedChapter in QuizSettingsScreen, etc.
+        {loading ? (
+          // Render skeleton loaders if loading
+          Array.from({ length: numberOfSkeletons }).map((_, index) => (
+            <ChapterCardSkeleton key={index} />
+          ))
+        ) : (
+          // Render actual chapters once loaded
+          allChapters.map((ch, idx) => {
+            const isAccessible = accessibleChapters.some((c) => c.id === ch.id);
+            const isSelected = false; // Not used for this component's visual selection state
 
-          return (
-            <motion.div
-              key={ch.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full ${!isAccessible ? 'opacity-50' : 'cursor-pointer'}`}
-              onClick={() => handleChapterClick(ch)}
-            >
-              <Card
-                className={`border-2 h-full transition duration-300 ease-in-out
-                ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700'}
-                ${!isAccessible
-                  ? 'bg-gray-100 dark:bg-gray-900'
-                  : 'bg-gradient-to-br from-green-50/70 via-blue-50/50 to-indigo-50/30 dark:from-green-900/30 dark:via-blue-900/20 dark:to-indigo-900/10 backdrop-blur-sm'
-                }`}
+            return (
+              <motion.div
+                key={ch.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`w-full ${!isAccessible ? 'opacity-50' : 'cursor-pointer'}`}
+                onClick={() => handleChapterClick(ch)}
               >
-                <CardHeader className="px-4 py-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center
-                          ${isAccessible
-                            ? 'bg-gradient-to-r from-green-200 to-blue-200 dark:from-green-800 dark:to-blue-800'
-                            : 'bg-gray-200 dark:bg-gray-700'
-                          }`}>
-                        {isAccessible ? (
-                          <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                        )}
+                <Card
+                  className={`border-2 h-full transition duration-300 ease-in-out
+                  ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700'}
+                  ${!isAccessible
+                    ? 'bg-gray-100 dark:bg-gray-900'
+                    : 'bg-gradient-to-br from-green-50/70 via-blue-50/50 to-indigo-50/30 dark:from-green-900/30 dark:via-blue-900/20 dark:to-indigo-900/10 backdrop-blur-sm'
+                  }`}
+                >
+                  <CardHeader className="px-4 py-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center
+                            ${isAccessible
+                              ? 'bg-gradient-to-r from-green-200 to-blue-200 dark:from-green-800 dark:to-blue-800'
+                              : 'bg-gray-200 dark:bg-gray-700'
+                            }`}>
+                          {isAccessible ? (
+                            <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-gray-900 dark:text-white">Chapter {ch.chapter_number}</CardTitle>
+                          <CardDescription className="text-sm text-gray-500 dark:text-gray-400">{ch.name}</CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg text-gray-900 dark:text-white">Chapter {ch.chapter_number}</CardTitle>
-                        <CardDescription className="text-sm text-gray-500 dark:text-gray-400">{ch.name}</CardDescription>
-                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{questionCounts[ch.id] || 0} Qs</span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{questionCounts[ch.id] || 0} Qs</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{ch.description}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{ch.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })
+        )}
       </div>
     </div>
   );
