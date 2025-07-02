@@ -1,3 +1,4 @@
+// src/pages/MCQs.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +13,8 @@ import { ProgressTracker } from '@/components/mcq/ProgressTracker';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { getUserStats, Subject, Chapter } from '@/utils/mcqData';
-import { useQuery } from '@tanstack/react-query'; // Import useQuery
-import { supabase } from '@/integrations/supabase/client'; // Import supabase client
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 type Screen = 'subjects' | 'chapters' | 'settings' | 'quiz';
 
@@ -32,16 +33,16 @@ const MCQs = () => {
   });
 
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user } = useAuth(); // Only need 'user' here, as 'profiles' is fetched via useQuery
 
-  // Get user profile data
+  // Get user profile data using useQuery
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('plan') // Select only the 'plan' for efficiency if that's all you need
         .eq('id', user.id)
         .maybeSingle();
 
@@ -51,7 +52,7 @@ const MCQs = () => {
       }
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id // Only run query if user ID exists
   });
 
   // Define plan color schemes
@@ -68,15 +69,15 @@ const MCQs = () => {
       light: 'bg-green-100 text-green-800 border-green-300',
       dark: 'dark:bg-green-900/30 dark:text-green-200 dark:border-green-700'
     },
-    // Add more plans as needed
     'default': { // Fallback for unknown plans
       light: 'bg-gray-100 text-gray-800 border-gray-300',
       dark: 'dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
     }
   };
 
-  // Determine the user's plan and its display name
-  const rawUserPlan = profile?.plan?.toLowerCase() || 'free'; // Ensure lowercase for lookup
+  // Determine the user's plan and its display name for the badge
+  // Use the 'profile' data from useQuery
+  const rawUserPlan = profile?.plan?.toLowerCase() || 'free';
   const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
 
   // Get the color classes for the current plan
@@ -128,7 +129,15 @@ const MCQs = () => {
       case 'subjects':
         return <SubjectSelectionScreen onSubjectSelect={handleSubjectSelect} />;
       case 'chapters':
-        return selectedSubject ? <ChapterSelectionScreen subject={selectedSubject} onChapterSelect={handleChapterSelect} onBack={handleBackToSubjects} /> : null;
+        // FIX: Pass the user's profile data to ChapterSelectionScreen
+        return selectedSubject ? (
+          <ChapterSelectionScreen
+            subject={selectedSubject}
+            onChapterSelect={handleChapterSelect}
+            onBack={handleBackToSubjects}
+            userProfile={profile} // <--- THE KEY FIX IS HERE
+          />
+        ) : null;
       case 'settings':
         return selectedSubject && selectedChapter ? <QuizSettingsScreen subject={selectedSubject} chapter={selectedChapter} onStartQuiz={handleStartQuiz} onBack={handleBackToChapters} /> : null;
       case 'quiz':
@@ -144,7 +153,8 @@ const MCQs = () => {
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex justify-between items-center max-w-full">
           <Link to="/dashboard" className="flex items-center space-x-1 sm:space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
-            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> {/* Added mr-1 for better spacing */}
+            <span>Back to Dashboard</span> {/* Changed text for clarity */}
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">

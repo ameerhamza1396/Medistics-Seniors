@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen, Loader2, Lock } from 'lucide-react';
 import { fetchChaptersBySubject, fetchMCQsByChapter, Chapter, Subject } from '@/utils/mcqData';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'; // Keep useAuth for 'user' if needed elsewhere, but 'profiles' is not used for plan here
 import { getAccessibleChapters } from '@/utils/accesscontrol';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,28 +13,34 @@ interface ChapterSelectionScreenProps {
   subject: Subject;
   onChapterSelect: (chapter: Chapter) => void;
   onBack: () => void;
+  // NEW PROP: User profile containing the plan
+  userProfile: { plan: 'free' | 'premium' | 'iconic' } | null | undefined;
 }
 
 export const ChapterSelectionScreen = ({
   subject,
   onChapterSelect,
-  onBack
+  onBack,
+  userProfile // Destructure the new prop
 }: ChapterSelectionScreenProps) => {
   const [allChapters, setAllChapters] = useState<Chapter[]>([]);
   const [accessibleChapters, setAccessibleChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
-  const { user, profiles } = useAuth(); // Destructure profiles (plural)
+  // No longer need 'profiles' from useAuth here for plan determination
+  const { user } = useAuth(); // Keep 'user' if you need user.id for something else later, otherwise can remove
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadChapters = async () => {
       setLoading(true);
       const fetched = await fetchChaptersBySubject(subject.id);
-      // CORRECTED: Access plan from profiles object
+      
+      // FIX: Use userProfile prop to determine the plan
       const userPlan: 'free' | 'premium' | 'iconic' =
-        profiles?.plan === 'premium' || profiles?.plan === 'iconic' ? profiles.plan : 'free';
-      const accessible = getAccessibleChapters(fetched, userPlan); // Pass userPlan as role
+        userProfile?.plan === 'premium' || userProfile?.plan === 'iconic' ? userProfile.plan : 'free';
+      
+      const accessible = getAccessibleChapters(fetched, userPlan); // Pass the correctly determined userPlan
       setAllChapters(fetched);
       setAccessibleChapters(accessible);
 
@@ -46,8 +52,9 @@ export const ChapterSelectionScreen = ({
       setQuestionCounts(counts);
       setLoading(false);
     };
+    // Add userProfile to the dependency array
     loadChapters();
-  }, [subject, user, profiles]); // profiles in dependency array
+  }, [subject, userProfile]); // userProfile in dependency array
 
   const handleChapterClick = (chapter: Chapter) => {
     const isAccessible = accessibleChapters.some((c) => c.id === chapter.id);
@@ -79,7 +86,8 @@ export const ChapterSelectionScreen = ({
       <div className="text-center mb-6">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Chapter – {subject.name}</h1>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          {profiles?.plan === 'free' // CORRECTED: Use profiles.plan here
+          {/* Use userProfile.plan for displaying the message */}
+          {userProfile?.plan === 'free'
             ? 'First 2 chapters are free. Unlock the rest with premium.'
             : 'You have access to all chapters.'}
         </p>
@@ -88,7 +96,7 @@ export const ChapterSelectionScreen = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {allChapters.map((ch, idx) => {
           const isAccessible = accessibleChapters.some((c) => c.id === ch.id);
-          const isSelected = false;
+          const isSelected = false; // This 'isSelected' logic is not currently used to determine selection visually, only if chapter.id === selectedChapter in QuizSettingsScreen, etc.
 
           return (
             <motion.div
