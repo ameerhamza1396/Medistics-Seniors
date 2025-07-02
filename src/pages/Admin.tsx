@@ -1,35 +1,46 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, Lock, Users, Database, Upload, Code, ClipboardCheck } from 'lucide-react'; // Import ClipboardCheck icon
+import {
+  ArrowLeft,
+  Moon,
+  Sun,
+  Lock,
+  Users, // Existing for Admin3
+  Database, // Existing for Admin1
+  Upload, // Existing for Admin2
+  Code, // Existing for Admin4
+  ClipboardCheck, // Existing for Admin5
+  UsersRound, // New for Admin6 Ambassador Applications
+  GraduationCap, // New for Admin7 Teaching Ambassador Applications
+  Briefcase, // New for Admin8 Internship Applications
+  ShoppingCart // New for Admin9 Plan Purchase Applications
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 
-// Define Theme type for clarity
-type Theme = 'light' | 'dark';
-
 export default function AdminPage() {
-  const { theme, setTheme } = useTheme(); // Hook for theme management
-  const { user, isLoading: isUserLoading } = useAuth(); // Hook for authentication
+  const { theme, setTheme } = useTheme();
+  const { user, isLoading: isUserLoading } = useAuth();
 
   const [enteredPin, setEnteredPin] = useState('');
   const [pinVerified, setPinVerified] = useState(false);
   const [pinError, setPinError] = useState('');
-  const [accessAttempted, setAccessAttempted] = useState(false); // To track if PIN access was attempted
+  const [accessAttempted, setAccessAttempted] = useState(false);
 
-  // Get user profile data
+  // Get user profile data (only role needed now)
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('role, plan') // Select role and plan
+        .select('role') // Only select role
         .eq('id', user.id)
         .maybeSingle();
 
@@ -39,7 +50,7 @@ export default function AdminPage() {
       }
       return data;
     },
-    enabled: !!user?.id // Only run query if user ID is available
+    enabled: !!user?.id
   });
 
   // Fetch admin PIN from Supabase `app_settings` table
@@ -71,31 +82,6 @@ export default function AdminPage() {
     }
   };
 
-  // Define plan color schemes (from your reference)
-  const planColors = {
-    'free': {
-      light: 'bg-purple-100 text-purple-800 border-purple-300',
-      dark: 'dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700'
-    },
-    'premium': {
-      light: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      dark: 'dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700'
-    },
-    'pro': {
-      light: 'bg-green-100 text-green-800 border-green-300',
-      dark: 'dark:bg-green-900/30 dark:text-green-200 dark:border-green-700'
-    },
-    'default': { // Fallback for unknown plans
-      light: 'bg-gray-100 text-gray-800 border-gray-300',
-      dark: 'dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
-    }
-  };
-
-  // Determine the user's plan and its display name
-  const rawUserPlan = profile?.plan?.toLowerCase() || 'free';
-  const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
-  const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
-
   // Loading state for initial data fetch
   if (isUserLoading || isProfileLoading || isAdminSettingsLoading) {
     return (
@@ -109,20 +95,17 @@ export default function AdminPage() {
   const isAdmin = profile?.role === 'admin';
 
   if (!user) {
-    // Not logged in
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
         <Lock className="w-16 h-16 text-gray-400 dark:text-gray-600 mb-4" />
         <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
         <p className="text-lg mb-4">You must be logged in to access this page.</p>
-        {/* You might want a link back to login or home */}
         <a href="/" className="text-blue-500 hover:underline">Go to Home</a>
       </div>
     );
   }
 
   if (!isAdmin) {
-    // Logged in but not an admin
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
         <Lock className="w-16 h-16 text-red-500 dark:text-red-400 mb-4" />
@@ -134,7 +117,6 @@ export default function AdminPage() {
   }
 
   if (isAdmin && !pinVerified) {
-    // Admin, but PIN not verified
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 text-center">
         <Lock className="w-16 h-16 text-purple-600 dark:text-purple-400 mb-4" />
@@ -142,7 +124,7 @@ export default function AdminPage() {
         <p className="text-lg mb-4">Please enter the 4-digit PIN to access the admin panel.</p>
         <div className="flex flex-col items-center space-y-4">
           <input
-            type="password" // Use type="password" for security
+            type="password"
             maxLength={4}
             value={enteredPin}
             onChange={(e) => setEnteredPin(e.target.value)}
@@ -170,16 +152,14 @@ export default function AdminPage() {
   // --- Admin Dashboard (if access granted) ---
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Header (Replicated from your reference) */}
+      {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
-          {/* Using <a> for navigation for simplicity without react-router-dom context */}
           <a href="/dashboard" className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </a>
 
           <div className="flex items-center space-x-3">
-            {/* Replace with your actual logo path */}
             <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold">Admin Panel</span>
           </div>
@@ -188,11 +168,12 @@ export default function AdminPage() {
             <Button variant="ghost" size="sm" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
+            {/* Hardcoded Admin badge */}
             <Badge
               variant="secondary"
-              className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
+              className="bg-purple-600 text-white border-purple-800 dark:bg-purple-700 dark:text-white dark:border-purple-900"
             >
-              {userPlanDisplayName}
+              Admin
             </Badge>
             <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">
@@ -213,7 +194,7 @@ export default function AdminPage() {
           </p>
         </div>
 
-        {/* Updated grid layout to 3x2 with reordered boxes */}
+        {/* Admin Modules Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 max-w-6xl mx-auto">
           {/* Admin 1: Update MCQs Database */}
           <a href="/admin1" className="block">
@@ -287,7 +268,7 @@ export default function AdminPage() {
             </Card>
           </a>
 
-          {/* Admin 5: Mock Test Results (Now at the end) */}
+          {/* Admin 5: Mock Test Results */}
           <a href="/admin5" className="block">
             <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
               <CardHeader className="text-center pb-4">
@@ -304,9 +285,82 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </a>
+
+          {/* Admin 6: Ambassador Applications */}
+          <a href="/admin6" className="block">
+            <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-800">
+              <CardHeader className="text-center pb-4">
+                <UsersRound className="h-12 w-12 mx-auto mb-4 text-indigo-600 dark:text-indigo-400" />
+                <CardTitle className="text-xl mb-2">Admin6: Ambassador Applications</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Manage applications for ambassador roles.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white w-full">
+                  Go to Admin6
+                </Button>
+              </CardContent>
+            </Card>
+          </a>
+
+          {/* Admin 7: Teaching Ambassador Applications */}
+          <a href="/admin7" className="block">
+            <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 border-teal-200 dark:border-teal-800">
+              <CardHeader className="text-center pb-4">
+                <GraduationCap className="h-12 w-12 mx-auto mb-4 text-teal-600 dark:text-teal-400" />
+                <CardTitle className="text-xl mb-2">Admin7: Teaching Ambassador Applications</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Review applications for teaching ambassador positions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button className="bg-teal-600 hover:bg-teal-700 text-white w-full">
+                  Go to Admin7
+                </Button>
+              </CardContent>
+            </Card>
+          </a>
+
+          {/* Admin 8: Internship Applications */}
+          <a href="/admin8" className="block">
+            <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800">
+              <CardHeader className="text-center pb-4">
+                <Briefcase className="h-12 w-12 mx-auto mb-4 text-orange-600 dark:text-orange-400" />
+                <CardTitle className="text-xl mb-2">Admin8: Internship Applications</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Process applications for internships.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button className="bg-orange-600 hover:bg-orange-700 text-white w-full">
+                  Go to Admin8
+                </Button>
+              </CardContent>
+            </Card>
+          </a>
+
+          {/* Admin 9: Plan Purchase Applications */}
+          <a href="/admin9" className="block">
+            <Card className="hover:scale-105 hover:shadow-lg transition-all duration-300 animate-fade-in cursor-pointer h-full bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 border-pink-200 dark:border-pink-800">
+              <CardHeader className="text-center pb-4">
+                <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-pink-600 dark:text-pink-400" />
+                <CardTitle className="text-xl mb-2">Admin9: Plan Purchase Applications</CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400">
+                  Review and manage manual plan purchase requests.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button className="bg-pink-600 hover:bg-pink-700 text-white w-full">
+                  Go to Admin9
+                </Button>
+              </CardContent>
+            </Card>
+          </a>
+
         </div>
 
-        {/* New Admin List Section */}
+        {/* Admin List Section */}
         <div className="mt-12 text-center max-w-4xl mx-auto p-6 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Admins</h2>
           <ul className="text-lg text-gray-700 dark:text-gray-300 space-y-2">

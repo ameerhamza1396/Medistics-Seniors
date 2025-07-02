@@ -9,6 +9,7 @@ import {
   MoreVertical, // For the three-dot menu icon
   Loader2, // For loading spinner
   ExternalLink, // For proof link icon
+  ArrowLeft, // Added for the back button
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
@@ -171,11 +172,7 @@ const Admin9: React.FC = () => {
         // For custom tags, we might store the custom value if the 'status' column design allows.
         // If your 'status' column only accepts predefined values, you might need a separate 'custom_tag_value' column.
         // For now, we are assuming 'custom' is a valid status value.
-        // If you need to store the specific custom string, add a new column like 'custom_status_details' to your DB.
-        // For this example, 'custom' just indicates a custom tag was applied, but the specific text isn't saved in 'status'.
-        // If 'custom' status itself holds the tag value, then updateData.status = customTag would be the approach.
-        // Given your previous schema, 'custom' is just a status.
-        // To store the custom string, you would need another column, e.g., `custom_tag_text text`.
+        // If you need to store the specific custom string, add a new column like 'custom_tag_text text'.
         // For simplicity, this example just marks it as 'custom' status.
     }
 
@@ -252,6 +249,13 @@ const Admin9: React.FC = () => {
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
+            {/* Back Button Added */}
+            <Link to="/admin" className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+                <span className="sr-only">Go back to Admin Dashboard</span>
+              </Button>
+            </Link>
             <img
               src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
               alt="Medistics Logo"
