@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import {
   Moon,
   Sun,
+  CheckCircle, // For success icon
+  XCircle, // For error icon
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from 'next-themes';
@@ -11,17 +13,25 @@ import { ProfileDropdown } from '@/components/ProfileDropdown';
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-// Assuming your Supabase client is exported from this path
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client'; // Assuming your Supabase client is here
 
+// Shadcn UI components for the Dialog
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const Checkout = () => {
-  const { user } = useAuth(); // user object from useAuth should contain id and email
+  const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false); // State for the success dialog
   const [proofOfPayment, setProofOfPayment] = useState<File | null>(null);
 
   // Extract plan details from URL query parameters
@@ -30,16 +40,37 @@ const Checkout = () => {
   const duration = searchParams.get('duration');
   const currency = searchParams.get('currency');
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null); // Clear previous errors
     if (event.target.files && event.target.files[0]) {
-      setProofOfPayment(event.target.files[0]);
+      const file = event.target.files[0];
+
+      // File type validation
+      const acceptedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!acceptedTypes.includes(file.type)) {
+        setError("Invalid file type. Please upload a PNG, JPG, or WebP image.");
+        setProofOfPayment(null);
+        return;
+      }
+
+      // File size validation (2 MB limit)
+      const maxSize = 2 * 1024 * 1024; // 2 MB in bytes
+      if (file.size > maxSize) {
+        setError("File size exceeds 2MB. Please upload a smaller image.");
+        setProofOfPayment(null);
+        return;
+      }
+
+      setProofOfPayment(file);
+    } else {
+      setProofOfPayment(null);
     }
   };
 
   const handleSubmitPaymentProof = async () => {
     setIsLoading(true);
     setError(null);
-    setSuccess(null);
+    setShowSuccessDialog(false); // Hide dialog just in case
 
     if (!user) {
       setError("You must be logged in to submit a payment request.");
@@ -53,7 +84,17 @@ const Checkout = () => {
       return;
     }
 
-    if (!planName || !duration || !currency || !price) { // Ensure price is also checked
+    // Re-check validation on submission, though handled in handleFileUpload
+    const acceptedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    const maxSize = 2 * 1024 * 1024; // 2 MB
+    if (!acceptedTypes.includes(proofOfPayment.type) || proofOfPayment.size > maxSize) {
+        setError("Please re-upload a valid image (PNG, JPG, WebP) under 2MB.");
+        setIsLoading(false);
+        return;
+    }
+
+
+    if (!planName || !duration || !currency || !price) {
       setError("Missing plan details. Please go back and select a plan.");
       setIsLoading(false);
       return;
@@ -80,20 +121,18 @@ const Checkout = () => {
       const imageUrl = cloudinaryData.secure_url; // Get the secure URL of the uploaded image
 
       // 2. Insert data into Supabase table
-      const { data, error: supabaseError } = await supabase
+      const { error: supabaseError } = await supabase
         .from('manual_payment_requests')
         .insert([
           {
             user_id: user.id,
-            name: user.user_metadata?.full_name || user.email, // Use user's full name or email if name isn't available
+            name: user.user_metadata?.full_name || user.email,
             email: user.email,
             plan_name: planName,
-            price: parseFloat(price), // Convert price to number for numeric column
+            price: parseFloat(price),
             duration: duration,
             currency: currency,
             cloudinary_proof_url: imageUrl,
-            // submission_timestamp will default to now()
-            // status will default to 'pending'
           },
         ]);
 
@@ -101,8 +140,8 @@ const Checkout = () => {
         throw new Error(supabaseError.message || 'Failed to record payment request in database.');
       }
 
-      console.log('Payment request submitted to Supabase:', data);
-      setSuccess("Your payment proof has been submitted. We will verify it shortly and activate your plan.");
+      console.log('Payment request submitted to Supabase successfully.');
+      setShowSuccessDialog(true); // Show the success dialog
       setProofOfPayment(null); // Clear the selected file after successful upload
 
     } catch (err: any) {
@@ -210,13 +249,13 @@ const Checkout = () => {
               <Input
                 id="payment-proof"
                 type="file"
-                accept="image/*"
+                accept=".png,.jpg,.jpeg,.webp" 
                 onChange={handleFileUpload}
                 className="file:text-purple-600 dark:file:text-purple-300"
               />
               {proofOfPayment && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Selected file: {proofOfPayment.name}
+                  Selected file: {proofOfPayment.name} ({Math.round(proofOfPayment.size / 1024)} KB)
                 </p>
               )}
             </div>
@@ -224,14 +263,9 @@ const Checkout = () => {
         </Card>
 
         {error && (
-          <div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 p-3 rounded-lg mb-6">
+          <div className="text-center text-red-500 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 p-3 rounded-lg mb-6 flex items-center justify-center">
+            <XCircle className="h-5 w-5 mr-2" />
             <p className="font-medium">{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div className="text-center text-green-600 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-700 p-3 rounded-lg mb-6">
-            <p className="font-medium">{success}</p>
           </div>
         )}
 
@@ -239,7 +273,7 @@ const Checkout = () => {
           <Button
             className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-3 px-8 rounded-full text-lg font-semibold"
             onClick={handleSubmitPaymentProof}
-            disabled={isLoading || !proofOfPayment || !planName || !duration || !currency || !price || !user}
+            disabled={isLoading || !proofOfPayment || !planName || !duration || !currency || !price || !user || !!error}
           >
             {isLoading ? 'Submitting Proof...' : 'Submit Payment Proof'}
           </Button>
@@ -254,6 +288,40 @@ const Checkout = () => {
         <p>A Project by Educational Spot.</p>
         <p>&copy; 2025 Medistics. All rights reserved.</p>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-[450px] p-6 text-center">
+          <DialogHeader className="flex flex-col items-center justify-center mb-4">
+            <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
+            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+              Submission Received!
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-300 mt-2">
+              Thank you for submitting your payment proof.
+              Your request has been received and is now under review.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-left text-gray-700 dark:text-gray-300">
+            <p className="font-medium">
+              Review may take up to <span className="text-purple-600 dark:text-purple-400 font-semibold">24 hours</span>.
+              We'll notify you once your plan is activated.
+            </p>
+            <p>
+              For any issues or inquiries, please contact our team:
+            </p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Email: <a href="mailto:medistics@dr.com" className="text-blue-600 hover:underline dark:text-blue-400">medistics@dr.com</a></li>
+              <li>WhatsApp: <a href="https://wa.me/923392456162" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">03392456162</a></li>
+            </ul>
+          </div>
+          <DialogFooter className="mt-6 flex justify-center">
+            <Button onClick={() => setShowSuccessDialog(false)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+              Got it!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
