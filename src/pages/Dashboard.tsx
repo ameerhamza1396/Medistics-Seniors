@@ -210,8 +210,7 @@ useEffect(() => {
     type: 'internal',
     gradient: 'from-amber-500 to-orange-600', // Amber to Orange gradient
     bgGradient: 'from-amber-50 to-orange-50', // Lighter shades for background
-    darkBgGradient: 'from-amber-900/30 to-orange-900/30', // Dark mode background
-    tag: 'Stay Updated',
+darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shades    tag: 'Stay Updated',
     tagColor: 'bg-orange-700 text-white' // A deep orange for the tag
 },
     // {
