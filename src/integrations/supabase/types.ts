@@ -75,13 +75,78 @@ export type Database = {
         }
         Relationships: []
       }
+      ambassador_applications: {
+        Row: {
+          college_id_card_url: string
+          college_name: string
+          contact_number: string
+          created_at: string | null
+          education: string
+          email: string
+          id: string
+          name: string
+          profile_picture_url: string
+          recent_marksheet_url: string
+          user_id: string | null
+        }
+        Insert: {
+          college_id_card_url: string
+          college_name: string
+          contact_number: string
+          created_at?: string | null
+          education: string
+          email: string
+          id?: string
+          name: string
+          profile_picture_url: string
+          recent_marksheet_url: string
+          user_id?: string | null
+        }
+        Update: {
+          college_id_card_url?: string
+          college_name?: string
+          contact_number?: string
+          created_at?: string | null
+          education?: string
+          email?: string
+          id?: string
+          name?: string
+          profile_picture_url?: string
+          recent_marksheet_url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          created_at: string
+          setting_name: string
+          setting_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          setting_name: string
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          setting_name?: string
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       battle_participants: {
         Row: {
           answers: Json | null
           battle_room_id: string | null
+          created_at: string
           id: string
           is_ready: boolean | null
           joined_at: string
+          kicked_at: string | null
           score: number | null
           team: number | null
           user_id: string
@@ -90,9 +155,11 @@ export type Database = {
         Insert: {
           answers?: Json | null
           battle_room_id?: string | null
+          created_at?: string
           id?: string
           is_ready?: boolean | null
           joined_at?: string
+          kicked_at?: string | null
           score?: number | null
           team?: number | null
           user_id: string
@@ -101,9 +168,11 @@ export type Database = {
         Update: {
           answers?: Json | null
           battle_room_id?: string | null
+          created_at?: string
           id?: string
           is_ready?: boolean | null
           joined_at?: string
+          kicked_at?: string | null
           score?: number | null
           team?: number | null
           user_id?: string
@@ -170,16 +239,22 @@ export type Database = {
         Row: {
           battle_type: string
           chapter_id: string | null
+          countdown_initiated_at: string | null
           created_at: string
           current_players: number | null
           current_question: number | null
           ended_at: string | null
+          host_id: string | null
+          host_ping_requested_at: string | null
           id: string
+          last_ping_sender_id: string | null
+          last_ping_sender_username: string | null
           max_players: number
           questions: Json | null
           room_code: string
           started_at: string | null
           status: string
+          subject: string | null
           subject_id: string | null
           time_per_question: number | null
           total_questions: number | null
@@ -187,16 +262,22 @@ export type Database = {
         Insert: {
           battle_type: string
           chapter_id?: string | null
+          countdown_initiated_at?: string | null
           created_at?: string
           current_players?: number | null
           current_question?: number | null
           ended_at?: string | null
+          host_id?: string | null
+          host_ping_requested_at?: string | null
           id?: string
+          last_ping_sender_id?: string | null
+          last_ping_sender_username?: string | null
           max_players: number
           questions?: Json | null
           room_code: string
           started_at?: string | null
           status?: string
+          subject?: string | null
           subject_id?: string | null
           time_per_question?: number | null
           total_questions?: number | null
@@ -204,16 +285,22 @@ export type Database = {
         Update: {
           battle_type?: string
           chapter_id?: string | null
+          countdown_initiated_at?: string | null
           created_at?: string
           current_players?: number | null
           current_question?: number | null
           ended_at?: string | null
+          host_id?: string | null
+          host_ping_requested_at?: string | null
           id?: string
+          last_ping_sender_id?: string | null
+          last_ping_sender_username?: string | null
           max_players?: number
           questions?: Json | null
           room_code?: string
           started_at?: string | null
           status?: string
+          subject?: string | null
           subject_id?: string | null
           time_per_question?: number | null
           total_questions?: number | null
@@ -251,6 +338,127 @@ export type Database = {
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classroom_members: {
+        Row: {
+          classroom_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          classroom_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          classroom_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_members_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classrooms: {
+        Row: {
+          created_at: string
+          description: string | null
+          host_id: string
+          id: string
+          invite_code: string | null
+          is_public: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          host_id: string
+          id?: string
+          invite_code?: string | null
+          is_public?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          host_id?: string
+          id?: string
+          invite_code?: string | null
+          is_public?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      internship_applications: {
+        Row: {
+          application_status: string
+          cnic_student_card_url: string
+          contact_number: string
+          created_at: string | null
+          email: string
+          gender: string
+          id: string
+          name: string
+          profile_picture_url: string
+          skill_experience: string
+          skills_to_apply: Json
+          user_id: string | null
+          user_skills: string
+          why_join_medistics: string
+        }
+        Insert: {
+          application_status?: string
+          cnic_student_card_url: string
+          contact_number: string
+          created_at?: string | null
+          email: string
+          gender: string
+          id?: string
+          name: string
+          profile_picture_url: string
+          skill_experience: string
+          skills_to_apply: Json
+          user_id?: string | null
+          user_skills: string
+          why_join_medistics: string
+        }
+        Update: {
+          application_status?: string
+          cnic_student_card_url?: string
+          contact_number?: string
+          created_at?: string | null
+          email?: string
+          gender?: string
+          id?: string
+          name?: string
+          profile_picture_url?: string
+          skill_experience?: string
+          skills_to_apply?: Json
+          user_id?: string | null
+          user_skills?: string
+          why_join_medistics?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -297,6 +505,48 @@ export type Database = {
           user_id?: string
           username?: string
           win_rate?: number | null
+        }
+        Relationships: []
+      }
+      manual_payment_requests: {
+        Row: {
+          cloudinary_proof_url: string
+          currency: string
+          duration: string
+          email: string
+          id: string
+          name: string | null
+          plan_name: string
+          price: number
+          status: string
+          submission_timestamp: string
+          user_id: string
+        }
+        Insert: {
+          cloudinary_proof_url: string
+          currency: string
+          duration: string
+          email: string
+          id?: string
+          name?: string | null
+          plan_name: string
+          price: number
+          status?: string
+          submission_timestamp?: string
+          user_id: string
+        }
+        Update: {
+          cloudinary_proof_url?: string
+          currency?: string
+          duration?: string
+          email?: string
+          id?: string
+          name?: string | null
+          plan_name?: string
+          price?: number
+          status?: string
+          submission_timestamp?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -347,38 +597,185 @@ export type Database = {
           },
         ]
       }
+      mock_test_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          explanation: string | null
+          id: number
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          explanation?: string | null
+          id?: number
+          option_a: string
+          option_b: string
+          option_c: string
+          option_d: string
+          question: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          explanation?: string | null
+          id?: number
+          option_a?: string
+          option_b?: string
+          option_c?: string
+          option_d?: string
+          question?: string
+        }
+        Relationships: []
+      }
+      payment_submissions: {
+        Row: {
+          admin_status: string
+          amount: number
+          created_at: string
+          currency: string
+          email: string
+          full_name: string
+          id: string
+          plan_purchased: string
+          plan_validity: string
+          proof_url: string
+          submission_timestamp: string
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          admin_status?: string
+          amount: number
+          created_at?: string
+          currency: string
+          email: string
+          full_name: string
+          id?: string
+          plan_purchased: string
+          plan_validity: string
+          proof_url: string
+          submission_timestamp?: string
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          admin_status?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          email?: string
+          full_name?: string
+          id?: string
+          plan_purchased?: string
+          plan_validity?: string
+          proof_url?: string
+          submission_timestamp?: string
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
-          created_at: string | null
           full_name: string | null
           id: string
-          medical_school: string | null
+          plan: string
+          plan_expiry_date: string | null
+          role: string | null
           updated_at: string | null
           username: string | null
-          year_of_study: number | null
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
-          created_at?: string | null
           full_name?: string | null
           id: string
-          medical_school?: string | null
+          plan?: string
+          plan_expiry_date?: string | null
+          role?: string | null
           updated_at?: string | null
           username?: string | null
-          year_of_study?: number | null
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string | null
           full_name?: string | null
           id?: string
-          medical_school?: string | null
+          plan?: string
+          plan_expiry_date?: string | null
+          role?: string | null
           updated_at?: string | null
           username?: string | null
-          year_of_study?: number | null
+          website?: string | null
         }
         Relationships: []
+      }
+      study_materials: {
+        Row: {
+          chapter_id: string | null
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          subject_id: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          chapter_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          subject_id?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          chapter_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          subject_id?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_materials_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_materials_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subjects: {
         Row: {
@@ -404,6 +801,78 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      teaching_ambassador_applications: {
+        Row: {
+          cnic_url: string
+          contact_number: string
+          created_at: string | null
+          email: string
+          gender: string
+          id: string
+          name: string
+          profile_picture_url: string
+          subjects: Json
+          teaching_experience: string
+          user_id: string | null
+          why_join_medistics: string
+        }
+        Insert: {
+          cnic_url: string
+          contact_number: string
+          created_at?: string | null
+          email: string
+          gender: string
+          id?: string
+          name: string
+          profile_picture_url: string
+          subjects: Json
+          teaching_experience: string
+          user_id?: string | null
+          why_join_medistics: string
+        }
+        Update: {
+          cnic_url?: string
+          contact_number?: string
+          created_at?: string | null
+          email?: string
+          gender?: string
+          id?: string
+          name?: string
+          profile_picture_url?: string
+          subjects?: Json
+          teaching_experience?: string
+          user_id?: string | null
+          why_join_medistics?: string
+        }
+        Relationships: []
+      }
+      test_configs: {
+        Row: {
+          created_at: string | null
+          end_time: string
+          id: string
+          test_name: string
+          unlock_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time: string
+          id?: string
+          test_name: string
+          unlock_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          test_name?: string
+          unlock_time?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -492,6 +961,57 @@ export type Database = {
           },
         ]
       }
+      user_question_attempts: {
+        Row: {
+          attempted_at: string
+          correct_answer: string
+          id: string
+          is_correct: boolean
+          is_skipped: boolean
+          question_id: number
+          test_result_id: string
+          user_answer: string | null
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          correct_answer: string
+          id?: string
+          is_correct?: boolean
+          is_skipped?: boolean
+          question_id: number
+          test_result_id: string
+          user_answer?: string | null
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          correct_answer?: string
+          id?: string
+          is_correct?: boolean
+          is_skipped?: boolean
+          question_id?: number
+          test_result_id?: string
+          user_answer?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_question_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "mock_test_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_question_attempts_test_result_id_fkey"
+            columns: ["test_result_id"]
+            isOneToOne: false
+            referencedRelation: "user_test_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_scores: {
         Row: {
           created_at: string | null
@@ -517,12 +1037,45 @@ export type Database = {
           total_questions?: number
           user_id?: string
         }
+        Relationships: []
+      }
+      user_test_results: {
+        Row: {
+          completed_at: string | null
+          id: string
+          score: number
+          test_config_id: string | null
+          total_questions: number
+          user_id: string | null
+          user_responses: Json | null
+          username: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          score: number
+          test_config_id?: string | null
+          total_questions: number
+          user_id?: string | null
+          user_responses?: Json | null
+          username: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          score?: number
+          test_config_id?: string | null
+          total_questions?: number
+          user_id?: string | null
+          user_responses?: Json | null
+          username?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "user_scores_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "user_test_results_test_config_id_fkey"
+            columns: ["test_config_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "test_configs"
             referencedColumns: ["id"]
           },
         ]
@@ -532,10 +1085,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      expire_old_plans: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      get_user_classroom_memberships: {
+        Args: { p_user_id: string }
+        Returns: {
+          classroom_id: string
+          user_id: string
+          role: string
+        }[]
+      }
+      has_role_on_profiles: {
+        Args: { user_id: string; required_role: string }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { group_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_plan_status:
+        | "free"
+        | "iconic"
+        | "premium"
+        | "24_day"
+        | "30_day"
+        | "365_day"
+        | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -650,6 +1233,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_plan_status: [
+        "free",
+        "iconic",
+        "premium",
+        "24_day",
+        "30_day",
+        "365_day",
+        "custom",
+      ],
+    },
   },
 } as const

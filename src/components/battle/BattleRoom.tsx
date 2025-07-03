@@ -49,9 +49,9 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   const prevParticipantsCount = useRef<number | null>(null);
 
   // --- Fetch room details and participants in real-time ---
-  const { data: room, isLoading: roomLoading, error: roomError } = useQuery<RoomData>({
+  const { data: room, isLoading: roomLoading, error: roomError } = useQuery({
     queryKey: ['battleRoom', roomId],
-    queryFn: async () => {
+    queryFn: async (): Promise<RoomData> => {
       console.log('useQuery: Fetching battle room for roomId:', roomId);
       const { data, error } = await supabase
         .from('battle_rooms')
@@ -76,12 +76,6 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     },
     refetchInterval: 3000,
     enabled: !!roomId,
-    onSuccess: (data) => {
-      console.log('useQuery onSuccess: Room data received:', data);
-    },
-    onError: (err) => {
-      console.error('useQuery onError: Error fetching room data:', err);
-    }
   });
 
   // --- Real-time subscription for participants and room status ---

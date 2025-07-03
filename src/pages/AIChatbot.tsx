@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'; // Added PanelLeftClose, PanelLeftOpen
+import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,15 +30,18 @@ interface SavedChat {
 }
 
 type Profile = {
-  avatar_url: string;
-  created_at: string;
-  full_name: string;
+  avatar_url: string | null;
+  created_at?: string;
+  full_name: string | null;
   id: string;
-  medical_school: string;
-  updated_at: string;
-  username: string;
-  year_of_study: number;
-  plan?: string;
+  medical_school?: string;
+  updated_at: string | null;
+  username: string | null;
+  year_of_study?: number;
+  plan: string;
+  plan_expiry_date: string | null;
+  role: string | null;
+  website: string | null;
 };
 
 const API_BASE_URL = 'https://medistics-ai-bot.vercel.app';
@@ -47,7 +51,7 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error'; onClo
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
     return () => clearTimeout(timer);
   }, [message, onClose]);
 
@@ -61,16 +65,15 @@ const Notification: React.FC<{ message: string; type: 'success' | 'error'; onClo
   );
 };
 
-
 const DrSultanChat: React.FC = () => {
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, loading } = useAuth();
   const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
 
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -83,12 +86,12 @@ const DrSultanChat: React.FC = () => {
   // Drawer state for mobile (controlled by Menu icon)
   const [isDrawerOpenMobile, setIsDrawerOpenMobile] = useState(false);
   const [touchStartX, setTouchStartX] = useState(0);
-  const [currentTranslateX, setCurrentTranslateX] = useState(-256); // Initial position for closed drawer (w-64 is 256px)
+  const [currentTranslateX, setCurrentTranslateX] = useState(-256);
   const drawerRef = useRef<HTMLDivElement>(null);
-  const drawerWidth = 256; // Corresponds to w-64
+  const drawerWidth = 256;
 
   // Drawer state for desktop (controlled by new PanelLeftClose/Open button)
-  const [isDrawerOpenDesktop, setIsDrawerOpenDesktop] = useState(true); // Open by default on desktop
+  const [isDrawerOpenDesktop, setIsDrawerOpenDesktop] = useState(true);
 
   // Function to show notification
   const showTemporaryNotification = (message: string, type: 'success' | 'error') => {
@@ -98,9 +101,9 @@ const DrSultanChat: React.FC = () => {
   };
 
   // Fetch user profile for plan badge and avatar initial
-  const { data: profile, isLoading: isProfileLoading } = useQuery<Profile | null>({
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['profile', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<Profile | null> => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
@@ -118,7 +121,7 @@ const DrSultanChat: React.FC = () => {
     retry: false
   });
 
-  // Define plan color schemes (copied from AI component, added 'iconic')
+  // Define plan color schemes
   const planColors = {
     'free': {
       light: 'bg-purple-100 text-purple-800 border-purple-300',
@@ -128,22 +131,22 @@ const DrSultanChat: React.FC = () => {
       light: 'bg-yellow-100 text-yellow-800 border-yellow-300',
       dark: 'dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700'
     },
-    'pro': { // Keeping 'pro' as it was there, assuming it's an alias or another tier for display
+    'pro': {
       light: 'bg-green-100 text-green-800 border-green-300',
       dark: 'dark:bg-green-900/30 dark:text-green-200 dark:border-green-700'
     },
-    'iconic': { // Added iconic plan with its own color scheme
+    'iconic': {
       light: 'bg-indigo-100 text-indigo-800 border-indigo-300',
       dark: 'dark:bg-indigo-900/30 dark:text-indigo-200 dark:border-indigo-700'
     },
-    'default': { // Fallback for unknown plans (e.g., 'basic' if it existed)
+    'default': {
       light: 'bg-gray-100 text-gray-800 border-gray-300',
       dark: 'dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
     }
   };
 
   // Determine the user's plan and its display name
-  const rawUserPlan = profile?.plan?.toLowerCase() || 'free'; // Ensure lowercase for lookup
+  const rawUserPlan = profile?.plan?.toLowerCase() || 'free';
   const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
 
   // Get the color classes for the current plan
@@ -152,14 +155,13 @@ const DrSultanChat: React.FC = () => {
   // Access control logic
   const hasAccess = ['premium', 'iconic'].includes(rawUserPlan);
 
-
-  // Fetch saved chats
-  const { data: chatHistory, isLoading: isHistoryLoading } = useQuery<SavedChat[]>({
+  // Fetch saved chats using ai_chat_sessions table
+  const { data: chatHistory, isLoading: isHistoryLoading } = useQuery({
     queryKey: ['chatHistory', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<SavedChat[]> => {
       if (!user?.id) return [];
       const { data, error } = await supabase
-        .from('chats')
+        .from('ai_chat_sessions')
         .select('id, created_at, messages')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -170,7 +172,7 @@ const DrSultanChat: React.FC = () => {
         messages: r.messages as ChatMessage[]
       }));
     },
-    enabled: !!user?.id && hasAccess // Only fetch chat history if user has access
+    enabled: !!user?.id && hasAccess
   });
 
   // Mutation: save current chat
@@ -178,7 +180,7 @@ const DrSultanChat: React.FC = () => {
     mutationFn: async () => {
       if (!user?.id) throw new Error('No user ID');
       const { data, error } = await supabase
-        .from('chats')
+        .from('ai_chat_sessions')
         .insert([{ user_id: user.id, messages }])
         .select()
         .single();
@@ -189,7 +191,7 @@ const DrSultanChat: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['chatHistory', user?.id] });
       showTemporaryNotification('Chat saved ✔️', 'success');
     },
-    onError: err => {
+    onError: (err: any) => {
       showTemporaryNotification(`Failed to save chat: ${err.message}`, 'error');
     }
   });
@@ -198,13 +200,13 @@ const DrSultanChat: React.FC = () => {
   const loadSavedChat = (chat: SavedChat) => {
     setMessages(chat.messages);
     setError(null);
-    closeDrawerMobile(); // Close mobile drawer after loading chat
+    closeDrawerMobile();
   };
 
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]); // Also scroll when loading state changes (for typing indicator)
+  }, [messages, apiLoading]);
 
   // Handle mobile drawer open/close
   const toggleDrawerMobile = () => {
@@ -225,66 +227,15 @@ const DrSultanChat: React.FC = () => {
     setIsDrawerOpenDesktop(prev => !prev);
   };
 
-  // Touch event handlers for draggable mobile drawer
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      setTouchStartX(e.touches[0].clientX);
-      if (drawerRef.current) {
-        drawerRef.current.style.transition = 'none'; // Disable transition during drag
-      }
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      const currentTouchX = e.touches[0].clientX;
-      const deltaX = currentTouchX - touchStartX;
-      let newTranslateX = currentTranslateX + deltaX;
-
-      // Clamp the translation to keep the drawer within bounds
-      newTranslateX = Math.min(0, Math.max(-drawerWidth, newTranslateX));
-      setCurrentTranslateX(newTranslateX);
-
-      if (drawerRef.current) {
-        drawerRef.current.style.transform = `translateX(${newTranslateX}px)`;
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (drawerRef.current) {
-      drawerRef.current.style.transition = 'transform 0.3s ease-in-out'; // Re-enable transition
-    }
-
-    const threshold = drawerWidth * 0.3; // If dragged more than 30% of its width
-    if (currentTranslateX > -threshold) {
-      // If opened more than threshold, open fully
-      setIsDrawerOpenMobile(true);
-      setCurrentTranslateX(0);
-    } else {
-      // Otherwise, close fully
-      setIsDrawerOpenMobile(false);
-      setCurrentTranslateX(-drawerWidth);
-    }
-    setTouchStartX(0); // Reset touch start X
-  };
-
-  // Effect to apply initial transform and react to isDrawerOpenMobile changes from button
-  useEffect(() => {
-    if (drawerRef.current) {
-      drawerRef.current.style.transform = `translateX(${isDrawerOpenMobile ? 0 : -drawerWidth}px)`;
-    }
-  }, [isDrawerOpenMobile]); // Only react when isDrawerOpenMobile changes by button
-
   // Send a message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || loading || !hasAccess) return; // Prevent sending if no access
+    if (!inputMessage.trim() || apiLoading || !hasAccess) return;
     const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: ChatMessage = { sender: 'user', text: inputMessage.trim(), time: ts };
     setMessages(m => [...m, userMsg]);
     setInputMessage('');
-    setLoading(true);
+    setApiLoading(true);
     setError(null);
 
     try {
@@ -306,13 +257,13 @@ const DrSultanChat: React.FC = () => {
       setError(err.message);
       setMessages(m => [...m, { sender: 'ai', text: 'Whoops—something went wrong.', time: '' }]);
     } finally {
-      setLoading(false);
+      setApiLoading(false);
     }
   };
 
   // Voice-to-text handler
   const handleMicClick = () => {
-    if (!hasAccess) { // Prevent mic use if no access
+    if (!hasAccess) {
       showTemporaryNotification('Upgrade your plan to use voice input.', 'error');
       return;
     }
@@ -332,9 +283,9 @@ const DrSultanChat: React.FC = () => {
     rec.maxAlternatives = 1;
     rec.continuous = false;
     rec.onstart = () => setRecording(true);
-    rec.onresult = (evt: SpeechRecognitionEvent) =>
+    rec.onresult = (evt: any) =>
       setInputMessage(evt.results[0][0].transcript);
-    rec.onerror = evt => {
+    rec.onerror = (evt: any) => {
       let msg = evt.error === 'network'
         ? 'Network error—use HTTPS'
         : evt.error === 'no-speech'
@@ -352,11 +303,10 @@ const DrSultanChat: React.FC = () => {
   };
 
   // Determine if AI is currently typing
-  const isAITyping = loading && messages.length > 0 && messages[messages.length - 1].sender === 'user';
-
+  const isAITyping = apiLoading && messages.length > 0 && messages[messages.length - 1].sender === 'user';
 
   // Loading & auth states
-  if (isAuthLoading || isProfileLoading) {
+  if (loading || isProfileLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 text-gray-900 dark:text-white"><p>Loading…</p></div>;
   }
   if (!user) {
@@ -394,39 +344,32 @@ const DrSultanChat: React.FC = () => {
       {/* Sidebar / Draggable Drawer */}
       <aside
         ref={drawerRef}
-        // Controls mobile drawer visibility
         className={`fixed inset-y-0 left-0 z-[60] w-64 bg-white dark:bg-gray-800 border-r border-purple-200 dark:border-purple-800 p-4 overflow-y-auto transform transition-transform duration-300 ease-in-out
           ${isDrawerOpenMobile ? 'translate-x-0' : '-translate-x-full'}
           ${isDrawerOpenDesktop ? 'lg:translate-x-0' : 'lg:-translate-x-full'} lg:relative lg:flex lg:flex-col lg:z-auto`}
-        onTouchStart={hasAccess ? handleTouchStart : undefined} // Only enable drag if hasAccess
-        onTouchMove={hasAccess ? handleTouchMove : undefined} // Only enable drag if hasAccess
-        onTouchEnd={hasAccess ? handleTouchEnd : undefined} // Only enable drag if hasAccess
       >
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Saved Chats</h3>
           <div className="flex items-center space-x-2">
-            {/* Dark/Light mode toggle */}
             <Button variant="ghost" size="sm" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            {/* Exit button for mobile drawer */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={closeDrawerMobile} // Close the mobile drawer
-              className="lg:hidden w-9 h-9 p-0 hover:scale-110 transition-transform duration-200" // Show only on small screens
+              onClick={closeDrawerMobile}
+              className="lg:hidden w-9 h-9 p-0 hover:scale-110 transition-transform duration-200"
             >
               <X className="h-4 w-4" />
             </Button>
-            {/* "Go to Dashboard" button (ArrowLeft) for larger screens in sidebar */}
-            <Link to="/ai" className="hidden lg:block"> {/* Hide Link on small screens */}
+            <Link to="/ai" className="hidden lg:block">
               <Button variant="ghost" size="sm" className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
           </div>
         </div>
-        {hasAccess ? ( // Only show history if user has access
+        {hasAccess ? (
           isHistoryLoading ? (
             <p className="text-gray-500">Loading chat history...</p>
           ) : chatHistory && chatHistory.length > 0 ? (
@@ -447,189 +390,94 @@ const DrSultanChat: React.FC = () => {
         )}
       </aside>
 
-      {/* Backdrop for mobile drawer */}
-      {isDrawerOpenMobile && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" // z-40 is below drawer's z-index
-          onClick={closeDrawerMobile}
-        ></div>
-      )}
-
-      {/* Conditional Rendering for Upgrade Required (Full screen) or Chat Panel */}
-      {!hasAccess ? (
-        // This container now takes up the entire remaining screen width and height
-        // and centers its content (the Card) within itself.
-        <div className="flex-1 flex items-center justify-center w-full h-full p-4 lg:p-8">
-          <Card className="w-full max-w-lg p-6 text-center bg-white border border-purple-200 text-gray-900 shadow-lg dark:bg-gray-800 dark:border-purple-800 dark:text-white"> {/* Added dark mode styles */}
-            <CardHeader><CardTitle className="text-xl font-bold text-gray-900 dark:text-white">Upgrade Required</CardTitle></CardHeader> {/* Added dark mode text */}
-            <CardContent>
-              <p className="text-gray-700 mb-4 dark:text-gray-300">
-                Dr. Sultan Chat is a premium feature. Please upgrade your plan to access.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <Button onClick={() => window.location.href = '/pricing'} className="bg-purple-600 hover:bg-purple-700 text-white">Upgrade Plan</Button>
-                <Link to="/dashboard">
-                  <Button variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-400 dark:hover:bg-purple-900 dark:hover:text-purple-100">Go to Dashboard</Button>
-                </Link>
+      {/* Main chat panel content */}
+      <main className="flex-1 min-h-0 w-full flex flex-col p-4 lg:p-8 max-w-4xl mx-auto">
+        <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800">
+          <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200 dark:border-purple-800">
+            <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Sultan Chat</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(100vh-250px)] bg-white dark:bg-gray-800">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 italic">
+                <MessageSquare className="w-16 h-16 mb-4 text-purple-400" />
+                <p className="text-lg text-gray-700 dark:text-gray-300">Start a new conversation with Dr. Sultan!</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Ask about medical conditions, treatments, and more.</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        // This container holds BOTH the header and the main chat content
-        <div className={`flex-1 flex flex-col h-full transition-all duration-300 ease-in-out ${isDrawerOpenDesktop ? 'lg:ml-64' : 'lg:ml-0'}`}>
-          {/* Header */}
-          <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50 w-full">
-            <div className="w-full p-4 lg:p-8 flex justify-between items-center max-w-4xl mx-auto">
-              {/* Left side: Menu for mobile and Drawer Toggle for desktop */}
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" onClick={toggleDrawerMobile} className="lg:hidden w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
-                  <Menu className="h-4 w-4" />
-                </Button>
-                {/* Desktop drawer toggle button */}
-                <Button variant="ghost" size="sm" onClick={toggleDrawerDesktop} className="hidden lg:block w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
-                  {isDrawerOpenDesktop ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-                </Button>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
-                {/* Dr. Sultan Chat for desktop */}
-                <span className="text-xl font-bold text-gray-900 dark:text-white hidden lg:block">Dr. Sultan Chat</span>
-                {/* Medistics.app for mobile */}
-                <span className="text-base font-bold text-gray-900 dark:text-white block lg:hidden">Medistics.app</span>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                {/* Dynamic Plan Badge with dynamic colors */}
-                <Badge
-                  variant="secondary"
-                  className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
-                >
-                  {userPlanDisplayName}
-                </Badge>
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Main chat panel content */}
-          <main className="flex-1 min-h-0 w-full flex flex-col p-4 lg:p-8 max-w-4xl mx-auto">
-            <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800"> {/* Added dark mode bg and border */}
-              <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200 dark:border-purple-800"> {/* Added dark mode border */}
-                {/* This div now holds the ArrowLeft (mobile only) and the CardTitle */}
-                <div className="flex items-center space-x-2">
-                  <Link to="/ai" className="lg:hidden"> {/* Visible only on mobile */}
-                    <Button variant="ghost" size="sm" className="w-9 h-9 p-0 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"> {/* Adjusted dark mode text/hover */}
-                      <ArrowLeft className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                  <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Sultan Chat</CardTitle> {/* Added dark mode text */}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setMessages([]); setError(null); }} className="p-2 w-9 h-9 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"> {/* Adjusted dark mode text/hover */}
-                    <PlusSquare className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => saveChatMutation.mutate()}
-                    disabled={!messages.length || saveChatMutation.isPending}
-                    // Adjusted dark mode text/hover
-                    className="p-2 w-9 h-9 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(100vh-250px)] bg-white dark:bg-gray-800"> {/* Added dark mode bg */}
-                {messages.length === 0 && !isAITyping && (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 italic">
-                    <MessageSquare className="w-16 h-16 mb-4 text-purple-400" />
-                    <p className="text-lg text-gray-700 dark:text-gray-300">Start a new conversation with Dr. Sultan!</p> {/* Added dark mode text */}
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Ask about medical conditions, treatments, and more.</p> {/* Added dark mode text */}
-                  </div>
-                )}
-                {messages.map((msg, i) => {
-                  const isUser = msg.sender === 'user';
-                  return (
-                    <div key={i} className={`flex items-end ${isUser ? 'justify-end' : 'justify-start'} transition-opacity duration-300 ease-out opacity-100`}>
-                      {!isUser && (
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 text-white font-bold text-sm"> {/* DS avatar color remains */}
-                          DS
-                        </div>
-                      )}
-                      <div className={`max-w-[70%] p-3 rounded-lg shadow ${isUser
-                          ? 'bg-purple-600 text-white rounded-br-none'
-                          : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600' /* Softer AI message background, added subtle border, and dark mode */
-                        }`}>
-                        <p className="whitespace-pre-wrap">{msg.text}</p>
-                        {msg.time && (
-                          <span className="block text-xs mt-1 text-gray-300 text-right dark:text-gray-400"> {/* Adjusted time text color for dark theme */}
-                            {msg.time}
-                          </span>
-                        )}
-                      </div>
-                      {isUser && (
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center ml-2 text-white font-bold text-sm"> {/* User avatar color remains */}
-                          {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-                {isAITyping && (
-                  <div className="flex items-end justify-start">
+            )}
+            {messages.map((msg, i) => {
+              const isUser = msg.sender === 'user';
+              return (
+                <div key={i} className={`flex items-end ${isUser ? 'justify-end' : 'justify-start'} transition-opacity duration-300 ease-out opacity-100`}>
+                  {!isUser && (
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 text-white font-bold text-sm">
                       DS
                     </div>
-                    <div className="max-w-[70%] p-3 rounded-lg shadow bg-gray-50 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:border-gray-600"> {/* Softer AI typing background, added subtle border, and dark mode */}
-                      <div className="flex items-center space-x-1 animate-pulse-dot">
-                        <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span> {/* Adjusted dot color for dark theme */}
-                        <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span> {/* Adjusted dot color for dark theme */}
-                        <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span> {/* Adjusted dot color for dark theme */}
-                      </div>
-                    </div>
+                  )}
+                  <div className={`max-w-[70%] p-3 rounded-lg shadow ${isUser
+                      ? 'bg-purple-600 text-white rounded-br-none'
+                      : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600'
+                    }`}>
+                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                    {msg.time && (
+                      <span className="block text-xs mt-1 text-gray-300 text-right dark:text-gray-400">
+                        {msg.time}
+                      </span>
+                    )}
                   </div>
-                )}
-                <div ref={messagesEndRef} />
-              </CardContent>
-              {error && (
-                <div className="p-4 text-red-500 bg-red-100 border-t border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"> {/* Adjusted dark mode error colors */}
-                  Error: {error}
+                  {isUser && (
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center ml-2 text-white font-bold text-sm">
+                      {user?.email?.substring(0, 2).toUpperCase() || 'U'}
+                    </div>
+                  )}
                 </div>
-              )}
-              {/* Input + controls */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-purple-200 flex items-center space-x-2 dark:border-purple-800"> {/* Adjusted dark mode border */}
-                <Input
-                  placeholder="Type or speak your medical question..."
-                  value={inputMessage}
-                  onChange={e => setInputMessage(e.target.value)}
-                  disabled={loading || !hasAccess} // Disable if no access
-                  className="flex-1 border-purple-300 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500 dark:border-purple-700 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400" // Adjusted input colors for dark theme
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleMicClick}
-                  disabled={loading || !hasAccess} // Disable if no access
-                  className={`w-10 h-10 transition-colors duration-200 ${recording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800'}`} // Adjusted mic button colors for dark theme
-                >
-                  {recording ? <X className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                </Button>
-                <Button type="submit" disabled={loading || !hasAccess} className="bg-purple-600 hover:bg-purple-700 text-white">
-                  <Send className="w-5 h-5" />
-                </Button>
-              </form>
-            </Card>
-          </main>
-        </div>
-      )}
+              );
+            })}
+            {isAITyping && (
+              <div className="flex items-end justify-start">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 text-white font-bold text-sm">
+                  DS
+                </div>
+                <div className="max-w-[70%] p-3 rounded-lg shadow bg-gray-50 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:border-gray-600">
+                  <div className="flex items-center space-x-1 animate-pulse-dot">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span>
+                    <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span>
+                    <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </CardContent>
+          {error && (
+            <div className="p-4 text-red-500 bg-red-100 border-t border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800">
+              Error: {error}
+            </div>
+          )}
+          {/* Input + controls */}
+          <form onSubmit={handleSendMessage} className="p-4 border-t border-purple-200 flex items-center space-x-2 dark:border-purple-800">
+            <Input
+              placeholder="Type or speak your medical question..."
+              value={inputMessage}
+              onChange={e => setInputMessage(e.target.value)}
+              disabled={apiLoading || !hasAccess}
+              className="flex-1 border-purple-300 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500 dark:border-purple-700 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleMicClick}
+              disabled={apiLoading || !hasAccess}
+              className={`w-10 h-10 transition-colors duration-200 ${recording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800'}`}
+            >
+              {recording ? <X className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </Button>
+            <Button type="submit" disabled={apiLoading || !hasAccess} className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Send className="w-5 h-5" />
+            </Button>
+          </form>
+        </Card>
+      </main>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { fetchMCQsByChapter, MCQ } from '@/utils/mcqData';
 import { supabase } from '@/integrations/supabase/client';
+import { AIChatbot } from './AIChatbot';
 
 interface MCQDisplayProps {
   subject: string;
@@ -321,6 +322,9 @@ export const MCQDisplay = ({
           </Card>
         </motion.div>
       </AnimatePresence>
+
+      {/* AI Chatbot */}
+      <AIChatbot currentQuestion={currentMCQ?.question} />
     </div>
   );
 };
