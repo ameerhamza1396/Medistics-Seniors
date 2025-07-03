@@ -23,6 +23,7 @@ import Admin6 from '@/pages/Admin6';
 import Admin7 from '@/pages/Admin7';
 import Admin8 from '@/pages/Admin8';
 import Admin9 from '@/pages/Admin9';
+import Admin10 from '@/pages/Admin10';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
@@ -43,6 +44,7 @@ import TestCompletion from '@/pages/TestResults'; // Assuming this is correct
 import Career from '@/pages/Career'; // Assuming this is correct
 import TeachingAmbassadors from '@/pages/TeachingAmbassadors'; // Assuming this is correct
 import InternshipApplication from '@/pages/InternshipApplication'; // Assuming this is correct
+import AnnouncementsPage from '@/pages/Announcements'; // Assuming this is correct
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -80,6 +82,7 @@ function App() {
               <Route path="/admin7" element={<Admin7 />} />
               <Route path="/admin8" element={<Admin8 />} />
               <Route path="/admin9" element={<Admin9 />} />
+              <Route path="/admin10" element={<Admin10 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/password" element={<ChangePassword />} />
               <Route path="/profile/upgrade" element={<Profile />} />
@@ -102,6 +105,7 @@ function App() {
               <Route path="/career" element={<Career />} /> {/* <-- FIX IS HERE */}
               <Route path="/teaching-career" element={<TeachingAmbassadors />} /> {/* <-- FIX IS HERE */}
               <Route path="/summerinternship2025" element={<InternshipApplication />} /> {/* <-- FIX IS HERE */}
+              <Route path="/announcements" element={<AnnouncementsPage />} /> {/* <-- FIX IS HERE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

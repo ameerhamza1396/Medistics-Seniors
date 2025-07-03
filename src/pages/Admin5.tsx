@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Moon, Sun, Lock, Loader2, Award } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Lock, Loader2, Award, CalendarIcon } from 'lucide-react'; // Added CalendarIcon
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,11 +14,18 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Label } from '@/components/ui/label';
 
+// New imports for date picker
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils'; // Assuming you have this utility for class names
+
 // Define the interface for the fetched test result
 interface UserTestResult {
   user_id: string;
   score: number | null; // score can be null
   username: string;
+  completed_at: string; // Added completed_at timestamp
 }
 
 // Define Theme type for clarity
@@ -29,6 +36,7 @@ export default function Admin5() {
   const { user, isLoading: isUserLoading } = useAuth();
 
   const [sortBy, setSortBy] = useState<'score' | 'username'>('score');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date()); // State for selected date
 
   // --- Fetch User Profile to Check Role (Access Control) ---
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useQuery({
@@ -56,16 +64,26 @@ export default function Admin5() {
 
   // --- Fetch User Test Results ---
   const { data: rawResults, isLoading: isResultsLoading, error: resultsError } = useQuery<UserTestResult[]>({
-    queryKey: ['userTestResults'],
+    queryKey: ['userTestResults', selectedDate?.toDateString()], // Add selectedDate to query key
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('user_test_results')
         .select(`
           score,
           username,
-          user_id
+          user_id,
+          completed_at
         `)
         .not('score', 'is', null); // Ensure score is not null from DB
+
+      // Apply date filter if a date is selected
+      if (selectedDate) {
+        const startOfDay = format(selectedDate, 'yyyy-MM-dd 00:00:00');
+        const endOfDay = format(selectedDate, 'yyyy-MM-dd 23:59:59');
+        query = query.gte('completed_at', startOfDay).lte('completed_at', endOfDay);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching user test results:', error.message || error);
@@ -85,14 +103,14 @@ export default function Admin5() {
     console.log('Results Fetch Enabled:', (!isUserLoading && !isProfileLoading && isAdmin));
 
     if (profileError) {
-        console.error("Profile fetch error detected:", profileError);
+      console.error("Profile fetch error detected:", profileError);
     }
     if (resultsError) {
-        console.error("User Test Results fetch error detected:", resultsError);
+      console.error("User Test Results fetch error detected:", resultsError);
     }
 
     if (!isResultsLoading && rawResults && rawResults.length === 0 && (user && isAdmin)) {
-        console.log("Results loaded, but the array is empty. This could be due to no data, or a very strict RLS policy on 'user_test_results' that filters all rows.");
+      console.log("Results loaded, but the array is empty. This could be due to no data, or a very strict RLS policy on 'user_test_results' that filters all rows.");
     }
   }, [isUserLoading, isProfileLoading, isAdmin, isResultsLoading, profileError, resultsError, rawResults, user]);
 
@@ -163,7 +181,7 @@ export default function Admin5() {
     });
 
     return positions;
-  }, [sortedResults]); // Depends on sortedResults
+  }, [sortedResults]);
 
 
   // --- Access Control Render Logic ---
@@ -217,6 +235,31 @@ export default function Admin5() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* Calendar Button for Date Selection */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[180px] justify-start text-left font-normal dark:bg-gray-800 dark:border-gray-700 dark:text-white",
+                    !selectedDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                  className="dark:bg-gray-800 dark:text-white"
+                />
+              </PopoverContent>
+            </Popover>
+
             <Button
               variant="ghost"
               size="sm"
@@ -248,7 +291,7 @@ export default function Admin5() {
             🏆 Mock Test Leaderboard
           </h1>
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            View and analyze student performance in mock tests.
+            View and analyze student performance in mock tests {selectedDate && `for ${format(selectedDate, 'PPP')}`}.
           </p>
         </div>
 
@@ -314,7 +357,7 @@ export default function Admin5() {
           <CardHeader>
             <CardTitle className="text-gray-900 dark:text-white">All Test Results</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              A comprehensive list of all student mock test attempts (best score per student).
+              A comprehensive list of all student mock test attempts (best score per student){selectedDate && ` for ${format(selectedDate, 'PPP')}`}.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -333,10 +376,10 @@ export default function Admin5() {
               </div>
             ) : (
               <p className="text-center text-gray-500 dark:text-gray-400 py-4">
-                No mock test results found.
+                No mock test results found {selectedDate ? `for ${format(selectedDate, 'PPP')}` : ''}.
                 {!(isUserLoading || isProfileLoading || isResultsLoading) && !user && "(Please log in)"}
                 {!(isUserLoading || isProfileLoading || isResultsLoading) && user && !isAdmin && "(You are not an admin)"}
-                {!(isUserLoading || isProfileLoading || isResultsLoading) && user && isAdmin && " (Check your Supabase 'user_test_results' table, especially the 'score' and 'username' columns, and RLS policies.)"}
+                {!(isUserLoading || isProfileLoading || isResultsLoading) && user && isAdmin && " (Check your Supabase 'user_test_results' table, especially the 'score', 'username', and 'completed_at' columns, and RLS policies.)"}
               </p>
             )}
           </CardContent>

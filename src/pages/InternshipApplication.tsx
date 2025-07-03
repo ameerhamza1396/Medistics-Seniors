@@ -33,6 +33,8 @@ const InternshipApplication = () => {
     const [captchaVerified, setCaptchaVerified] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null); // 'success', 'error', 'loading'
     const [errorMessage, setErrorMessage] = useState('');
+    const [profilePictureError, setProfilePictureError] = useState(''); // New state for file errors
+    const [cnicOrStudentCardError, setCnicOrStudentCardError] = useState(''); // New state for file errors
     const [showSuccessModal, setShowSuccessModal] = useState(false); // State for modal visibility
 
     const recaptchaRef = useRef(null);
@@ -113,28 +115,34 @@ const InternshipApplication = () => {
     const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
     const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
 
-    const handleFileChange = (e, setter, allowedTypes, maxSizeMB) => {
+    const handleFileChange = (e, setter, setErrorSetter, allowedTypes, maxSizeMB) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
             const fileType = file.type;
             const fileSize = file.size; // in bytes
 
+            // Clear previous errors for this file input
+            setErrorSetter('');
+
             if (!allowedTypes.includes(fileType)) {
-                setErrorMessage(`Invalid file type. Please upload ${allowedTypes.join(', ')}.`);
+                setErrorSetter(`Invalid file type. Please upload ${allowedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ')}.`);
                 setter(null);
                 e.target.value = ''; // Clear the input
                 return;
             }
 
             if (fileSize > maxSizeMB * 1024 * 1024) { // Convert MB to bytes
-                setErrorMessage(`File size exceeds ${maxSizeMB}MB limit.`);
+                setErrorSetter(`File size exceeds ${maxSizeMB}MB limit.`);
                 setter(null);
                 e.target.value = ''; // Clear the input
                 return;
             }
 
-            setErrorMessage(''); // Clear previous file-related errors
+            setErrorSetter(''); // Clear error if file is valid
             setter(file);
+        } else {
+            setter(null); // Clear file if no file selected
+            setErrorSetter(''); // Clear error if no file selected
         }
     };
 
@@ -169,17 +177,20 @@ const InternshipApplication = () => {
         e.preventDefault();
         setSubmissionStatus('loading');
         setErrorMessage('');
+        setProfilePictureError(''); // Clear previous file errors on submission attempt
+        setCnicOrStudentCardError(''); // Clear previous file errors on submission attempt
+
 
         // CAPTCHA check only for non-signed-in users
         if (!user && !captchaVerified) {
-            setErrorMessage('Please complete the CAPTCHA verification.');
+            setErrorMessage('Please complete the CAPTCHA verification to submit your application.');
             setSubmissionStatus('error');
             return;
         }
 
         // Validate required fields (name and email will be pre-filled for logged-in users)
         if (!name || !email || !contactNumber || !gender || !skillExperience || !whyJoinMedistics || selectedSkills.length === 0 || !userSkills || !profilePicture || !cnicOrStudentCard) {
-            setErrorMessage('Please fill in all required fields and upload all documents.');
+            setErrorMessage('Please fill in all required fields and upload all necessary documents before submitting.');
             setSubmissionStatus('error');
             return;
         }
@@ -195,6 +206,13 @@ const InternshipApplication = () => {
             setSubmissionStatus('error');
             return;
         }
+
+        if (profilePictureError || cnicOrStudentCardError) {
+            setErrorMessage('Please correct the file upload errors before submitting.');
+            setSubmissionStatus('error');
+            return;
+        }
+
 
         try {
             // 1. Upload files to Cloudinary
@@ -222,6 +240,10 @@ const InternshipApplication = () => {
                 ]);
 
             if (error) {
+                // More specific Supabase errors can be caught here
+                if (error.code === '23505') { // Example: unique constraint violation
+                    throw new Error('An application with this email or user ID already exists.');
+                }
                 throw error;
             }
 
@@ -249,7 +271,7 @@ const InternshipApplication = () => {
 
         } catch (error) {
             console.error('Submission error:', error);
-            setErrorMessage(`Failed to submit application: ${error.message || 'An unknown error occurred.'}`);
+            setErrorMessage(`Failed to submit application: ${error.message || 'An unexpected error occurred. Please check your inputs and try again.'}`);
             setSubmissionStatus('error');
         }
     };
@@ -360,7 +382,7 @@ const InternshipApplication = () => {
                                         <SelectContent>
                                             <SelectItem value="male">Male</SelectItem>
                                             <SelectItem value="female">Female</SelectItem>
-                                            <SelectItem value="other">Other/Prefer not to say</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem> {/* Added 'Other' for completeness */}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -375,6 +397,7 @@ const InternshipApplication = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="less_than_1_year">Less than 1 year</SelectItem>
+                                        <SelectItem value="1-2_years">1-2 years</SelectItem> {/* Adjusted range */}
                                         <SelectItem value="2-3_years">2-3 years</SelectItem>
                                         <SelectItem value="4-5_years">4-5 years</SelectItem>
                                         <SelectItem value="5_plus_years">5+ years</SelectItem>
@@ -423,6 +446,9 @@ const InternshipApplication = () => {
                                 />
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     {whyJoinMedistics.length} / 500 characters (Min: 70)
+                                    {whyJoinMedistics.length > 0 && whyJoinMedistics.length < 70 && (
+                                        <span className="text-red-500 ml-2">Minimum 70 characters required.</span>
+                                    )}
                                 </p>
                             </div>
 
@@ -442,6 +468,9 @@ const InternshipApplication = () => {
                                 />
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     {userSkills.length} / 500 characters (Min: 70)
+                                    {userSkills.length > 0 && userSkills.length < 70 && (
+                                        <span className="text-red-500 ml-2">Minimum 70 characters required.</span>
+                                    )}
                                 </p>
                             </div>
 
@@ -454,10 +483,11 @@ const InternshipApplication = () => {
                                         id="profilePicture"
                                         type="file"
                                         accept="image/jpeg,image/png,image/webp"
-                                        onChange={(e) => handleFileChange(e, setProfilePicture, ['image/jpeg', 'image/png', 'image/webp'], 2)}
+                                        onChange={(e) => handleFileChange(e, setProfilePicture, setProfilePictureError, ['image/jpeg', 'image/png', 'image/webp'], 2)}
                                         required
                                     />
-                                    {profilePicture && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{profilePicture.name}</p>}
+                                    {profilePicture && !profilePictureError && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">File selected: {profilePicture.name}</p>}
+                                    {profilePictureError && <p className="text-red-500 text-xs mt-1">{profilePictureError}</p>}
                                 </div>
                                 <div>
                                     <Label htmlFor="cnicOrStudentCard" className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
@@ -467,10 +497,11 @@ const InternshipApplication = () => {
                                         id="cnicOrStudentCard"
                                         type="file"
                                         accept="image/jpeg,image/png,image/webp,application/pdf"
-                                        onChange={(e) => handleFileChange(e, setCnicOrStudentCard, ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], 2)}
+                                        onChange={(e) => handleFileChange(e, setCnicOrStudentCard, setCnicOrStudentCardError, ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], 2)}
                                         required
                                     />
-                                    {cnicOrStudentCard && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{cnicOrStudentCard.name}</p>}
+                                    {cnicOrStudentCard && !cnicOrStudentCardError && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">File selected: {cnicOrStudentCard.name}</p>}
+                                    {cnicOrStudentCardError && <p className="text-red-500 text-xs mt-1">{cnicOrStudentCardError}</p>}
                                 </div>
                             </div>
 
@@ -487,16 +518,16 @@ const InternshipApplication = () => {
                             )}
 
                             {submissionStatus === 'loading' && (
-                                <p className="text-center text-blue-500 dark:text-blue-400 mt-4">Submitting your application...</p>
+                                <p className="text-center text-blue-500 dark:text-blue-400 mt-4">Submitting your application, please wait...</p>
                             )}
                             {submissionStatus === 'error' && (
                                 <div className="text-center text-red-600 dark:text-red-400 mt-4 flex items-center justify-center">
-                                    <XCircle className="h-5 w-5 mr-2" /> {errorMessage || 'An error occurred during submission. Please try again.'}
+                                    <XCircle className="h-5 w-5 mr-2" /> {errorMessage || 'An unexpected error occurred during submission. Please try again.'}
                                 </div>
                             )}
 
-                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2" disabled={submissionStatus === 'loading'}>
-                                Submit Application
+                            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2" disabled={submissionStatus === 'loading' || !captchaVerified && !user || profilePictureError || cnicOrStudentCardError}>
+                                {submissionStatus === 'loading' ? 'Submitting...' : 'Submit Application'}
                             </Button>
                         </form>
                     </CardContent>
