@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Import useRef
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Clock, CheckCircle, XCircle, Timer } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, Timer, Bot, MessageSquare, X } from 'lucide-react'; // Added MessageSquare for toast icon, and explicitly imported X
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { fetchMCQsByChapter, MCQ } from '@/utils/mcqData';
 import { supabase } from '@/integrations/supabase/client';
 import { AIChatbot } from './AIChatbot';
-import { useQuery } from '@tanstack/react-query'; // Import useQuery
+import { useQuery } from '@tanstack/react-query';
 
 interface MCQDisplayProps {
   subject: string;
@@ -52,6 +52,25 @@ export const MCQDisplay = ({
   const [timeLeft, setTimeLeft] = useState(timePerQuestion);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [score, setScore] = useState(0);
+
+  // States for AIChatbot visibility
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
+  // States for Dr. Sultan's help toast
+  const [showHelpToast, setShowHelpToast] = useState(false);
+  const [helpToastMessage, setHelpToastMessage] = useState('');
+  const helpToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const helpMessages = [
+    "Hey, you look stuck. May I help you?",
+    "Things going dude or may I help you?",
+    "Hey, I am Dr. Sultan. Tap here to ask me if you need help.",
+    "Don't hesitate to ask! Dr. Sultan is here.",
+    "Need a hint? I'm here to assist!",
+    "Feeling puzzled? Dr. Sultan has answers!",
+    "Stuck on this one? Let's figure it out together.",
+    "I can explain this question further. Just tap me!"
+  ];
 
   // Derive username for the good luck message
   const username = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -104,27 +123,32 @@ export const MCQDisplay = ({
     loadMCQs();
   }, [chapter]);
 
+  // Timer for Dr. Sultan's help toast
   useEffect(() => {
-    setStartTime(Date.now());
-    setTimeLeft(timePerQuestion);
-  }, [currentQuestionIndex, timePerQuestion]);
+    // Clear any existing timer when question changes or component unmounts
+    if (helpToastTimerRef.current) {
+      clearTimeout(helpToastTimerRef.current);
+    }
+    setShowHelpToast(false); // Hide toast for new question
 
-  useEffect(() => {
-    if (!timerEnabled || showExplanation || timeLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Time's up - auto submit
-          handleTimeUp();
-          return 0;
+    // Set a new timer if no answer selected yet and chatbot is not open
+    // and user is authenticated (chatbot is a premium feature)
+    if (user && userPlanForChatbot === 'premium' && !selectedAnswer && !isChatbotOpen) {
+      helpToastTimerRef.current = setTimeout(() => {
+        if (!selectedAnswer && !isChatbotOpen) { // Double check if still no answer and chatbot is closed
+          setHelpToastMessage(helpMessages[Math.floor(Math.random() * helpMessages.length)]);
+          setShowHelpToast(true);
         }
-        return prev - 1;
-      });
-    }, 1000);
+      }, 10000); // 10 seconds
+    }
 
-    return () => clearInterval(timer);
-  }, [timerEnabled, showExplanation, timeLeft]);
+    // Cleanup function for the effect
+    return () => {
+      if (helpToastTimerRef.current) {
+        clearTimeout(helpToastTimerRef.current);
+      }
+    };
+  }, [currentQuestionIndex, selectedAnswer, isChatbotOpen, user, userPlanForChatbot]); // Depend on selectedAnswer and isChatbotOpen
 
   const currentMCQ = mcqs[currentQuestionIndex];
   const totalQuestions = mcqs.length;
@@ -139,6 +163,10 @@ export const MCQDisplay = ({
   const handleAnswerSelect = (answer: string) => {
     if (showExplanation) return;
     setSelectedAnswer(answer);
+    setShowHelpToast(false); // Hide help toast if user selects an answer
+    if (helpToastTimerRef.current) {
+      clearTimeout(helpToastTimerRef.current); // Clear timer if user acts
+    }
   };
 
   const handleSubmitAnswer = async (timeUp = false) => {
@@ -166,6 +194,10 @@ export const MCQDisplay = ({
     }
 
     setShowExplanation(true);
+    setShowHelpToast(false); // Hide help toast after submitting answer
+    if (helpToastTimerRef.current) {
+      clearTimeout(helpToastTimerRef.current); // Clear timer
+    }
   };
 
   const handleNextQuestion = () => {
@@ -174,6 +206,7 @@ export const MCQDisplay = ({
       setSelectedAnswer(null);
       setShowExplanation(false);
       setTimeLeft(timePerQuestion);
+      // Timer for help toast will be reset by useEffect due to currentQuestionIndex change
     } else {
       // Quiz completed
       toast({
@@ -183,6 +216,13 @@ export const MCQDisplay = ({
       
       onBack();
     }
+  };
+
+  // Function to handle clicking the help toast
+  const handleHelpToastClick = () => {
+    setShowHelpToast(false); // Dismiss the toast
+    setIsChatbotOpen(true); // Open the chatbot
+    // The AIChatbot component itself will handle showing the welcome/help message
   };
 
   if (loading) {
@@ -388,8 +428,38 @@ export const MCQDisplay = ({
         </motion.div>
       </AnimatePresence>
 
+      {/* Dr. Sultan's Help Toast */}
+      <AnimatePresence>
+        {showHelpToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-24 right-6 z-50 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-purple-200 dark:border-purple-700 flex items-center space-x-2 cursor-pointer max-w-[calc(100vw-48px)] sm:max-w-xs"
+            onClick={handleHelpToastClick}
+          >
+            <Bot className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+            <span className="text-sm text-gray-800 dark:text-gray-200 flex-grow">{helpToastMessage}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); setShowHelpToast(false); }}
+              className="w-6 h-6 p-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* AI Chatbot */}
-      <AIChatbot currentQuestion={currentMCQ?.question} userPlan={userPlanForChatbot} />
+      <AIChatbot 
+        currentQuestion={currentMCQ?.question} 
+        userPlan={userPlanForChatbot} 
+        isOpen={isChatbotOpen} // Pass isOpen state
+        setIsOpen={setIsChatbotOpen} // Pass setIsOpen setter
+      />
     </div>
   );
 };
