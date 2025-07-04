@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/components/ui/use-toast'; // Assuming you have a toast system
-import { ArrowLeft, Moon, Sun, Upload, User, Mail, Phone, Briefcase, Lightbulb, FileImage, CreditCard, Loader2 } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Upload, User, Mail, Phone, Briefcase, Lightbulb, FileImage, CreditCard, Loader2, RefreshCw } from 'lucide-react'; // Added RefreshCw for CAPTCHA refresh
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -42,17 +42,35 @@ const InternshipApplication = () => {
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
   const [cnicStudentCardFile, setCnicStudentCardFile] = useState<File | null>(null);
 
+  // Local CAPTCHA states
+  const [captchaValue, setCaptchaValue] = useState('');
+  const [userCaptchaInput, setUserCaptchaInput] = useState('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profilePictureUploading, setProfilePictureUploading] = useState(false);
   const [cnicStudentCardUploading, setCnicStudentCardUploading] = useState(false);
 
-  // Prefill name and email from logged-in user
+  // Function to generate a random CAPTCHA string
+  const generateCaptcha = () => {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaValue(result);
+    setUserCaptchaInput(''); // Clear user input on refresh
+  };
+
+  // Prefill name and email from logged-in user and generate CAPTCHA on mount if not logged in
   useEffect(() => {
     if (user) {
       setName(user.user_metadata?.full_name || user.email?.split('@')[0] || '');
       setEmail(user.email || '');
+    } else {
+      generateCaptcha(); // Generate CAPTCHA if user is not logged in
     }
   }, [user]);
+
 
   // Get user profile data for the badge (same as MCQs.tsx)
   const { data: profile } = useQuery({
@@ -214,6 +232,20 @@ const InternshipApplication = () => {
       return;
     }
 
+    // CAPTCHA validation for non-logged-in users
+    if (!user) {
+      if (userCaptchaInput.toLowerCase() !== captchaValue.toLowerCase()) {
+        toast({
+          title: "CAPTCHA Mismatch",
+          description: "The CAPTCHA you entered is incorrect. Please try again.",
+          variant: "destructive",
+        });
+        generateCaptcha(); // Generate new CAPTCHA on failure
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     // Re-validate files just before submission to be safe
     if (!validateFile(profilePictureFile, 'Profile Picture') || !validateFile(cnicStudentCardFile, 'CNIC/Student Card')) {
       setIsSubmitting(false);
@@ -300,6 +332,10 @@ const InternshipApplication = () => {
       setSkillsToApply([]);
       setProfilePictureFile(null);
       setCnicStudentCardFile(null);
+      // Generate new CAPTCHA after successful submission if not logged in
+      if (!user) {
+        generateCaptcha();
+      }
 
     } catch (error: any) {
       console.error('Error submitting application:', error);
@@ -308,6 +344,10 @@ const InternshipApplication = () => {
         description: `Failed to submit application: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
+      // Generate new CAPTCHA on error if not logged in
+      if (!user) {
+        generateCaptcha();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -320,7 +360,7 @@ const InternshipApplication = () => {
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex justify-between items-center max-w-full">
           <Link to="/dashboard" className="flex items-center space-x-1 sm:space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
             <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            <span>Back to Dashboard</span>
+            <span className="hidden sm:inline">Back to Dashboard</span> {/* Hidden on mobile */}
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -569,10 +609,41 @@ const InternshipApplication = () => {
                 {cnicStudentCardUploading && <p className="text-sm text-purple-600 dark:text-purple-400 mt-1 flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading CNIC/Student Card...</p>}
               </div>
 
+              {/* Local CAPTCHA for non-logged-in users */}
+              {!user && (
+                <div className="flex flex-col items-center justify-center py-4 border rounded-lg p-4 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Please verify you are not a robot:</p>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="text-2xl font-bold tracking-widest text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900 px-4 py-2 rounded-md select-none border border-purple-300 dark:border-purple-700">
+                      {captchaValue}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={generateCaptcha}
+                      className="w-9 h-9 rounded-full text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-800 border-purple-300 dark:border-purple-700"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    type="text"
+                    value={userCaptchaInput}
+                    onChange={(e) => setUserCaptchaInput(e.target.value)}
+                    placeholder="Enter CAPTCHA"
+                    className="w-full max-w-xs text-center rounded-md border border-purple-300 dark:border-purple-700 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                  {userCaptchaInput.length > 0 && userCaptchaInput.toLowerCase() !== captchaValue.toLowerCase() && (
+                    <p className="text-red-500 text-sm mt-2">Incorrect CAPTCHA. Please try again.</p>
+                  )}
+                </div>
+              )}
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.01]"
-                disabled={isSubmitting || profilePictureUploading || cnicStudentCardUploading}
+                disabled={isSubmitting || profilePictureUploading || cnicStudentCardUploading || (!user && userCaptchaInput.toLowerCase() !== captchaValue.toLowerCase())}
               >
                 {isSubmitting ? (
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />

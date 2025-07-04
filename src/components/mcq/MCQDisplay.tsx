@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchMCQsByChapter, MCQ } from '@/utils/mcqData';
 import { supabase } from '@/integrations/supabase/client';
 import { AIChatbot } from './AIChatbot';
+import { useQuery } from '@tanstack/react-query'; // Import useQuery
 
 interface MCQDisplayProps {
   subject: string;
@@ -43,7 +43,8 @@ export const MCQDisplay = ({
 }: MCQDisplayProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [mcqs, setMcqs] = useState<ShuffledMCQ[]>([]);
+  const [mcqs, setMcqs] = useState<ShuffledMCQ[]>([]
+);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -51,6 +52,32 @@ export const MCQDisplay = ({
   const [timeLeft, setTimeLeft] = useState(timePerQuestion);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [score, setScore] = useState(0);
+
+  // Derive username for the good luck message
+  const username = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
+  // Fetch user profile data to get the plan
+  const { data: profile } = useQuery({
+    queryKey: ['profileForChatbot', user?.id], // Unique query key
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile for chatbot:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!user?.id // Only run query if user ID exists
+  });
+
+  // Determine the user's plan for the chatbot
+  const userPlanForChatbot = profile?.plan?.toLowerCase() || 'free';
 
   useEffect(() => {
     const loadMCQs = async () => {
@@ -161,9 +188,36 @@ export const MCQDisplay = ({
   if (loading) {
     return (
       <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm mx-2 sm:mx-0">
-        <CardContent className="text-center py-6 sm:py-8">
-          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Loading questions...</p>
+        <style jsx>{`
+          @keyframes wave-animation {
+            0%, 100% {
+              transform: scaleY(0.4);
+              opacity: 0.5;
+            }
+            50% {
+              transform: scaleY(1);
+              opacity: 1;
+            }
+          }
+          .wave-bar {
+            animation: wave-animation 1.2s ease-in-out infinite;
+            transform-origin: bottom; /* Make it animate from the bottom */
+          }
+          .wave-bar:nth-child(1) { animation-delay: 0s; }
+          .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+          .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+          .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+          .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+        `}</style>
+        <CardContent className="text-center py-6 sm:py-8 flex flex-col items-center justify-center h-full">
+          <div className="flex justify-center items-end h-24 space-x-2"> {/* items-end to make waves rise from bottom */}
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.3s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-4">Loading questions...</p>
         </CardContent>
       </Card>
     );
@@ -318,13 +372,24 @@ export const MCQDisplay = ({
                   </Button>
                 )}
               </div>
+
+              {/* Best of luck message */}
+              {user && ( // Only show if a user is logged in
+                <div className="mt-6 text-center text-gray-700 dark:text-gray-300 text-base sm:text-lg">
+                  Best of luck,{' '}
+                  <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text font-bold">
+                    {username}
+                  </span>
+                  !
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       </AnimatePresence>
 
       {/* AI Chatbot */}
-      <AIChatbot currentQuestion={currentMCQ?.question} />
+      <AIChatbot currentQuestion={currentMCQ?.question} userPlan={userPlanForChatbot} />
     </div>
   );
 };

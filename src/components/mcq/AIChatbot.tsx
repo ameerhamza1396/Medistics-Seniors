@@ -1,10 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Added CardDescription
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, Send, X, Loader2, Bot } from 'lucide-react';
+import { MessageSquare, Send, X, Loader2, Bot, Lock } from 'lucide-react'; // Added Lock icon
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
@@ -15,14 +14,18 @@ interface Message {
 
 interface AIChatbotProps {
   currentQuestion?: string;
+  userPlan?: string; // Prop for user's plan (e.g., 'free', 'iconic', 'premium')
 }
 
-export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion }) => {
+export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Determine if the user has premium access
+  const hasPremiumAccess = userPlan === 'premium';
 
   const API_BASE_URL = 'https://medistics-ai-bot.vercel.app';
 
@@ -35,6 +38,12 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion }) => {
   }, [messages]);
 
   const sendMessage = async (message: string) => {
+    // Only allow sending messages if premium access is granted
+    if (!hasPremiumAccess) {
+      console.warn("User does not have premium access. Cannot send message.");
+      return;
+    }
+
     if (!message.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -106,6 +115,11 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion }) => {
   };
 
   const handleQuestionHelp = () => {
+    // Only allow this action if premium access is granted
+    if (!hasPremiumAccess) {
+      console.warn("User does not have premium access. Cannot use question help.");
+      return;
+    }
     if (currentQuestion) {
       sendMessage(`Can you help me understand this question: ${currentQuestion}`);
     }
@@ -153,81 +167,100 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion }) => {
               </CardHeader>
 
               <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
-                <ScrollArea className="flex-1 px-4 py-4">
-                  {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-8">
-                      <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="text-sm">Ask me anything about your studies!</p>
-                      <p className="text-xs text-gray-500 mt-2">I'm Dr. Sultan, your MCAT tutor specialized in medical sciences.</p>
-                      {currentQuestion && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleQuestionHelp}
-                          className="mt-3"
-                        >
-                          Help with current question
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {messages.map((message, index) => (
-                        <div
-                          key={index}
-                          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-[80%] p-3 rounded-lg ${
-                              message.role === 'user'
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-                            }`}
-                          >
-                            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                            <p className={`text-xs mt-1 ${
-                              message.role === 'user' ? 'text-purple-100' : 'text-gray-500'
-                            }`}>
-                              {new Date(message.timestamp).toLocaleTimeString()}
-                            </p>
-                          </div>
+                {hasPremiumAccess ? (
+                  <>
+                    <ScrollArea className="flex-1 px-4 py-4">
+                      {messages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-8">
+                          <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p className="text-sm">Ask me anything about your studies!</p>
+                          <p className="text-xs text-gray-500 mt-2">I'm Dr. Sultan, your MCAT tutor specialized in medical sciences.</p>
+                          {currentQuestion && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleQuestionHelp}
+                              className="mt-3"
+                            >
+                              Help with current question
+                            </Button>
+                          )}
                         </div>
-                      ))}
-                      {isLoading && (
-                        <div className="flex justify-start">
-                          <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  )}
-                </ScrollArea>
-
-                <div className="border-t p-4 flex-shrink-0">
-                  <form onSubmit={handleSubmit} className="flex space-x-2">
-                    <Input
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask about the question..."
-                      disabled={isLoading}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={isLoading || !input.trim()}
-                      size="sm"
-                      className="bg-purple-600 hover:bg-purple-700"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Send className="w-4 h-4" />
+                        <div className="space-y-4">
+                          {messages.map((message, index) => (
+                            <div
+                              key={index}
+                              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div
+                                className={`max-w-[80%] p-3 rounded-lg ${
+                                  message.role === 'user'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                                <p className={`text-xs mt-1 ${
+                                  message.role === 'user' ? 'text-purple-100' : 'text-gray-500'
+                                }`}>
+                                  {new Date(message.timestamp).toLocaleTimeString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          {isLoading && (
+                            <div className="flex justify-start">
+                              <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              </div>
+                            </div>
+                          )}
+                          <div ref={messagesEndRef} />
+                        </div>
                       )}
+                    </ScrollArea>
+
+                    <div className="border-t p-4 flex-shrink-0">
+                      <form onSubmit={handleSubmit} className="flex space-x-2">
+                        <Input
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          placeholder="Ask about the question..."
+                          disabled={isLoading}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="submit"
+                          disabled={isLoading || !input.trim()}
+                          size="sm"
+                          className="bg-purple-600 hover:bg-purple-700"
+                        >
+                          {isLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+                  </>
+                ) : (
+                  // Content for non-premium users
+                  <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                    <Lock className="w-16 h-16 text-purple-600 mb-4 opacity-70" />
+                    <CardTitle className="text-xl mb-2">Premium Feature</CardTitle>
+                    <CardDescription className="text-gray-600 dark:text-gray-400 mb-4">
+                      Unlock full access to Dr. Sultan AI Chatbot with a Premium plan.
+                    </CardDescription>
+                    <Button
+                      asChild
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105"
+                    >
+                      <a href="/pricing">Upgrade to Premium</a>
                     </Button>
-                  </form>
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
