@@ -1,10 +1,9 @@
-// src/pages/MCQs.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, BookOpen, Target, Trophy, Clock, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, BookOpen, Target, Trophy, Clock, Moon, Sun, Lock } from 'lucide-react'; // Added Lock icon
 import { SubjectSelectionScreen } from '@/components/mcq/SubjectSelectionScreen';
 import { ChapterSelectionScreen } from '@/components/mcq/ChapterSelectionScreen';
 import { QuizSettingsScreen } from '@/components/mcq/QuizSettingsScreen';
@@ -33,10 +32,10 @@ const MCQs = () => {
   });
 
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth(); // Only need 'user' here, as 'profiles' is fetched via useQuery
+  const { user, loading: authLoading } = useAuth(); // Get loading state from useAuth
 
   // Get user profile data using useQuery
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -90,8 +89,11 @@ const MCQs = () => {
         setUserStats(stats);
       }
     };
-    loadUserStats();
-  }, [user?.id]);
+    // Only load stats if user is logged in and not currently loading auth/profile
+    if (user?.id && !authLoading && !profileLoading) {
+      loadUserStats();
+    }
+  }, [user?.id, authLoading, profileLoading]);
 
   const handleSubjectSelect = (subject: Subject) => {
     setSelectedSubject(subject);
@@ -129,13 +131,12 @@ const MCQs = () => {
       case 'subjects':
         return <SubjectSelectionScreen onSubjectSelect={handleSubjectSelect} />;
       case 'chapters':
-        // FIX: Pass the user's profile data to ChapterSelectionScreen
         return selectedSubject ? (
           <ChapterSelectionScreen
             subject={selectedSubject}
             onChapterSelect={handleChapterSelect}
             onBack={handleBackToSubjects}
-            userProfile={profile} // <--- THE KEY FIX IS HERE
+            userProfile={profile}
           />
         ) : null;
       case 'settings':
@@ -146,6 +147,38 @@ const MCQs = () => {
         return <SubjectSelectionScreen onSubjectSelect={handleSubjectSelect} />;
     }
   };
+
+  // Show a loading state while authentication is in progress
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-600"></div>
+        <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">Loading user data...</p>
+      </div>
+    );
+  }
+
+  // If user is not logged in, show login prompt
+  if (!user) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4 text-center">
+        <Card className="w-full max-w-md bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-purple-200 dark:border-purple-800 shadow-lg p-6">
+          <CardHeader className="mb-4">
+            <Lock className="w-16 h-16 mx-auto text-purple-600 dark:text-purple-400 mb-4" />
+            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Access Restricted</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              Please log in to access the MCQ practice section.
+            </p>
+            <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.01]">
+              <Link to="/login">Go to Login</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
