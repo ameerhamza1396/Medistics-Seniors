@@ -177,6 +177,8 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     // --- Client-side Supabase Update (for current player's score/answers) ---
     // This part remains to simulate saving the current player's progress.
     try {
+      // First, try to fetch the participant to see if they exist
+      console.log('Attempting to fetch participant for room:', roomData.id, 'user:', userId);
       const { data: participantData, error: fetchError } = await supabase
         .from('battle_participants')
         .select('score, answers')
@@ -185,9 +187,11 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         .single();
 
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error('Error fetching participant:', fetchError);
         console.warn('Participant not found or multiple found. Ensure battle_participants has unique (battle_room_id, user_id) constraint.', fetchError);
         // If participant not found, attempt to insert a new one before updating
         if (fetchError.code === 'PGRST116') {
+          console.log('Participant not found, attempting to insert new one.');
           const { error: insertError } = await supabase
             .from('battle_participants')
             .insert({
@@ -198,7 +202,10 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
               answers: [],
               is_finished: false
             });
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('Error inserting new participant:', insertError);
+            throw insertError;
+          }
           console.log('New participant inserted after initial fetch failed.');
         } else {
           throw fetchError; // Re-throw other fetch errors
@@ -208,6 +215,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
       const existingAnswers = participantData?.answers || [];
       const updatedScore = (participantData?.score || 0) + questionScore;
 
+      console.log('Attempting to update participant with score:', updatedScore, 'and answers:', existingAnswers.length + 1);
       const { error: updateError } = await supabase
         .from('battle_participants')
         .update({
@@ -223,14 +231,17 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         .eq('battle_room_id', roomData.id)
         .eq('user_id', userId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating participant:', updateError);
+        throw updateError;
+      }
 
-      console.log('Answer and score saved to battle_participants.');
+      console.log('Answer and score saved to battle_participants successfully.');
     } catch (error) {
-      console.error('Error saving answer to database:', error);
+      console.error('Error in handleAnswerSubmit (Supabase operation failed):', error);
       toast({
         title: "Error",
-        description: `Failed to save answer: ${error instanceof Error ? error.message : String(error)}`,
+        description: `Failed to save answer: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
         variant: "destructive"
       });
     }
@@ -252,14 +263,18 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     
     try {
       // --- Client-side Supabase Update (for current player's final score and finished status) ---
+      console.log('Attempting to update final score and finish status for current participant.');
       const { error: updateParticipantError } = await supabase
         .from('battle_participants')
         .update({ score: score, is_finished: true })
         .eq('battle_room_id', roomData.id)
         .eq('user_id', userId);
 
-      if (updateParticipantError) throw updateParticipantError;
-      console.log('Final score and finished status updated for current participant.');
+      if (updateParticipantError) {
+        console.error('Error updating final participant status:', updateParticipantError);
+        throw updateParticipantError;
+      }
+      console.log('Final score and finished status updated for current participant successfully.');
       // -----------------------------------------------------------------------------------------
 
       // --- CLIENT-SIDE RANK CALCULATION SIMULATION ---
@@ -268,6 +283,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
       // and calculate the rank here.
       
       // Fetch all participants for the room to get their latest scores
+      console.log('Fetching all participants for room:', roomData.id, 'to calculate ranks.');
       const { data: allParticipants, error: fetchParticipantsError } = await supabase
         .from('battle_participants')
         .select('user_id, username, score')
@@ -282,6 +298,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         });
         return; // Exit if we can't get participant data
       }
+      console.log('Fetched participants:', allParticipants);
 
       // Ensure current player's score is updated in the list for accurate ranking
       // (This step is crucial if the local 'score' state is more up-to-date than the fetched 'allParticipants')
@@ -291,14 +308,17 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
 
       // Sort participants by score to determine rank
       const sortedParticipants = [...updatedParticipants].sort((a, b) => b.score - a.score);
+      console.log('Sorted participants for rank calculation:', sortedParticipants);
 
       // Find the current player's rank
       const playerRank = sortedParticipants.findIndex(p => p.user_id === userId) + 1;
+      console.log('Calculated player rank:', playerRank);
 
       const totalCorrect = (score - (score % 100)) / 100; // Assuming 100 base points per correct answer
       const accuracyPercentage = (totalCorrect / questions.length) * 100;
 
       // --- Client-side Supabase Upsert for Battle Results (now with calculated rank) ---
+      console.log('Attempting to upsert battle results with calculated rank:', playerRank);
       const { error: upsertResultError } = await supabase
         .from('battle_results')
         .upsert({
@@ -312,11 +332,12 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
           time_bonus: score - (totalCorrect * 100)
         }, { onConflict: ['battle_room_id', 'user_id'] }); // Use onConflict to update if exists
 
-      if (upsertResultError) throw upsertResultError;
-      console.log('Battle results (including client-side calculated rank) upserted.');
+      if (upsertResultError) {
+        console.error('Error upserting battle results:', upsertResultError);
+        throw upsertResultError;
+      }
+      console.log('Battle results (including client-side calculated rank) upserted successfully.');
       // ----------------------------------------------------------------------------------
-
-      console.log('Player score, finished status, and client-side rank updated.');
 
       // Prepare results object to pass to onGameComplete
       const results = {
@@ -334,10 +355,10 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
       }, 2000);
 
     } catch (error) {
-      console.error('Error finishing game (Supabase operation failed):', error);
+      console.error('Error in finishGame (Supabase operation failed):', error);
       toast({
         title: "Error",
-        description: `Failed to save game results or calculate rank: ${error instanceof Error ? error.message : String(error)}`,
+        description: `Failed to save game results or calculate rank: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
         variant: "destructive"
       });
     }
