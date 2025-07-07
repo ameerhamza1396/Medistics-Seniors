@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
@@ -23,7 +24,6 @@ import Admin6 from '@/pages/Admin6';
 import Admin7 from '@/pages/Admin7';
 import Admin8 from '@/pages/Admin8';
 import Admin9 from '@/pages/Admin9';
-import Admin10 from '@/pages/Admin10';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
@@ -40,11 +40,10 @@ import UsernamePage from '@/pages/UsernamePage';
 import WelcomeNewUserPage from './pages/WelcomeNewUserPage';
 import AllSetPage from '@/pages/AllSetPage';
 import MockTestResults from '@/pages/MockTestResults';
-import TestCompletion from '@/pages/TestResults'; // Assuming this is correct
-import Career from '@/pages/Career'; // Assuming this is correct
-import TeachingAmbassadors from '@/pages/TeachingAmbassadors'; // Assuming this is correct
-import InternshipApplication from '@/pages/InternshipApplication'; // Assuming this is correct
-import AnnouncementsPage from '@/pages/Announcements'; // Assuming this is correct
+import TestCompletion from '@/pages/TestResults';
+import Career from '@/pages/Career';
+import TeachingAmbassadors from '@/pages/TeachingAmbassadors';
+import InternshipApplication from '@/pages/InternshipApplication';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -82,7 +81,6 @@ function App() {
               <Route path="/admin7" element={<Admin7 />} />
               <Route path="/admin8" element={<Admin8 />} />
               <Route path="/admin9" element={<Admin9 />} />
-              <Route path="/admin10" element={<Admin10 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/password" element={<ChangePassword />} />
               <Route path="/profile/upgrade" element={<Profile />} />
@@ -96,16 +94,14 @@ function App() {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/classroom" element={<Classroom />} />
               {/* <Route path="/classroom/:id" element={<ClassroomChat />} /> */}
-              {/* NOTE: You have two /verify-email routes. Keep the one you intend to use. */}
               <Route path="/welcome-new-user" element={<WelcomeNewUserPage />} />
               <Route path="/all-set" element={<AllSetPage />} />
               <Route path="/settings/username" element={<UsernamePage />} />
               <Route path="/results" element={<MockTestResults />} />
-              <Route path="/test-summary" element={<TestCompletion />} /> {/* <-- FIX IS HERE */}
-              <Route path="/career" element={<Career />} /> {/* <-- FIX IS HERE */}
-              <Route path="/teaching-career" element={<TeachingAmbassadors />} /> {/* <-- FIX IS HERE */}
-              <Route path="/summerinternship2025" element={<InternshipApplication />} /> {/* <-- FIX IS HERE */}
-              <Route path="/announcements" element={<AnnouncementsPage />} /> {/* <-- FIX IS HERE */}
+              <Route path="/test-summary" element={<TestCompletion />} />
+              <Route path="/career" element={<Career />} />
+              <Route path="/teaching-career" element={<TeachingAmbassadors />} />
+              <Route path="/summerinternship2025" element={<InternshipApplication />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
