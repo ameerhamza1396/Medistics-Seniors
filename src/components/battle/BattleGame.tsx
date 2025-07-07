@@ -1,12 +1,12 @@
-
+// BattleGame.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Using alias path
+import { Button } from '@/components/ui/button'; // Using alias path
+import { Progress } from '@/components/ui/progress'; // Using alias path
+import { Badge } from '@/components/ui/badge'; // Using alias path
 import { Clock, Trophy, Users, Zap } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client'; // Using alias path
+import { useToast } from '@/hooks/use-toast'; // Using alias path
 
 interface BattleGameProps {
   roomData: {
@@ -23,10 +23,19 @@ interface BattleGameProps {
       username: string; 
       score: number; 
       answers?: any[];
+      is_finished?: boolean; // Added for client-side simulation
     }[];
   };
   userId: string;
-  onGameComplete: (results: any) => void;
+  // onGameComplete now expects the full results object
+  onGameComplete: (results: {
+    finalScore: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    accuracy: number;
+    rank: number;
+    roomCode: string;
+  }) => void; 
 }
 
 interface Question {
@@ -45,7 +54,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
   const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [gameFinished, setGameFinished] = useState(false);
+  const [gameFinishedLocally, setGameFinishedLocally] = useState(false); // Local state for this player's game status
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sample questions for demo (in real implementation, fetch from database)
@@ -88,13 +97,13 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
   ];
 
   useEffect(() => {
-    // Initialize questions (in real implementation, fetch from Supabase)
+    // Initialize questions (in real implementation, fetch from Supabase based on roomData.subject)
     setQuestions(sampleQuestions.slice(0, roomData.total_questions));
     setIsLoading(false);
   }, [roomData.total_questions]);
 
   useEffect(() => {
-    if (!isLoading && !gameFinished) {
+    if (!isLoading && !gameFinishedLocally) {
       startTimer();
     }
     return () => {
@@ -102,7 +111,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         clearInterval(timerRef.current);
       }
     };
-  }, [currentQuestionIndex, isLoading, gameFinished]);
+  }, [currentQuestionIndex, isLoading, gameFinishedLocally]);
 
   const startTimer = () => {
     if (timerRef.current) {
@@ -147,9 +156,10 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     const currentQuestion = questions[currentQuestionIndex];
     const isCorrect = answer === currentQuestion.correct_answer;
     
+    let questionScore = 0;
     if (isCorrect) {
       const timeBonus = Math.max(0, timeLeft);
-      const questionScore = 100 + timeBonus * 2;
+      questionScore = 100 + timeBonus * 2;
       setScore(prev => prev + questionScore);
       
       toast({
@@ -164,26 +174,46 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
       });
     }
 
-    // Save answer to database (simplified)
+    // --- Client-side Supabase Update (for current player's score/answers) ---
+    // This part remains to simulate saving the current player's progress.
     try {
-      const currentParticipant = roomData.battle_participants.find(p => p.user_id === userId);
-      const existingAnswers = currentParticipant?.answers || [];
-      
+      const { data: participantData, error: fetchError } = await supabase
+        .from('battle_participants')
+        .select('score, answers')
+        .eq('battle_room_id', roomData.id)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
+        throw fetchError;
+      }
+
+      const existingAnswers = participantData?.answers || [];
+      const updatedScore = (participantData?.score || 0) + questionScore;
+
       await supabase
         .from('battle_participants')
         .update({
+          score: updatedScore,
           answers: [...existingAnswers, {
             questionId: currentQuestion.id,
             selectedAnswer: answer,
             isCorrect,
-            timeLeft
+            timeLeft,
+            points: questionScore
           }]
         })
         .eq('battle_room_id', roomData.id)
         .eq('user_id', userId);
     } catch (error) {
       console.error('Error saving answer:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save answer to database",
+        variant: "destructive"
+      });
     }
+    // ---------------------------------------------------------------------
 
     // Move to next question or finish game
     setTimeout(() => {
@@ -197,47 +227,96 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
   };
 
   const finishGame = async () => {
-    setGameFinished(true);
+    setGameFinishedLocally(true); // Mark this player's game as finished locally
     
     try {
-      // Update final score
-      await supabase
+      // --- Client-side Supabase Update (for current player's final score and finished status) ---
+      const { error: updateParticipantError } = await supabase
         .from('battle_participants')
-        .update({ score })
+        .update({ score: score, is_finished: true })
         .eq('battle_room_id', roomData.id)
         .eq('user_id', userId);
 
-      // Create battle result
-      await supabase
+      if (updateParticipantError) throw updateParticipantError;
+      // -----------------------------------------------------------------------------------------
+
+      // --- CLIENT-SIDE RANK CALCULATION SIMULATION ---
+      // This is the key change to make the rank dynamic without backend logic.
+      // We'll gather all participant scores (including this player's and mock others)
+      // and calculate the rank here.
+      
+      // Fetch all participants for the room to get their latest scores
+      // In a real app, this would be a real-time stream or a final fetch from server.
+      // For this client-side simulation, we'll use roomData.battle_participants
+      // and assume they are up-to-date or we fetch them.
+      const { data: allParticipants, error: fetchParticipantsError } = await supabase
+        .from('battle_participants')
+        .select('user_id, username, score')
+        .eq('battle_room_id', roomData.id);
+
+      if (fetchParticipantsError) {
+        console.error('Error fetching all participants for ranking:', fetchParticipantsError);
+        toast({
+          title: "Error",
+          description: "Failed to fetch participant data for ranking",
+          variant: "destructive"
+        });
+        return; // Exit if we can't get participant data
+      }
+
+      // Ensure current player's score is updated in the list for accurate ranking
+      const updatedParticipants = allParticipants.map(p => 
+        p.user_id === userId ? { ...p, score: score } : p
+      );
+
+      // Sort participants by score to determine rank
+      const sortedParticipants = [...updatedParticipants].sort((a, b) => b.score - a.score);
+
+      // Find the current player's rank
+      const playerRank = sortedParticipants.findIndex(p => p.user_id === userId) + 1;
+
+      const totalCorrect = (score - (score % 100)) / 100; // Assuming 100 base points per correct answer
+      const accuracyPercentage = (totalCorrect / questions.length) * 100;
+
+      // --- Client-side Supabase Upsert for Battle Results (now with calculated rank) ---
+      const { error: upsertResultError } = await supabase
         .from('battle_results')
-        .insert({
+        .upsert({
           battle_room_id: roomData.id,
           user_id: userId,
           final_score: score,
-          rank: 1, // Calculate actual rank based on other participants
-          total_correct: Math.floor(score / 100),
+          rank: playerRank, // Set the calculated rank here!
+          total_correct: totalCorrect,
           total_questions: questions.length,
-          accuracy_percentage: (Math.floor(score / 100) / questions.length) * 100,
-          time_bonus: score - (Math.floor(score / 100) * 100)
-        });
+          accuracy_percentage: accuracyPercentage,
+          time_bonus: score - (totalCorrect * 100)
+        }, { onConflict: ['battle_room_id', 'user_id'] }); // Use onConflict to update if exists
 
+      if (upsertResultError) throw upsertResultError;
+      // ----------------------------------------------------------------------------------
+
+      console.log('Player score, finished status, and client-side rank updated.');
+
+      // Prepare results object to pass to onGameComplete
       const results = {
         finalScore: score,
         totalQuestions: questions.length,
-        correctAnswers: Math.floor(score / 100),
-        accuracy: (Math.floor(score / 100) / questions.length) * 100,
-        rank: 1,
+        correctAnswers: totalCorrect,
+        accuracy: accuracyPercentage,
+        rank: playerRank, // Pass the calculated rank
         roomCode: roomData.room_code
       };
 
+      // Delay for a moment to show "Processing results..." then call onGameComplete
       setTimeout(() => {
-        onGameComplete(results);
+        onGameComplete(results); // Pass the full results object to the parent
       }, 2000);
+
     } catch (error) {
       console.error('Error finishing game:', error);
       toast({
         title: "Error",
-        description: "Failed to save game results",
+        description: "Failed to save game results or calculate rank",
         variant: "destructive"
       });
     }
@@ -254,7 +333,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     );
   }
 
-  if (gameFinished) {
+  if (gameFinishedLocally) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
         <Card className="w-full max-w-md p-8 text-center">
@@ -266,8 +345,9 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
             Final Score: {score}
           </p>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Processing results...
+            Calculating ranks...
           </p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mt-4"></div>
         </Card>
       </div>
     );
