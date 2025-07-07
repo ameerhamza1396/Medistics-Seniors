@@ -1,4 +1,4 @@
-// BattleRoom.tsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,33 +7,36 @@ import { Loader2, Users, Swords, XCircle, Gamepad2, Hourglass, Copy, BookOpenTex
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { Input } from '@/components/ui/input';
 
 interface BattleRoomProps {
   roomId: string;
-  userId: string; // The ID of the current logged-in user
+  userId: string;
   onLeave: () => void;
-  onBattleStart: (roomData: RoomData) => void; // MODIFIED: now passes roomData
+  onBattleStart: (roomData: RoomData) => void;
 }
 
-// Defines the structure of the room data, including participants, as fetched from Supabase.
 interface RoomData {
   id: string;
   room_code: string;
-  battle_type: '1v1' | '2v2' | 'ffa'; // Explicitly define battle types
+  battle_type: '1v1' | '2v2' | 'ffa';
   max_players: number;
   status: 'waiting' | 'in_progress' | 'completed';
   time_per_question: number;
   total_questions: number;
   subject: string;
   host_id: string;
-  host_ping_requested_at: string | null; // Timestamp for host ping request
-  last_ping_sender_id: string | null; // ID of the last user who pinged
-  last_ping_sender_username: string | null; // Username of the last user who pinged
-  countdown_initiated_at: string | null; // New: Timestamp when countdown was initiated
+  host_ping_requested_at: string | null;
+  last_ping_sender_id: string | null;
+  last_ping_sender_username: string | null;
+  countdown_initiated_at: string | null;
   created_at: string;
-  battle_participants: { id: string; user_id: string; username: string; created_at: string; }[]; // Added created_at for sorting
+  battle_participants: { 
+    id: string; 
+    user_id: string; 
+    username: string; 
+    created_at: string; 
+  }[];
 }
 
 export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoomProps) => {
@@ -45,47 +48,53 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   const prevHostPingRequestedAt = useRef<string | null>(null);
   const prevHostPingSenderId = useRef<string | null>(null);
   const [showConfirmLeaveModal, setShowConfirmLeaveModal] = useState(false);
-
   const prevParticipantsCount = useRef<number | null>(null);
 
-  // --- Fetch room details and participants in real-time ---
+  // Fetch room details and participants in real-time
   const { data: room, isLoading: roomLoading, error: roomError } = useQuery({
     queryKey: ['battleRoom', roomId],
     queryFn: async (): Promise<RoomData> => {
-      console.log('useQuery: Fetching battle room for roomId:', roomId);
+      console.log('Fetching battle room for roomId:', roomId);
       const { data, error } = await supabase
         .from('battle_rooms')
         .select(`
           *,
-          host_id,
-          host_ping_requested_at,
-          last_ping_sender_id,
-          last_ping_sender_username,
-          countdown_initiated_at,
           battle_participants(id, user_id, username, created_at)
         `)
         .eq('id', roomId)
         .single();
 
       if (error) {
-        console.error("Supabase Error fetching battle room in queryFn:", error);
+        console.error("Error fetching battle room:", error);
         throw error;
       }
-      console.log('useQuery: Successfully fetched room data:', data);
+      console.log('Successfully fetched room data:', data);
       return data as RoomData;
     },
     refetchInterval: 3000,
     enabled: !!roomId,
   });
 
-  // --- Real-time subscription for participants and room status ---
+  // Check if battle should start immediately when room data changes
   useEffect(() => {
-    if (!roomId) {
-      console.log('Realtime Subscriptions: roomId is null, skipping subscriptions.');
-      return;
+    if (room && room.status === 'in_progress') {
+      console.log("Room status is 'in_progress'. Starting battle immediately...");
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+      // Add a small delay to ensure the UI transitions smoothly
+      setTimeout(() => {
+        onBattleStart(room);
+      }, 500);
     }
+  }, [room, onBattleStart]);
 
-    console.log('Realtime Subscriptions: Setting up channels for roomId:', roomId);
+  // Real-time subscription
+  useEffect(() => {
+    if (!roomId) return;
+
+    console.log('Setting up real-time subscriptions for roomId:', roomId);
 
     const participantChannel = supabase
       .channel(`battle_room_${roomId}_participants`)
@@ -98,7 +107,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           filter: `battle_room_id=eq.${roomId}`
         },
         (payload) => {
-          console.log('Realtime participant change detected:', payload);
+          console.log('Real-time participant change:', payload);
           queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
         }
       )
@@ -115,19 +124,21 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           filter: `id=eq.${roomId}`
         },
         (payload) => {
-          console.log('Realtime room status change detected:', payload);
+          console.log('Real-time room status change:', payload);
           queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
-          const updatedRoom = payload.new as RoomData;
+          const updatedRoom = payload.new as any;
           if (updatedRoom.status === 'in_progress') {
-            console.log("Realtime: Room status changed to 'in_progress'. Starting battle...");
+            console.log("Room status changed to 'in_progress' via real-time. Starting battle...");
             if (countdownTimerRef.current) {
               clearInterval(countdownTimerRef.current);
               countdownTimerRef.current = null;
-              console.log('Realtime: Cleared countdown timer due to status change.');
             }
-            onBattleStart(updatedRoom);
+            // Trigger battle start with updated room data
+            setTimeout(() => {
+              onBattleStart(updatedRoom);
+            }, 500);
           } else if (updatedRoom.status === 'completed') {
-            console.log("Realtime: Room status changed to 'completed'. Leaving room.");
+            console.log("Room status changed to 'completed'. Leaving room.");
             onLeave();
             toast({
               title: "Room Closed",
@@ -139,136 +150,86 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
       )
       .subscribe();
 
-    console.log('Realtime Subscriptions: Channels subscribed.');
-
     return () => {
-      console.log('Realtime Subscriptions: Cleaning up channels.');
+      console.log('Cleaning up real-time channels');
       supabase.removeChannel(participantChannel);
       supabase.removeChannel(roomStatusChannel);
       if (countdownTimerRef.current) {
         clearInterval(countdownTimerRef.current);
         countdownTimerRef.current = null;
-        console.log('Realtime Subscriptions: Cleared countdown timer on unmount/cleanup.');
       }
     };
   }, [roomId, queryClient, onBattleStart, onLeave, toast]);
 
-  // --- Effect to manage countdown when room is full or manually started ---
+  // Countdown management
   useEffect(() => {
-    console.log('Countdown Effect: Re-evaluating. Current room state:', room?.status, 'countdown_initiated_at:', room?.countdown_initiated_at);
+    console.log('Countdown effect triggered. Room status:', room?.status, 'countdown_initiated_at:', room?.countdown_initiated_at);
     
     if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-        countdownTimerRef.current = null;
-        console.log('Countdown Effect: Cleared existing interval.');
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
     }
 
     if (!room || room.status === 'in_progress') {
-        console.log('Countdown Effect: No room data or room is in progress. Setting countdown to null and returning.');
-        setCountdown(null);
-        return;
+      setCountdown(null);
+      return;
     }
 
     const currentPlayers = room.battle_participants?.length || 0;
     const isRoomFull = currentPlayers === room.max_players;
     const isWaitingStatus = room.status === 'waiting';
-    const isCountdownInitiatedByDB = room.countdown_initiated_at !== null;
+    const isCountdownInitiated = room.countdown_initiated_at !== null;
 
-    console.log('Countdown Effect: Conditions - isWaitingStatus:', isWaitingStatus, 'isRoomFull:', isRoomFull, 'isCountdownInitiatedByDB:', isCountdownInitiatedByDB);
-
-    if (isWaitingStatus && (isRoomFull || isCountdownInitiatedByDB)) {
+    if (isWaitingStatus && (isRoomFull || isCountdownInitiated)) {
       const initialCountdownDuration = room.battle_type === '1v1' ? 5 : 10;
       let calculatedTimeRemaining = initialCountdownDuration;
 
-      if (isCountdownInitiatedByDB && room.countdown_initiated_at) {
+      if (isCountdownInitiated && room.countdown_initiated_at) {
         const timeElapsed = (new Date().getTime() - new Date(room.countdown_initiated_at).getTime()) / 1000;
         calculatedTimeRemaining = Math.max(0, initialCountdownDuration - Math.floor(timeElapsed));
-        console.log('Countdown Effect: Time elapsed:', timeElapsed, 'Calculated time remaining:', calculatedTimeRemaining);
       }
 
-      if (countdown === null || countdown !== calculatedTimeRemaining) {
-        setCountdown(calculatedTimeRemaining);
-        console.log('Countdown Effect: Initial countdown set to:', calculatedTimeRemaining);
-      }
+      setCountdown(calculatedTimeRemaining);
       
       if (calculatedTimeRemaining <= 0) {
-        console.log('Countdown Effect: Calculated time remaining is <= 0. Attempting to start battle directly.');
-        if (room.status === 'waiting') {
-            const updateStatus = async () => {
-              console.log('Countdown Effect: Calling updateStatus to set room in_progress (time expired).');
-              const { error } = await supabase
-                .from('battle_rooms')
-                .update({ status: 'in_progress', countdown_initiated_at: null })
-                .eq('id', roomId);
-              if (error) {
-                console.error('Error updating room status to in_progress (time expired):', error);
-                toast({
-                  title: "Error",
-                  description: "Failed to start battle automatically.",
-                  variant: "destructive",
-                });
-              } else {
-                console.log('Countdown Effect: Database update success (time expired). Invalidating queries.');
-                queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
-              }
-            };
-            updateStatus();
-        }
+        const updateStatus = async () => {
+          console.log('Countdown finished, updating room status to in_progress');
+          const { error } = await supabase
+            .from('battle_rooms')
+            .update({ status: 'in_progress', countdown_initiated_at: null })
+            .eq('id', roomId);
+          if (error) {
+            console.error('Error updating room status:', error);
+            toast({
+              title: "Error",
+              description: "Failed to start battle automatically.",
+              variant: "destructive",
+            });
+          }
+        };
+        updateStatus();
         return;
       }
 
-      if (calculatedTimeRemaining > 0 && countdownTimerRef.current === null) {
-        console.log('Countdown Effect: Starting new interval for countdown. Initial value:', calculatedTimeRemaining);
+      if (calculatedTimeRemaining > 0) {
         countdownTimerRef.current = setInterval(() => {
           setCountdown(prev => {
-            if (prev === null) {
-              if (countdownTimerRef.current) {
-                clearInterval(countdownTimerRef.current);
-                countdownTimerRef.current = null;
-                console.log('Countdown Interval: prev is null, cleared interval.');
-              }
-              return null;
-            }
-  
-            const currentRoomState = queryClient.getQueryData(['battleRoom', roomId]) as RoomData | undefined;
-            console.log('Countdown Interval: Tick. prev:', prev, 'Current cached room status:', currentRoomState?.status);
-  
-            if (currentRoomState?.status === 'in_progress') {
-              console.log('Countdown Interval: Cached room status is in_progress. Clearing interval.');
+            if (prev === null || prev <= 1) {
               if (countdownTimerRef.current) {
                 clearInterval(countdownTimerRef.current);
                 countdownTimerRef.current = null;
               }
-              return null;
-            }
-  
-            if (prev <= 1) {
-              console.log('Countdown Interval: Reached 0 or 1. Attempting status update.');
-              if (countdownTimerRef.current) {
-                clearInterval(countdownTimerRef.current);
-                countdownTimerRef.current = null;
-              }
-              if (currentRoomState?.status === 'waiting') {
-                  const updateStatus = async () => {
-                    console.log('Countdown Interval: Calling updateStatus to set room in_progress (countdown end).');
-                    const { error } = await supabase
-                      .from('battle_rooms')
-                      .update({ status: 'in_progress', countdown_initiated_at: null })
-                      .eq('id', roomId);
-                    if (error) {
-                      console.error('Error updating room status to in_progress (countdown end):', error);
-                      toast({
-                        title: "Error",
-                        description: "Failed to start battle automatically.",
-                        variant: "destructive",
-                      });
-                    } else {
-                      console.log('Countdown Interval: Database update success (countdown end). Invalidating queries.');
-                      queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
-                    }
-                  };
-                  updateStatus();
-              }
+              const updateStatus = async () => {
+                console.log('Countdown timer finished, updating room status to in_progress');
+                const { error } = await supabase
+                  .from('battle_rooms')
+                  .update({ status: 'in_progress', countdown_initiated_at: null })
+                  .eq('id', roomId);
+                if (error) {
+                  console.error('Error updating room status:', error);
+                }
+              };
+              updateStatus();
               return 0;
             }
             return prev - 1;
@@ -276,26 +237,18 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         }, 1000);
       }
     } else {
-      console.log('Countdown Effect: Conditions not met. Clearing interval and resetting countdown state.');
-      if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-        countdownTimerRef.current = null;
-      }
-      if (countdown !== null) {
-        setCountdown(null);
-      }
+      setCountdown(null);
     }
 
     return () => {
-      console.log('Countdown Effect Cleanup: Clearing interval on unmount/dependency change.');
       if (countdownTimerRef.current) {
         clearInterval(countdownTimerRef.current);
         countdownTimerRef.current = null;
       }
     };
-  }, [room, roomId, toast, queryClient, countdown]);
+  }, [room, roomId, toast]);
 
-  // --- Effect for Join/Leave Toast Notifications and Kicking Removed Players ---
+  // Join/Leave notifications
   useEffect(() => {
     if (!room) return;
 
@@ -303,24 +256,16 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     const isHost = room.host_id === userId;
 
     if (prevParticipantsCount.current !== null && prevParticipantsCount.current !== currentPlayers) {
-      const oldParticipants = (queryClient.getQueryData(['battleRoom', roomId]) as RoomData)?.battle_participants || [];
-
       if (currentPlayers > prevParticipantsCount.current) {
-        const newlyJoined = room.battle_participants.find(p => !oldParticipants.some(op => op.user_id === p.user_id));
-        if (newlyJoined) {
-          toast({
-            title: "Player Joined!",
-            description: `${newlyJoined.username} has joined the room.`,
-          });
-        }
+        toast({
+          title: "Player Joined!",
+          description: "A new player has joined the room.",
+        });
       } else if (currentPlayers < prevParticipantsCount.current) {
-        const removed = oldParticipants.find(p => !room.battle_participants?.some(np => np.user_id === p.user_id));
-        if (removed) {
-          toast({
-            title: "Player Left",
-            description: `${removed.username} has left the room.`,
-          });
-        }
+        toast({
+          title: "Player Left",
+          description: "A player has left the room.",
+        });
       }
     }
     prevParticipantsCount.current = currentPlayers;
@@ -337,9 +282,9 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
       });
       onLeave();
     }
-  }, [room, userId, onLeave, toast, queryClient, isLeaving]);
+  }, [room, userId, onLeave, toast, isLeaving]);
 
-  // --- Effect for Host Ping Notification ---
+  // Host ping notification
   useEffect(() => {
     if (!room || room.host_id !== userId) return;
 
@@ -357,7 +302,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     prevHostPingSenderId.current = room.last_ping_sender_id;
   }, [room, userId, toast]);
 
-  // --- Leave Room Mutation ---
+  // Leave room mutation
   const leaveRoomMutation = useMutation({
     mutationFn: async () => {
       setIsLeaving(true);
@@ -368,7 +313,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('user_id', userId);
 
       if (error) {
-        console.error("Supabase Error leaving room:", error);
+        console.error("Error leaving room:", error);
         throw error;
       }
     },
@@ -377,8 +322,9 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         const remainingParticipants = room.battle_participants?.filter(p => p.user_id !== userId);
 
         if (remainingParticipants && remainingParticipants.length > 0) {
-          const newHost = remainingParticipants.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0];
-          console.log(`Host ${room.host_id} left. New host is ${newHost.user_id}`);
+          const newHost = remainingParticipants.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          )[0];
 
           const { error: updateHostError } = await supabase
             .from('battle_rooms')
@@ -387,37 +333,19 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
 
           if (updateHostError) {
             console.error('Error updating new host:', updateHostError);
-            toast({
-              title: "Host Transfer Failed",
-              description: "Could not transfer host privileges.",
-              variant: "destructive"
-            });
           } else {
             toast({
               title: "Host Changed",
               description: `${newHost.username} is now the host.`,
             });
           }
-        } else {
-          console.log("Host left, no remaining participants to transfer host to.");
         }
       }
 
-      toast({ title: "Left Room", description: "You have left the battle room." });
-
-      const updatedRoom = queryClient.getQueryData(['battleRoom', roomId]) as RoomData;
-      if (updatedRoom && updatedRoom.status === 'in_progress' && (updatedRoom.battle_participants?.length || 0) <= updatedRoom.max_players) {
-        const newParticipantCount = (updatedRoom.battle_participants?.length || 0) - 1;
-        if (newParticipantCount < updatedRoom.max_players) {
-          const { error: statusUpdateError } = await supabase
-            .from('battle_rooms')
-            .update({ status: 'waiting', countdown_initiated_at: null })
-            .eq('id', roomId);
-          if (statusUpdateError) {
-            console.error("Error reverting room status to waiting:", statusUpdateError);
-          }
-        }
-      }
+      toast({ 
+        title: "Left Room", 
+        description: "You have left the battle room." 
+      });
       onLeave();
     },
     onError: (error: any) => {
@@ -431,7 +359,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     }
   });
 
-  // --- Remove Participant Mutation ---
+  // Remove participant mutation
   const removeParticipantMutation = useMutation({
     mutationFn: async (participantUserId: string) => {
       if (!room || room.host_id !== userId) {
@@ -448,27 +376,16 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('user_id', participantUserId);
 
       if (error) {
-        console.error("Supabase Error removing participant:", error);
+        console.error("Error removing participant:", error);
         throw error;
       }
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
-      toast({ title: "Participant Removed", description: "A participant has been removed from the room." });
-
-      const updatedRoom = queryClient.getQueryData(['battleRoom', roomId]) as RoomData;
-      if (updatedRoom && updatedRoom.status === 'in_progress' && (updatedRoom.battle_participants?.length || 0) <= updatedRoom.max_players) {
-        const newParticipantCount = (updatedRoom.battle_participants?.length || 0) - 1;
-        if (newParticipantCount < updatedRoom.max_players) {
-          const { error: statusUpdateError } = await supabase
-            .from('battle_rooms')
-            .update({ status: 'waiting', countdown_initiated_at: null })
-            .eq('id', roomId);
-          if (statusUpdateError) {
-            console.error("Error reverting room status to waiting:", statusUpdateError);
-          }
-        }
-      }
+      toast({ 
+        title: "Participant Removed", 
+        description: "A participant has been removed from the room." 
+      });
     },
     onError: (error: any) => {
       toast({
@@ -479,7 +396,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     }
   });
 
-  // Mutation for host to manually start the battle (FFA only)
+  // Start battle mutation (FFA only)
   const startBattleMutation = useMutation({
     mutationFn: async () => {
       if (!room || room.host_id !== userId) {
@@ -492,7 +409,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         throw new Error("Battle can only be started from 'waiting' status.");
       }
 
-      console.log('startBattleMutation: Initiating countdown by updating countdown_initiated_at.');
+      console.log('Host is starting battle manually, updating countdown_initiated_at');
       const { error } = await supabase
         .from('battle_rooms')
         .update({
@@ -504,19 +421,17 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('id', roomId);
 
       if (error) {
-        console.error("Supabase Error initiating countdown manually:", error);
+        console.error("Error initiating countdown:", error);
         throw error;
       }
     },
     onSuccess: () => {
-      console.log('startBattleMutation: Countdown initiated successfully.');
       toast({
         title: "Starting Battle!",
         description: "The host has initiated the battle countdown.",
       });
     },
     onError: (error: any) => {
-      console.error('startBattleMutation onError:', error);
       toast({
         title: "Error Starting Battle",
         description: `Failed to start battle: ${error.message}`,
@@ -525,7 +440,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     }
   });
 
-  // New: Mutation for participants to ping the host
+  // Ping host mutation
   const pingHostMutation = useMutation({
     mutationFn: async () => {
       if (!room || room.host_id === userId) {
@@ -540,7 +455,6 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
 
       const senderUsername = room.battle_participants.find(p => p.user_id === userId)?.username || 'A participant';
 
-      console.log('pingHostMutation: Pinging host.');
       const { error } = await supabase
         .from('battle_rooms')
         .update({
@@ -551,19 +465,17 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('id', roomId);
 
       if (error) {
-        console.error("Supabase Error pinging host:", error);
+        console.error("Error pinging host:", error);
         throw error;
       }
     },
     onSuccess: () => {
-      console.log('pingHostMutation: Ping sent successfully.');
       toast({
         title: "Ping Sent!",
         description: "Host has been notified to start the battle.",
       });
     },
     onError: (error: any) => {
-      console.error('pingHostMutation onError:', error);
       toast({
         title: "Error Pinging Host",
         description: `Failed to send ping: ${error.message}`,
@@ -572,28 +484,21 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     }
   });
 
-  // Function to copy room code to clipboard
+  // Copy room code function
   const handleCopyRoomCode = () => {
     if (room?.room_code) {
-      try {
-        const tempInput = document.createElement('input');
-        tempInput.value = room.room_code;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
+      navigator.clipboard.writeText(room.room_code).then(() => {
         toast({
           title: "Copied!",
           description: "Room code copied to clipboard.",
         });
-      } catch (err) {
-        console.error('Failed to copy room code:', err);
+      }).catch(() => {
         toast({
           title: "Copy Failed",
           description: "Could not copy room code. Please try manually.",
           variant: "destructive",
         });
-      }
+      });
     }
   };
 
@@ -615,7 +520,6 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     setShowConfirmLeaveModal(false);
   };
 
-  // --- Render logic for loading, error, and main waiting room UI ---
   if (roomLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 p-4">
@@ -626,12 +530,13 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   }
 
   if (roomError || !room) {
-    console.error('Render Error: Room data not available or error occurred:', roomError);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 p-4 text-center">
         <XCircle className="h-16 w-16 text-red-500 mb-4" />
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Error Loading Room</h2>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">{roomError?.message || "Room not found or accessible. Check RLS policies."}</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          {roomError?.message || "Room not found or accessible."}
+        </p>
         <Button onClick={onLeave} className="mt-6 bg-red-600 hover:bg-red-700 text-white">
           Back to Lobby
         </Button>
@@ -644,7 +549,6 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   const isGameStarting = room.status === 'in_progress';
   const isHost = room.host_id === userId;
   const isCountdownInitiated = room.countdown_initiated_at !== null;
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 p-4 flex flex-col items-center justify-center">
@@ -659,7 +563,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 pt-2 space-y-6">
-          {/* Room Code Display with Copy Button */}
+          {/* Room Code Display */}
           <div className="flex flex-col items-center space-y-2 mt-4">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Room Code:</p>
             <div className="flex items-center space-x-2">
@@ -675,11 +579,13 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
             </div>
           </div>
 
-          {/* Room statistics: Players, Type, Settings, Subject */}
+          {/* Room Statistics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-start text-center mt-6">
             <div>
               <Users className="w-6 h-6 mx-auto mb-1 text-red-600 dark:text-red-400" />
-              <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{currentPlayers} / {room.max_players}</p>
+              <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                {currentPlayers} / {room.max_players}
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Players Joined</p>
             </div>
             <div>
@@ -689,10 +595,11 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
             </div>
             <div>
               <Hourglass className="w-6 h-6 mx-auto mb-1 text-red-600 dark:text-red-400" />
-              <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{room.total_questions} Qs / {room.time_per_question}s</p>
+              <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                {room.total_questions} Qs / {room.time_per_question}s
+              </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">Settings</p>
             </div>
-            {/* Display Subject with a proper icon */}
             {room.subject && (
               <div>
                 <BookOpenText className="w-6 h-6 mx-auto mb-1 text-red-600 dark:text-red-400" />
@@ -702,7 +609,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
             )}
           </div>
 
-          {/* List of current players in the room */}
+          {/* Players List */}
           <div className="space-y-3">
             <h3 className="font-medium text-gray-900 dark:text-white">Current Players:</h3>
             <div className="flex flex-col space-y-2">
@@ -714,12 +621,17 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
                 >
                   <Users className="w-4 h-4 mr-2" />
                   <span>{participant.username}</span>
-                  {/* Conditional labels for host and current user */}
-                  {participant.user_id === userId && room.host_id === participant.user_id && <span className="ml-1 font-bold text-red-700 dark:text-red-300">(You, Host)</span>}
-                  {participant.user_id === userId && room.host_id !== participant.user_id && <span className="ml-1 text-purple-600 dark:text-purple-400">(You)</span>}
-                  {room.host_id === participant.user_id && participant.user_id !== userId && <span className="ml-1 font-bold text-blue-600 dark:text-blue-400">(Host)</span>}
+                  {participant.user_id === userId && room.host_id === participant.user_id && (
+                    <span className="ml-1 font-bold text-red-700 dark:text-red-300">(You, Host)</span>
+                  )}
+                  {participant.user_id === userId && room.host_id !== participant.user_id && (
+                    <span className="ml-1 text-purple-600 dark:text-purple-400">(You)</span>
+                  )}
+                  {room.host_id === participant.user_id && participant.user_id !== userId && (
+                    <span className="ml-1 font-bold text-blue-600 dark:text-blue-400">(Host)</span>
+                  )}
 
-                  {/* Host can remove other participants */}
+                  {/* Host can remove participants */}
                   {isHost && participant.user_id !== userId && (
                     <Button
                       variant="ghost"
@@ -731,7 +643,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
                       <XCircle className="w-4 h-4" />
                     </Button>
                   )}
-                  {/* New: Ping Host Button for non-host participants in FFA mode */}
+                  {/* Ping host button */}
                   {!isHost && participant.user_id === room.host_id && room.battle_type === 'ffa' && room.status === 'waiting' && (
                     <Button
                       variant="ghost"
@@ -748,14 +660,14 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
             </div>
           </div>
 
-          {/* Messages based on room status and countdown */}
+          {/* Status Messages */}
           {countdown !== null && room.status === 'waiting' && countdown > 0 ? (
             <div className="text-center text-lg font-semibold text-green-600 dark:text-green-400 animate-pulse">
               Battle starting in {countdown} seconds!
             </div>
           ) : isGameStarting ? (
             <div className="text-center text-lg font-semibold text-green-600 dark:text-green-400 animate-pulse">
-              All players joined! Battle starting soon...
+              Starting battle now...
             </div>
           ) : room.status === 'waiting' ? (
             <div className="text-center text-gray-700 dark:text-gray-300">
@@ -796,11 +708,13 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         </CardContent>
       </Card>
 
-      {/* Custom Confirmation Modal */}
+      {/* Confirmation Modal */}
       {showConfirmLeaveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-sm p-6 text-center shadow-lg bg-white dark:bg-gray-800">
-            <CardTitle className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Confirm Leave</CardTitle>
+            <CardTitle className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              Confirm Leave
+            </CardTitle>
             <CardDescription className="text-gray-700 dark:text-gray-300 mb-6">
               As the host, if you leave, a new host will be assigned. Are you sure you want to leave this battle room?
             </CardDescription>

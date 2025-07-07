@@ -1,274 +1,355 @@
-// @/components/battle/BattleGame.tsx
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Timer, Users, Target, Zap } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-// Mock questions for demonstration. In a real app, these would come from the backend,
-// possibly filtered by the `subject` defined in `roomDetails`.
-const mockQuestions = [
-  { id: '1', question: 'What is the largest organ in the human body?', options: ['Heart', 'Liver', 'Skin', 'Brain'], correct_answer: 'Skin' },
-  { id: '2', question: 'Which bone is the longest in the human body?', options: ['Tibia', 'Femur', 'Humerus', 'Radius'], correct_answer: 'Femur' },
-  { id: '3', question: 'What is the normal resting heart rate for adults?', options: ['40-60 bpm', '60-100 bpm', '100-120 bpm', '120-140 bpm'], correct_answer: '60-100 bpm' },
-  { id: '4', question: 'Which blood type is considered the universal donor?', options: ['A+', 'B+', 'AB+', 'O-'], correct_answer: 'O-' },
-  { id: '5', question: 'What is the medical term for high blood pressure?', options: ['Hypotension', 'Hypertension', 'Tachycardia', 'Bradycardia'], correct_answer: 'Hypertension' }
-];
+import { Badge } from '@/components/ui/badge';
+import { Clock, Trophy, Users, Zap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface BattleGameProps {
-  roomCode: string;
-  onGameEnd: (results: any) => void;
-  onLeave: () => void;
-  roomDetails: { // New prop to receive actual room settings
+  roomData: {
+    id: string;
+    room_code: string;
+    battle_type: '1v1' | '2v2' | 'ffa';
+    max_players: number;
     time_per_question: number;
     total_questions: number;
-    max_players: number;
-    battle_participants: any[]; // Used for displaying player count
-    subject: string; // Subject for questions (mocked for now)
+    subject: string;
+    battle_participants: { 
+      id: string; 
+      user_id: string; 
+      username: string; 
+      score: number; 
+      answers?: any[];
+    }[];
   };
+  userId: string;
+  onGameComplete: (results: any) => void;
 }
 
-export const BattleGame = ({ roomCode, onGameEnd, onLeave, roomDetails }: BattleGameProps) => {
+interface Question {
+  id: string;
+  question: string;
+  options: string[];
+  correct_answer: string;
+  explanation?: string;
+}
+
+export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps) => {
+  const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(roomData.time_per_question);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  // FIX: Safely initialize timeLeft using optional chaining and a fallback default
-  const [timeLeft, setTimeLeft] = useState(roomDetails?.time_per_question || 15);
   const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  
-  // FIX: Safely access battle_participants and total_questions with fallbacks
-  const playerCount = roomDetails?.battle_participants?.length || 0;
-  const opponentScore = 0; // This would need real-time data from other players
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [gameFinished, setGameFinished] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentQ = mockQuestions[currentQuestionIndex]; // Still using mockQuestions
-  const totalQuestions = roomDetails?.total_questions || mockQuestions.length; // Use roomDetails for total questions, with fallback
+  // Sample questions for demo (in real implementation, fetch from database)
+  const sampleQuestions: Question[] = [
+    {
+      id: '1',
+      question: 'What is the powerhouse of the cell?',
+      options: ['Nucleus', 'Mitochondria', 'Ribosome', 'Golgi apparatus'],
+      correct_answer: 'Mitochondria',
+      explanation: 'Mitochondria are known as the powerhouse of the cell because they produce ATP.'
+    },
+    {
+      id: '2',
+      question: 'Which organ system is responsible for transporting blood throughout the body?',
+      options: ['Respiratory system', 'Digestive system', 'Circulatory system', 'Nervous system'],
+      correct_answer: 'Circulatory system',
+      explanation: 'The circulatory system, consisting of the heart and blood vessels, transports blood throughout the body.'
+    },
+    {
+      id: '3',
+      question: 'What is the basic unit of heredity?',
+      options: ['Chromosome', 'Gene', 'DNA', 'Protein'],
+      correct_answer: 'Gene',
+      explanation: 'A gene is the basic unit of heredity that carries genetic information.'
+    },
+    {
+      id: '4',
+      question: 'Which part of the brain controls balance and coordination?',
+      options: ['Cerebrum', 'Cerebellum', 'Brainstem', 'Hypothalamus'],
+      correct_answer: 'Cerebellum',
+      explanation: 'The cerebellum is responsible for balance, coordination, and fine motor control.'
+    },
+    {
+      id: '5',
+      question: 'What type of blood cell fights infections?',
+      options: ['Red blood cells', 'White blood cells', 'Platelets', 'Plasma cells'],
+      correct_answer: 'White blood cells',
+      explanation: 'White blood cells are part of the immune system and help fight infections.'
+    }
+  ];
 
-  // Timer effect
   useEffect(() => {
-    // If showing result or time's already up, stop current timer
-    if (showResult || timeLeft <= 0) return;
+    // Initialize questions (in real implementation, fetch from Supabase)
+    setQuestions(sampleQuestions.slice(0, roomData.total_questions));
+    setIsLoading(false);
+  }, [roomData.total_questions]);
 
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
+  useEffect(() => {
+    if (!isLoading && !gameFinished) {
+      startTimer();
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [currentQuestionIndex, isLoading, gameFinished]);
+
+  const startTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    setTimeLeft(roomData.time_per_question);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(timer); // Stop this interval
-          // If no answer selected, treat as incorrect before moving on
-          if (!selectedAnswer) {
-            // No score change for skipped/incorrect
-          }
-          setShowResult(true); // Briefly show result (even if skipped)
-          setTimeout(() => {
-            handleNextQuestion(); // Move to next question after short delay
-          }, 1000); // 1 second delay
-          // FIX: Use optional chaining for roomDetails.time_per_question with a fallback
-          return roomDetails?.time_per_question || 15; // Reset for next question
+          handleTimeUp();
+          return 0;
         }
         return prev - 1;
       });
     }, 1000);
+  };
 
-    // Cleanup: clear interval when component unmounts or dependencies change
-    return () => clearInterval(timer);
-  }, [timeLeft, currentQuestionIndex, showResult, selectedAnswer, roomDetails?.time_per_question]); // Include optional chaining in dependency array
+  const handleTimeUp = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    // Auto-submit with no answer
+    handleAnswerSubmit(null);
+  };
 
   const handleAnswerSelect = (answer: string) => {
-    if (showResult) return; // Prevent changing answer after it's been submitted/revealed
+    if (selectedAnswer !== null) return; // Already answered
     setSelectedAnswer(answer);
-  };
-
-  const handleSubmit = () => {
-    if (!selectedAnswer || showResult) return; // Prevent multiple submissions or submission after showing result
     
-    const isCorrect = selectedAnswer === currentQ.correct_answer;
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-    }
-    
-    setShowResult(true);
-    // Move to next question after a brief display of the result
+    // Auto-submit after selection
     setTimeout(() => {
-      handleNextQuestion();
-    }, 1500); // Show result for 1.5 seconds
+      handleAnswerSubmit(answer);
+    }, 500);
   };
 
-  const handleNextQuestion = () => {
-    setShowResult(false); // Hide previous question's result feedback
-    setSelectedAnswer(null); // Clear selected answer for the new question
+  const handleAnswerSubmit = async (answer: string | null) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
 
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      // FIX: Use optional chaining for roomDetails.time_per_question with a fallback
-      setTimeLeft(roomDetails?.time_per_question || 15); // Reset timer for the new question
+    const currentQuestion = questions[currentQuestionIndex];
+    const isCorrect = answer === currentQuestion.correct_answer;
+    
+    if (isCorrect) {
+      const timeBonus = Math.max(0, timeLeft);
+      const questionScore = 100 + timeBonus * 2;
+      setScore(prev => prev + questionScore);
+      
+      toast({
+        title: "Correct! 🎉",
+        description: `+${questionScore} points (including time bonus)`,
+      });
     } else {
-      // Game has ended
+      toast({
+        title: "Incorrect ❌",
+        description: `Correct answer: ${currentQuestion.correct_answer}`,
+        variant: "destructive",
+      });
+    }
+
+    // Save answer to database (simplified)
+    try {
+      const currentParticipant = roomData.battle_participants.find(p => p.user_id === userId);
+      const existingAnswers = currentParticipant?.answers || [];
+      
+      await supabase
+        .from('battle_participants')
+        .update({
+          answers: [...existingAnswers, {
+            questionId: currentQuestion.id,
+            selectedAnswer: answer,
+            isCorrect,
+            timeLeft
+          }]
+        })
+        .eq('battle_room_id', roomData.id)
+        .eq('user_id', userId);
+    } catch (error) {
+      console.error('Error saving answer:', error);
+    }
+
+    // Move to next question or finish game
+    setTimeout(() => {
+      if (currentQuestionIndex + 1 >= questions.length) {
+        finishGame();
+      } else {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setSelectedAnswer(null);
+      }
+    }, 2000);
+  };
+
+  const finishGame = async () => {
+    setGameFinished(true);
+    
+    try {
+      // Update final score
+      await supabase
+        .from('battle_participants')
+        .update({ score })
+        .eq('battle_room_id', roomData.id)
+        .eq('user_id', userId);
+
+      // Create battle result
+      await supabase
+        .from('battle_results')
+        .insert({
+          battle_room_id: roomData.id,
+          user_id: userId,
+          final_score: score,
+          rank: 1, // Calculate actual rank based on other participants
+          total_correct: Math.floor(score / 100),
+          total_questions: questions.length,
+          accuracy_percentage: (Math.floor(score / 100) / questions.length) * 100,
+          time_bonus: score - (Math.floor(score / 100) * 100)
+        });
+
       const results = {
-        score,
-        totalQuestions,
-        accuracy: Math.round((score / totalQuestions) * 100),
-        // This 'rank' is a placeholder and would require fetching other players' scores
-        rank: score > opponentScore ? 1 : (score < opponentScore ? 2 : 'Tie') 
+        finalScore: score,
+        totalQuestions: questions.length,
+        correctAnswers: Math.floor(score / 100),
+        accuracy: (Math.floor(score / 100) / questions.length) * 100,
+        rank: 1,
+        roomCode: roomData.room_code
       };
-      onGameEnd(results); // Call the onGameEnd prop to transition to results in parent
+
+      setTimeout(() => {
+        onGameComplete(results);
+      }, 2000);
+    } catch (error) {
+      console.error('Error finishing game:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save game results",
+        variant: "destructive"
+      });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+        <Card className="w-full max-w-md p-8 text-center">
+          <CardTitle className="text-2xl mb-4">Loading Battle...</CardTitle>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (gameFinished) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+        <Card className="w-full max-w-md p-8 text-center">
+          <CardTitle className="text-2xl mb-4 flex items-center justify-center">
+            <Trophy className="w-6 h-6 mr-2 text-yellow-500" />
+            Battle Complete!
+          </CardTitle>
+          <p className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+            Final Score: {score}
+          </p>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            Processing results...
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Game Header */}
-        <Card className="mb-6 bg-gradient-to-r from-red-500 to-orange-500 text-white border-0">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <div>
-                  <CardTitle className="text-white">Battle Arena</CardTitle>
-                  <p className="text-white/80">Room: {roomCode}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-6">
-                <div className="text-center">
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4" />
-                    <span>{playerCount}</span>
-                  </div>
-                  <p className="text-xs text-white/80">Players</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center space-x-1">
-                    <Timer className="w-4 h-4" />
-                    <span className={timeLeft <= 5 ? 'text-yellow-300 font-bold' : ''}>{timeLeft}s</span>
-                  </div>
-                  <p className="text-xs text-white/80">Time Left</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center space-x-1">
-                    <Target className="w-4 h-4" />
-                    <span>{score}/{currentQuestionIndex + 1}</span>
-                  </div>
-                  <p className="text-xs text-white/80">Score</p>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Progress */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Question {currentQuestionIndex + 1} of {totalQuestions}</span>
-              <span className="text-sm text-gray-500">
-                {Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100)}% Complete
-              </span>
-            </div>
-            <Progress value={((currentQuestionIndex + 1) / totalQuestions) * 100} className="h-2" />
-          </CardContent>
-        </Card>
-
-        {/* Question Card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQuestionIndex} // Key ensures re-animation on question change
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-xl leading-relaxed">
-                  {currentQ?.question}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {currentQ?.options.map((option, index) => {
-                    const isSelected = selectedAnswer === option;
-                    const isCorrect = option === currentQ.correct_answer;
-                    const showCorrect = showResult && isCorrect;
-                    const showIncorrect = showResult && isSelected && !isCorrect;
-                    
-                    let buttonClass = "w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ";
-                    
-                    if (showCorrect) {
-                      buttonClass += "bg-green-50 dark:bg-green-900/30 border-green-500 text-green-700 dark:text-green-300";
-                    } else if (showIncorrect) {
-                      buttonClass += "bg-red-50 dark:bg-red-900/30 border-red-500 text-red-700 dark:text-red-300";
-                    } else if (isSelected) {
-                      buttonClass += "bg-orange-50 dark:bg-orange-900/30 border-orange-500 text-orange-700 dark:text-orange-300";
-                    } else {
-                      buttonClass += "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30";
-                    }
-
-                    return (
-                      <motion.button
-                        key={index}
-                        className={buttonClass}
-                        onClick={() => handleAnswerSelect(option)}
-                        disabled={showResult} // Disable interaction when showing result
-                        whileHover={!showResult ? { scale: 1.01 } : {}}
-                        whileTap={!showResult ? { scale: 0.99 } : {}}
-                      >
-                        <span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                {/* Submit Button */}
-                {!showResult && selectedAnswer && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 text-center"
-                  >
-                    <Button 
-                      onClick={handleSubmit}
-                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3"
-                      size="lg"
-                    >
-                      Submit Answer
-                    </Button>
-                  </motion.div>
-                )}
-
-                {/* Result feedback */}
-                {showResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 text-center"
-                  >
-                    <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full ${
-                      selectedAnswer === currentQ.correct_answer 
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
-                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                    }`}>
-                      <span>
-                        {selectedAnswer === currentQ.correct_answer ? '✅ Correct!' : '❌ Incorrect'}
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Leave Battle Button */}
-        <div className="text-center">
-          <Button
-            variant="outline"
-            onClick={onLeave}
-            className="border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
-          >
-            Leave Battle
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-4">
+      {/* Header */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <Badge variant="outline" className="text-lg px-4 py-2">
+            <Users className="w-4 h-4 mr-2" />
+            Room: {roomData.room_code}
+          </Badge>
+          <Badge variant="outline" className="text-lg px-4 py-2">
+            <Trophy className="w-4 h-4 mr-2" />
+            Score: {score}
+          </Badge>
         </div>
+        
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">
+            Question {currentQuestionIndex + 1} of {questions.length}
+          </span>
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-red-500" />
+            <span className={`font-bold ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : 'text-gray-700 dark:text-gray-300'}`}>
+              {timeLeft}s
+            </span>
+          </div>
+        </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+
+      {/* Question Card */}
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-center">
+            {currentQuestion.question}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {currentQuestion.options.map((option, index) => {
+            const letters = ['A', 'B', 'C', 'D'];
+            const isSelected = selectedAnswer === option;
+            const isCorrect = selectedAnswer && option === currentQuestion.correct_answer;
+            const isWrong = selectedAnswer && selectedAnswer !== currentQuestion.correct_answer && isSelected;
+            
+            return (
+              <Button
+                key={index}
+                variant="outline"
+                className={`w-full p-4 h-auto text-left justify-start text-wrap ${
+                  isCorrect ? 'bg-green-100 border-green-500 text-green-800 dark:bg-green-900/30 dark:border-green-400 dark:text-green-200' :
+                  isWrong ? 'bg-red-100 border-red-500 text-red-800 dark:bg-red-900/30 dark:border-red-400 dark:text-red-200' :
+                  isSelected ? 'bg-blue-100 border-blue-500 dark:bg-blue-900/30 dark:border-blue-400' :
+                  'hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+                onClick={() => handleAnswerSelect(option)}
+                disabled={selectedAnswer !== null}
+              >
+                <div className="flex items-start space-x-3">
+                  <Badge variant="secondary" className="mt-0.5 flex-shrink-0">
+                    {letters[index]}
+                  </Badge>
+                  <span className="flex-1">{option}</span>
+                  {isCorrect && <Zap className="w-4 h-4 text-green-600 flex-shrink-0" />}
+                </div>
+              </Button>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {/* Battle Type Info */}
+      <div className="max-w-4xl mx-auto mt-6 text-center">
+        <Badge variant="secondary" className="px-4 py-2">
+          {roomData.battle_type.toUpperCase()} Battle • {roomData.subject}
+        </Badge>
       </div>
     </div>
   );

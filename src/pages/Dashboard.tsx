@@ -18,7 +18,6 @@ import {
   TrendingUp,
   Award,
   Briefcase,
-  BellRing,
   Book, // New icon for Study Materials
   Instagram, // New icon for Instagram
   Construction // Icon for maintenance message
@@ -31,10 +30,9 @@ import { StudyAnalytics } from '@/components/dashboard/StudyAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react'; // Import useEffect
-import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager'; // Adjust path as needed
 
 const Dashboard = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -149,20 +147,19 @@ const Dashboard = () => {
   });
 
   // Effect for redirection based on user profile
-useEffect(() => {
-  // Only proceed if:
-  // 1. Authentication is complete and a user is logged in (!authLoading && user).
-  // 2. Profile data has finished loading (!profileLoading).
-  if (!authLoading && user && !profileLoading) {
-    // Redirect only if the 'username' field in the fetched profile is null.
-    // This implicitly covers the case where 'profile' itself might be null,
-    // as 'profile?.username' would then resolve to undefined, which is not null.
-    // If you need to redirect if 'profile' is entirely null, you'll need to add '!profile' back.
-    if (profile?.username === null) {
-      navigate('/welcome-new-user');
+  useEffect(() => {
+    // Only proceed if user is logged in and profile data has been loaded
+    if (user && !profileLoading) {
+      // We now only check for the existence of full_name and username.
+      // A username matching the email prefix is now considered valid.
+      const hasValidProfile = profile?.full_name && profile?.username;
+
+      // Redirect if profile is null, or if full_name/username are missing
+      if (!profile || !hasValidProfile) { // <--- REMOVED '|| isPlaceholderUsername'
+        navigate('/welcome-new-user');
+      }
     }
-  }
-}, [user, profile, profileLoading, authLoading, navigate]);
+  }, [user, profile, profileLoading, navigate]);
 
   // Quick Actions - now with Mock Test and new additions
   const quickActions = [
@@ -202,17 +199,6 @@ useEffect(() => {
     // tag: 'Live Now',
     // tagColor: 'bg-red-500 text-white animate-pulse',
   },
-{
-    title: 'News & Announcements',
-    description: 'Stay updated with the latest news and important announcements.',
-    icon: BellRing,
-    link: '/announcements',
-    type: 'internal',
-    gradient: 'from-amber-500 to-orange-600', // Amber to Orange gradient
-    bgGradient: 'from-amber-50 to-orange-50', // Lighter shades for background
-darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shades    tag: 'Stay Updated',
-    tagColor: 'bg-orange-700 text-white' // A deep orange for the tag
-},
     // {
     //   title: 'Study Materials',
     //   description: 'Access notes, videos, and resources',
@@ -223,6 +209,30 @@ darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shad
     //   bgGradient: 'from-orange-50 to-rose-50',
     //   darkBgGradient: 'from-orange-900/20 to-amber-900/10'
     // },
+
+    
+    {
+      title: 'Classrooms',
+      description: 'Join or create study groups (Under Maintenance)', // Updated description
+      icon: Users,
+      link: '/classroom',
+      type: 'internal',
+      gradient: 'from-indigo-500 to-purple-500',
+      bgGradient: 'from-indigo-50 to-purple-50',
+      darkBgGradient: 'from-purple-900/20 to-orange-900/20',
+      disabled: true
+    },
+    
+    {
+      title: 'Battle Arena',
+      description: 'Challenge other students in real-time MCQ battles',
+      icon: Swords,
+      link: '/battle',
+      type: 'internal',
+      gradient: 'from-red-500 to-orange-500',
+      bgGradient: 'from-red-50 to-orange-50',
+      darkBgGradient: 'from-red-900/20 to-orange-900/20'
+    },
     {
       title: 'Leaderboard',
       description: 'See your rank among peers',
@@ -244,29 +254,6 @@ darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shad
       darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
       tag: 'Open now!', // The requested tag
       tagColor: 'bg-red-500 text-white animate-pulse' // Eye-catching tag color and animation
-    },
-        {
-      title: 'Classrooms',
-      description: 'Join or create study groups (Under Maintenance)', // Updated description
-      icon: Users,
-      link: '/classroom',
-      type: 'internal',
-      gradient: 'from-indigo-500 to-purple-500',
-      bgGradient: 'from-indigo-50 to-purple-50',
-      darkBgGradient: 'from-purple-900/20 to-orange-900/20',
-      disabled: true
-    },
-    
-    {
-      title: 'Battle Arena',
-      description: 'Under Maintenance', // Updated description
-      icon: Swords,
-      link: '/battle',
-      type: 'internal',
-      gradient: 'from-red-500 to-orange-500',
-      bgGradient: 'from-red-50 to-orange-50',
-      darkBgGradient: 'from-red-900/20 to-orange-900/20',
-      disabled: true
     },
   ];
 
@@ -383,27 +370,27 @@ darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shad
   const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
 
   // Show a loading state or redirect immediately if not authenticated
-useEffect(() => {
-  
-        if (authLoading === false && profileLoading === false && user === null) { // user is null if not logged in
-            navigate('/');
-        }
-
-    }, [user, navigate]); // Depend on 'user' and 'navigate'
-
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Please sign in to access your dashboard</h1>
+          <Link to="/login">
+            <Button>Sign In</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Optionally, show a loading spinner while profile data is being fetched
-if (authLoading || profileLoading || userStatsLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <img
-        src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-        alt="Loading Medistics"
-        className="w-32 h-32 object-contain"
-      />
-    </div>
-  );
-}
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-gray-600 dark:text-gray-300">Loading user profile...</p>
+      </div>
+    );
+  }
 
   // If we reach here, user is authenticated and profile has been fetched.
   // The useEffect hook will handle the redirection for invalid profiles.
