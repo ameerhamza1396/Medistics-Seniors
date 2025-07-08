@@ -265,8 +265,7 @@ darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shad
       type: 'internal',
       gradient: 'from-red-500 to-orange-500',
       bgGradient: 'from-red-50 to-orange-50',
-      darkBgGradient: 'from-red-900/20 to-orange-900/20',
-      disabled: true
+      darkBgGradient: 'from-red-900/20 to-orange-900/20'
     },
   ];
 

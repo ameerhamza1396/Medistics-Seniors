@@ -1,12 +1,12 @@
 // BattleGame.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Using alias path
-import { Button } from '@/components/ui/button'; // Using alias path
-import { Progress } from '@/components/ui/progress'; // Using alias path
-import { Badge } from '@/components/ui/badge'; // Using alias path
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Clock, Trophy, Users, Zap } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client'; // Using alias path
-import { useToast } from '@/hooks/use-toast'; // Using alias path
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface BattleGameProps {
   roomData: {
@@ -17,17 +17,18 @@ interface BattleGameProps {
     time_per_question: number;
     total_questions: number;
     subject: string;
+    subject_id?: string;
+    chapter_id?: string;
     battle_participants: { 
       id: string; 
       user_id: string; 
       username: string; 
       score: number; 
       answers?: any[];
-      is_finished?: boolean; // Added for client-side simulation
+      is_finished?: boolean;
     }[];
   };
   userId: string;
-  // onGameComplete now expects the full results object
   onGameComplete: (results: {
     finalScore: number;
     totalQuestions: number;
@@ -54,53 +55,136 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
   const [score, setScore] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [gameFinishedLocally, setGameFinishedLocally] = useState(false); // Local state for this player's game status
+  const [gameFinishedLocally, setGameFinishedLocally] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sample questions for demo (in real implementation, fetch from database)
-  const sampleQuestions: Question[] = [
-    {
-      id: '1',
-      question: 'What is the powerhouse of the cell?',
-      options: ['Nucleus', 'Mitochondria', 'Ribosome', 'Golgi apparatus'],
-      correct_answer: 'Mitochondria',
-      explanation: 'Mitochondria are known as the powerhouse of the cell because they produce ATP.'
-    },
-    {
-      id: '2',
-      question: 'Which organ system is responsible for transporting blood throughout the body?',
-      options: ['Respiratory system', 'Digestive system', 'Circulatory system', 'Nervous system'],
-      correct_answer: 'Circulatory system',
-      explanation: 'The circulatory system, consisting of the heart and blood vessels, transports blood throughout the body.'
-    },
-    {
-      id: '3',
-      question: 'What is the basic unit of heredity?',
-      options: ['Chromosome', 'Gene', 'DNA', 'Protein'],
-      correct_answer: 'Gene',
-      explanation: 'A gene is the basic unit of heredity that carries genetic information.'
-    },
-    {
-      id: '4',
-      question: 'Which part of the brain controls balance and coordination?',
-      options: ['Cerebrum', 'Cerebellum', 'Brainstem', 'Hypothalamus'],
-      correct_answer: 'Cerebellum',
-      explanation: 'The cerebellum is responsible for balance, coordination, and fine motor control.'
-    },
-    {
-      id: '5',
-      question: 'What type of blood cell fights infections?',
-      options: ['Red blood cells', 'White blood cells', 'Platelets', 'Plasma cells'],
-      correct_answer: 'White blood cells',
-      explanation: 'White blood cells are part of the immune system and help fight infections.'
-    }
-  ];
-
   useEffect(() => {
-    // Initialize questions (in real implementation, fetch from Supabase based on roomData.subject)
+    loadQuestionsFromDatabase();
+  }, [roomData.chapter_id, roomData.total_questions]);
+
+  const loadQuestionsFromDatabase = async () => {
+    try {
+      setIsLoading(true);
+      
+      if (!roomData.chapter_id) {
+        console.error('No chapter_id provided, falling back to sample questions');
+        loadSampleQuestions();
+        return;
+      }
+
+      console.log('Loading questions for chapter:', roomData.chapter_id);
+      
+      const { data: mcqs, error } = await supabase
+        .from('mcqs')
+        .select('id, question, options, correct_answer, explanation')
+        .eq('chapter_id', roomData.chapter_id)
+        .limit(roomData.total_questions * 2);
+
+      if (error) {
+        console.error('Error fetching MCQs:', error);
+        toast({
+          title: "Error Loading Questions",
+          description: "Failed to load questions from database. Using sample questions.",
+          variant: "destructive",
+        });
+        loadSampleQuestions();
+        return;
+      }
+
+      if (!mcqs || mcqs.length === 0) {
+        console.warn('No MCQs found for chapter, using sample questions');
+        toast({
+          title: "No Questions Available",
+          description: "No questions found for this topic. Using sample questions.",
+        });
+        loadSampleQuestions();
+        return;
+      }
+
+      const transformedQuestions: Question[] = mcqs.map(mcq => {
+        let options: string[] = [];
+        
+        // Handle different option formats
+        if (Array.isArray(mcq.options)) {
+          options = mcq.options as string[];
+        } else if (typeof mcq.options === 'string') {
+          try {
+            options = JSON.parse(mcq.options);
+          } catch {
+            options = [];
+          }
+        }
+        
+        return {
+          id: mcq.id,
+          question: mcq.question,
+          options: options,
+          correct_answer: mcq.correct_answer,
+          explanation: mcq.explanation || undefined
+        };
+      });
+
+      const shuffledQuestions = transformedQuestions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, roomData.total_questions);
+
+      setQuestions(shuffledQuestions);
+      console.log(`Loaded ${shuffledQuestions.length} questions from database`);
+
+    } catch (error) {
+      console.error('Error in loadQuestionsFromDatabase:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load questions. Using sample questions.",
+        variant: "destructive",
+      });
+      loadSampleQuestions();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadSampleQuestions = () => {
+    const sampleQuestions: Question[] = [
+      {
+        id: 'sample_1',
+        question: 'What is the powerhouse of the cell?',
+        options: ['Nucleus', 'Mitochondria', 'Ribosome', 'Golgi apparatus'],
+        correct_answer: 'Mitochondria',
+        explanation: 'Mitochondria are known as the powerhouse of the cell because they produce ATP.'
+      },
+      {
+        id: 'sample_2',
+        question: 'Which organ system is responsible for transporting blood throughout the body?',
+        options: ['Respiratory system', 'Digestive system', 'Circulatory system', 'Nervous system'],
+        correct_answer: 'Circulatory system',
+        explanation: 'The circulatory system, consisting of the heart and blood vessels, transports blood throughout the body.'
+      },
+      {
+        id: 'sample_3',
+        question: 'What is the basic unit of heredity?',
+        options: ['Chromosome', 'Gene', 'DNA', 'Protein'],
+        correct_answer: 'Gene',
+        explanation: 'A gene is the basic unit of heredity that carries genetic information.'
+      },
+      {
+        id: 'sample_4',
+        question: 'Which part of the brain controls balance and coordination?',
+        options: ['Cerebrum', 'Cerebellum', 'Brainstem', 'Hypothalamus'],
+        correct_answer: 'Cerebellum',
+        explanation: 'The cerebellum is responsible for balance, coordination, and fine motor control.'
+      },
+      {
+        id: 'sample_5',
+        question: 'What type of blood cell fights infections?',
+        options: ['Red blood cells', 'White blood cells', 'Platelets', 'Plasma cells'],
+        correct_answer: 'White blood cells',
+        explanation: 'White blood cells are part of the immune system and help fight infections.'
+      }
+    ];
+
     setQuestions(sampleQuestions.slice(0, roomData.total_questions));
-    setIsLoading(false);
-  }, [roomData.total_questions]);
+  };
 
   useEffect(() => {
     if (!isLoading && !gameFinishedLocally) {
@@ -134,15 +218,13 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    // Auto-submit with no answer
     handleAnswerSubmit(null);
   };
 
   const handleAnswerSelect = (answer: string) => {
-    if (selectedAnswer !== null) return; // Already answered
+    if (selectedAnswer !== null) return;
     setSelectedAnswer(answer);
     
-    // Auto-submit after selection
     setTimeout(() => {
       handleAnswerSubmit(answer);
     }, 500);
@@ -174,10 +256,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
       });
     }
 
-    // --- Client-side Supabase Update (for current player's score/answers) ---
-    // This part remains to simulate saving the current player's progress.
     try {
-      // First, try to fetch the participant to see if they exist
       console.log('Attempting to fetch participant for room:', roomData.id, 'user:', userId);
       const { data: participantData, error: fetchError } = await supabase
         .from('battle_participants')
@@ -186,10 +265,9 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         .eq('user_id', userId)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
+      if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error fetching participant:', fetchError);
         console.warn('Participant not found or multiple found. Ensure battle_participants has unique (battle_room_id, user_id) constraint.', fetchError);
-        // If participant not found, attempt to insert a new one before updating
         if (fetchError.code === 'PGRST116') {
           console.log('Participant not found, attempting to insert new one.');
           const { error: insertError } = await supabase
@@ -197,7 +275,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
             .insert({
               battle_room_id: roomData.id,
               user_id: userId,
-              username: "Player", // You might need to pass username from parent or fetch it
+              username: "Player",
               score: 0,
               answers: [],
               is_finished: false
@@ -208,7 +286,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
           }
           console.log('New participant inserted after initial fetch failed.');
         } else {
-          throw fetchError; // Re-throw other fetch errors
+          throw fetchError;
         }
       }
 
@@ -245,9 +323,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         variant: "destructive"
       });
     }
-    // ---------------------------------------------------------------------
 
-    // Move to next question or finish game
     setTimeout(() => {
       if (currentQuestionIndex + 1 >= questions.length) {
         finishGame();
@@ -259,10 +335,9 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
   };
 
   const finishGame = async () => {
-    setGameFinishedLocally(true); // Mark this player's game as finished locally
+    setGameFinishedLocally(true);
     
     try {
-      // --- Client-side Supabase Update (for current player's final score and finished status) ---
       console.log('Attempting to update final score and finish status for current participant.');
       const { error: updateParticipantError } = await supabase
         .from('battle_participants')
@@ -275,14 +350,7 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         throw updateParticipantError;
       }
       console.log('Final score and finished status updated for current participant successfully.');
-      // -----------------------------------------------------------------------------------------
 
-      // --- CLIENT-SIDE RANK CALCULATION SIMULATION ---
-      // This is the key change to make the rank dynamic without backend logic.
-      // We'll gather all participant scores (including this player's and mock others)
-      // and calculate the rank here.
-      
-      // Fetch all participants for the room to get their latest scores
       console.log('Fetching all participants for room:', roomData.id, 'to calculate ranks.');
       const { data: allParticipants, error: fetchParticipantsError } = await supabase
         .from('battle_participants')
@@ -296,28 +364,23 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
           description: `Failed to fetch participant data for ranking: ${fetchParticipantsError.message}`,
           variant: "destructive"
         });
-        return; // Exit if we can't get participant data
+        return;
       }
       console.log('Fetched participants:', allParticipants);
 
-      // Ensure current player's score is updated in the list for accurate ranking
-      // (This step is crucial if the local 'score' state is more up-to-date than the fetched 'allParticipants')
       const updatedParticipants = allParticipants.map(p => 
         p.user_id === userId ? { ...p, score: score } : p
       );
 
-      // Sort participants by score to determine rank
       const sortedParticipants = [...updatedParticipants].sort((a, b) => b.score - a.score);
       console.log('Sorted participants for rank calculation:', sortedParticipants);
 
-      // Find the current player's rank
       const playerRank = sortedParticipants.findIndex(p => p.user_id === userId) + 1;
       console.log('Calculated player rank:', playerRank);
 
-      const totalCorrect = (score - (score % 100)) / 100; // Assuming 100 base points per correct answer
+      const totalCorrect = Math.floor(score / 100);
       const accuracyPercentage = (totalCorrect / questions.length) * 100;
 
-      // --- Client-side Supabase Upsert for Battle Results (now with calculated rank) ---
       console.log('Attempting to upsert battle results with calculated rank:', playerRank);
       const { error: upsertResultError } = await supabase
         .from('battle_results')
@@ -325,33 +388,30 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
           battle_room_id: roomData.id,
           user_id: userId,
           final_score: score,
-          rank: playerRank, // Set the calculated rank here!
+          rank: playerRank,
           total_correct: totalCorrect,
           total_questions: questions.length,
           accuracy_percentage: accuracyPercentage,
           time_bonus: score - (totalCorrect * 100)
-        }, { onConflict: ['battle_room_id', 'user_id'] }); // Use onConflict to update if exists
+        }, { onConflict: 'battle_room_id,user_id' });
 
       if (upsertResultError) {
         console.error('Error upserting battle results:', upsertResultError);
         throw upsertResultError;
       }
       console.log('Battle results (including client-side calculated rank) upserted successfully.');
-      // ----------------------------------------------------------------------------------
 
-      // Prepare results object to pass to onGameComplete
       const results = {
         finalScore: score,
         totalQuestions: questions.length,
         correctAnswers: totalCorrect,
         accuracy: accuracyPercentage,
-        rank: playerRank, // Pass the calculated rank
+        rank: playerRank,
         roomCode: roomData.room_code
       };
 
-      // Delay for a moment to show "Processing results..." then call onGameComplete
       setTimeout(() => {
-        onGameComplete(results); // Pass the full results object to the parent
+        onGameComplete(results);
       }, 2000);
 
     } catch (error) {
@@ -368,8 +428,11 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
         <Card className="w-full max-w-md p-8 text-center">
-          <CardTitle className="text-2xl mb-4">Loading Battle...</CardTitle>
+          <CardTitle className="text-2xl mb-4">Loading Questions...</CardTitle>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-4">
+            Fetching questions from {roomData.subject}
+          </p>
         </Card>
       </div>
     );
@@ -400,7 +463,6 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-4">
-      {/* Header */}
       <div className="max-w-4xl mx-auto mb-6">
         <div className="flex items-center justify-between mb-4">
           <Badge variant="outline" className="text-lg px-4 py-2">
@@ -427,7 +489,6 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         <Progress value={progress} className="h-2" />
       </div>
 
-      {/* Question Card */}
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-xl font-bold text-center">
@@ -467,7 +528,6 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
         </CardContent>
       </Card>
 
-      {/* Battle Type Info */}
       <div className="max-w-4xl mx-auto mt-6 text-center">
         <Badge variant="secondary" className="px-4 py-2">
           {roomData.battle_type.toUpperCase()} Battle • {roomData.subject}
@@ -476,3 +536,4 @@ export const BattleGame = ({ roomData, userId, onGameComplete }: BattleGameProps
     </div>
   );
 };
+// This component handles the battle game logic, including question loading, answer submission, and game completion.

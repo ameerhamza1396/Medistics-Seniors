@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Clock, Trophy, Swords, RefreshCw } from 'lucide-react';
 import { BattleRoom, DatabaseBattleRoom } from '@/types/battle';
+import { SubjectChapterSelector } from './SubjectChapterSelector';
 
 interface BattleLobbyProps {
   onJoinBattle: (roomId: string) => void;
@@ -21,6 +21,13 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [battleType, setBattleType] = useState<'1v1' | '2v2' | 'ffa'>('1v1');
+  
+  // New state for subject/chapter selection
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
+  const [selectedSubjectName, setSelectedSubjectName] = useState<string | null>(null);
+  const [selectedChapterName, setSelectedChapterName] = useState<string | null>(null);
+  
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -102,6 +109,15 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
       return;
     }
 
+    if (!selectedSubjectId || !selectedChapterId) {
+      toast({
+        title: "Topic Required",
+        description: "Please select a subject and chapter before creating a room.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsCreating(true);
       
@@ -119,7 +135,9 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
           host_id: user.id,
           time_per_question: 15,
           total_questions: 10,
-          subject: 'Biology'
+          subject: selectedSubjectName,
+          subject_id: selectedSubjectId,
+          chapter_id: selectedChapterId
         }])
         .select()
         .single();
@@ -128,7 +146,7 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
 
       toast({
         title: "Room Created!",
-        description: `Room code: ${roomCode}. You can share this code with others.`,
+        description: `Room code: ${roomCode}. Topic: ${selectedSubjectName} - ${selectedChapterName}`,
       });
 
       onJoinBattle(data.id);
@@ -197,6 +215,18 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
     }
   };
 
+  const handleSubjectChange = (subjectId: string, subjectName: string) => {
+    setSelectedSubjectId(subjectId);
+    setSelectedSubjectName(subjectName);
+    setSelectedChapterId(null);
+    setSelectedChapterName(null);
+  };
+
+  const handleChapterChange = (chapterId: string, chapterName: string) => {
+    setSelectedChapterId(chapterId);
+    setSelectedChapterName(chapterName);
+  };
+
   const getBattleTypeColor = (type: string) => {
     switch (type) {
       case '1v1': return 'bg-blue-500 hover:bg-blue-600';
@@ -235,6 +265,14 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Subject/Chapter Selection */}
+      <SubjectChapterSelector
+        selectedSubjectId={selectedSubjectId}
+        selectedChapterId={selectedChapterId}
+        onSubjectChange={handleSubjectChange}
+        onChapterChange={handleChapterChange}
+      />
+
       {/* Create Room Section */}
       <Card className="border-red-200 dark:border-red-800">
         <CardHeader>
@@ -263,7 +301,7 @@ export const BattleLobby = ({ onJoinBattle }: BattleLobbyProps) => {
             <div className="w-full sm:w-auto">
               <Button 
                 onClick={createRoom} 
-                disabled={isCreating}
+                disabled={isCreating || !selectedSubjectId || !selectedChapterId}
                 className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white mt-6"
               >
                 {isCreating ? (
