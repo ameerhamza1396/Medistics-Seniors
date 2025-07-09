@@ -548,7 +548,6 @@ export const Classroom = () => {
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex justify-between items-center max-w-full">
           <Link to="/dashboard" className="flex items-center space-x-1 sm:space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
             <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-            <span>Back to Dashboard</span>
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">

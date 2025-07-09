@@ -1,15 +1,15 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'; // Import DropdownMenu components
-import { ArrowLeft, MessageSquare, Users, Send, Loader2, Search, UserPlus, MoreVertical, LogOut, Crown, UserX, RotateCcw } from 'lucide-react'; // Added MoreVertical, LogOut, Crown, UserX, RotateCcw icons
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, MessageSquare, Users, Send, Loader2, Search, UserPlus, MoreVertical, LogOut, Crown, UserX, RotateCcw, Palette } from 'lucide-react'; // Added Palette icon
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card'; // Import Card and CardContent
 
 // Helper function to generate a consistent color based on user ID
 const getUserColor = (userId: string) => {
@@ -24,6 +24,100 @@ const getUserColor = (userId: string) => {
   }
   return color;
 };
+
+// Define Chat Themes
+const chatThemes = [
+  {
+    id: 'default',
+    name: 'Default',
+    imageUrl: '', // No specific image, or a generic placeholder
+    otherBubbleColor: 'bg-gray-200 dark:bg-gray-700',
+    myBubbleColor: 'bg-purple-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-gray-900 dark:text-gray-100',
+    overlayColor: 'bg-transparent', // No overlay for default
+  },
+  {
+    id: 'medical',
+    name: 'Medical',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981710/1_njsrwz.jpg',
+    otherBubbleColor: 'bg-green-800 dark:bg-green-800',
+    myBubbleColor: 'bg-gray-400 dark:bg-gray-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-black/60', // Blackish fade
+  },
+  {
+    id: 'sunflowers',
+    name: 'Sunflowers',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981710/2_zyq71a.jpg',
+    otherBubbleColor: 'bg-yellow-400 dark:bg-yellow-600',
+    myBubbleColor: 'bg-green-300 dark:bg-green-500',
+    myBubbleTextColor: 'text-gray-900',
+    otherBubbleTextColor: 'text-gray-900',
+    overlayColor: 'bg-black/40', // Blackish fade
+  },
+  {
+    id: 'girlies',
+    name: 'Girlies',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981709/5_zav5ex.jpg',
+    otherBubbleColor: 'bg-pink-700 dark:bg-pink-700',
+    myBubbleColor: 'bg-white dark:bg-gray-100',
+    myBubbleTextColor: 'text-black',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-black/50', // Blackish fade
+  },
+  {
+    id: 'art_colors',
+    name: 'Art Colors',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981709/4_oltakt.jpg',
+    otherBubbleColor: 'bg-purple-800 dark:bg-purple-800',
+    myBubbleColor: 'bg-purple-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-black/60', // Blackish fade
+  },
+  {
+    id: 'king',
+    name: 'King',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981709/4_oltakt.jpg', // Re-using image as per user's request
+    otherBubbleColor: 'bg-yellow-700 dark:bg-yellow-700',
+    myBubbleColor: 'bg-purple-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-black/60', // Blackish fade
+  },
+  {
+    id: 'black',
+    name: 'Black',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751982360/6_n80ruf.jpg',
+    otherBubbleColor: 'bg-blue-800 dark:bg-blue-800',
+    myBubbleColor: 'bg-purple-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-white/60', // Whitish fade for dark image
+  },
+  {
+    id: 'cats',
+    name: 'Cats',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751982360/7_u53i8q.jpg',
+    otherBubbleColor: 'bg-yellow-700 dark:bg-yellow-700',
+    myBubbleColor: 'bg-purple-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-black/50', // Blackish fade
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751982359/8_hlpokg.jpg',
+    otherBubbleColor: 'bg-gradient-to-r from-blue-500 to-white dark:from-blue-700 dark:to-gray-200',
+    myBubbleColor: 'bg-purple-600',
+    myBubbleTextColor: 'text-white',
+    otherBubbleTextColor: 'text-white',
+    overlayColor: 'bg-black/40', // Blackish fade
+  },
+];
 
 // Type definitions (re-defined here for component self-containment)
 interface Classroom {
@@ -102,14 +196,47 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [showMembersListModal, setShowMembersListModal] = useState(false);
-  const [showChangeChatColorModal, setShowChangeChatColorModal] = useState(false);
+  const [showChatThemeModal, setShowChatThemeModal] = useState(false); // Renamed from showChangeChatColorModal
   const [showManageInviteCodeModal, setShowManageInviteCodeModal] = useState(false);
   const [showManageRolesModal, setShowManageRolesModal] = useState(false);
+
+  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+  const [currentChatTheme, setCurrentChatTheme] = useState(chatThemes[0]); // Initialize with default theme
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, messagesEndRef]);
+
+  // Fetch current chat theme for the classroom
+  useEffect(() => {
+    const fetchChatTheme = async () => {
+      if (!selectedClassroom) return;
+      try {
+        const { data, error } = await supabase
+          .from('classroom_settings')
+          .select('setting_value')
+          .eq('classroom_id', selectedClassroom.id)
+          .eq('setting_key', 'chat_theme_id') // Using 'chat_theme_id' as the key
+          .maybeSingle();
+
+        if (error) throw error;
+
+        const themeId = data?.setting_value;
+        const foundTheme = chatThemes.find(theme => theme.id === themeId);
+        setCurrentChatTheme(foundTheme || chatThemes[0]); // Set found theme or default
+      } catch (error: any) {
+        console.error('Error fetching chat theme:', error.message);
+        toast({
+          title: "Error",
+          description: `Failed to load chat theme: ${error.message}`,
+          variant: "destructive",
+        });
+        setCurrentChatTheme(chatThemes[0]); // Fallback to default on error
+      }
+    };
+    fetchChatTheme();
+  }, [selectedClassroom]); // Re-fetch when classroom changes
 
   const isHost = user?.id === selectedClassroom.host_id;
 
@@ -337,11 +464,11 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
     }
   };
 
-  const handleChatColorChange = async (colorKey: string, colorValue: string) => {
-    if (!selectedClassroom || !isHost) {
+  const handleSetChatTheme = async () => {
+    if (!selectedClassroom || !isHost || !selectedThemeId) {
       toast({
         title: "Permission Denied",
-        description: "Only the host can change chat colors.",
+        description: "Only the host can change chat themes, and a theme must be selected.",
         variant: "destructive",
       });
       return;
@@ -354,26 +481,35 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         .upsert(
           {
             classroom_id: selectedClassroom.id,
-            setting_key: colorKey,
-            setting_value: colorValue,
+            setting_key: 'chat_theme_id', // Store the theme ID
+            setting_value: selectedThemeId,
           },
           { onConflict: 'classroom_id, setting_key' }
         );
 
       if (error) throw error;
 
-      toast({
-        title: "Chat Color Updated",
-        description: `Chat color for ${colorKey} updated to ${colorValue}.`,
-      });
-      // In a real app, you'd re-fetch settings or update local state to apply the color
-      // For now, this just updates the DB.
-      setShowChangeChatColorModal(false);
+      const newTheme = chatThemes.find(theme => theme.id === selectedThemeId);
+      if (newTheme) {
+        setCurrentChatTheme(newTheme);
+        toast({
+          title: "Chat Theme Updated",
+          description: `Chat theme set to "${newTheme.name}".`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Selected theme not found.",
+          variant: "destructive",
+        });
+      }
+      setShowChatThemeModal(false);
+      setSelectedThemeId(null); // Reset selected theme after setting
     } catch (error: any) {
-      console.error('Error changing chat color:', error.message);
+      console.error('Error changing chat theme:', error.message);
       toast({
         title: "Error",
-        description: `Failed to change chat color: ${error.message}`,
+        description: `Failed to change chat theme: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -402,8 +538,8 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
             <DropdownMenuItem onClick={() => setShowMembersListModal(true)} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
               <Users className="mr-2 h-4 w-4" /> View Members
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowChangeChatColorModal(true)} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-              <MessageSquare className="mr-2 h-4 w-4" /> Change Chat Colors
+            <DropdownMenuItem onClick={() => setShowChatThemeModal(true)} className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Palette className="mr-2 h-4 w-4" /> Chat Theme
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLeaveGroup} className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
               <LogOut className="mr-2 h-4 w-4" /> Leave Group
@@ -423,8 +559,18 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         </DropdownMenu>
       </div>
 
-      <ScrollArea className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg mb-4">
-        <div className="space-y-4">
+      <ScrollArea
+        className="flex-1 min-h-[90%] p-4 rounded-lg mb-4 relative overflow-hidden"
+        style={{
+          backgroundImage: currentChatTheme.imageUrl ? `url(${currentChatTheme.imageUrl})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {currentChatTheme.imageUrl && (
+          <div className={`absolute inset-0 ${currentChatTheme.overlayColor}`}></div>
+        )}
+        <div className="space-y-4 relative z-10"> {/* Ensure content is above overlay */}
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -461,8 +607,8 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
                   <div
                     className={`max-w-[70%] p-3 rounded-lg ${
                       message.user_id === user?.id
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                        ? `${currentChatTheme.myBubbleColor} ${currentChatTheme.myBubbleTextColor}`
+                        : `${currentChatTheme.otherBubbleColor} ${currentChatTheme.otherBubbleTextColor}`
                     }`}
                   >
                     <p className="font-semibold text-xs mb-1">
@@ -502,7 +648,7 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSendMessage} className="flex space-x-2 p-4 border-t border-purple-200 dark:border-purple-800 bg-white dark:bg-gray-900 rounded-b-lg">
+      <form onSubmit={handleSendMessage} className="flex space-x-2 p-4 border-t border-purple-200 dark:border-purple-800 bg-white dark:bg-gray-900 rounded-lg absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[85%] z">
         <Input
           value={newMessageContent}
           onChange={(e) => setNewMessageContent(e.target.value)}
@@ -616,30 +762,51 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Change Chat Colors Modal */}
-      <Dialog open={showChangeChatColorModal} onOpenChange={setShowChangeChatColorModal}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 border-purple-200 dark:border-purple-800">
+      {/* Chat Theme Modal */}
+      <Dialog open={showChatThemeModal} onOpenChange={setShowChatThemeModal}>
+        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-900 border-purple-200 dark:border-purple-800">
           <DialogHeader>
-            <DialogTitle>Change Chat Colors</DialogTitle>
+            <DialogTitle>Select Chat Theme</DialogTitle>
             <DialogDescription>
-              (Host Only) Select colors for chat bubbles.
+              (Host Only) Choose a background image and chat bubble colors for this classroom.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4 max-h-96 overflow-y-auto">
             {!isHost ? (
-              <p className="text-center text-red-500">Only the host can change chat colors.</p>
+              <p className="col-span-full text-center text-red-500">Only the host can change chat themes.</p>
             ) : (
-              <>
-                <Label htmlFor="userChatColor">Your Message Color (e.g., #8B5CF6 for purple-500)</Label>
-                <Input id="userChatColor" placeholder="e.g., #8B5CF6" onChange={(e) => console.log('User color selected:', e.target.value)} />
-                <Label htmlFor="otherChatColor">Other Members' Message Color (e.g., #E5E7EB for gray-200)</Label>
-                <Input id="otherChatColor" placeholder="e.g., #E5E7EB" onChange={(e) => console.log('Other color selected:', e.target.value)} />
-                <Button onClick={() => handleChatColorChange('user_bubble_color', 'current_user_color_value')} className="bg-purple-600 hover:bg-purple-700">Save Colors</Button>
-              </>
+              chatThemes.map(theme => (
+                <Card
+                  key={theme.id}
+                  className={`relative cursor-pointer overflow-hidden rounded-lg shadow-md transition-all duration-200
+                    ${selectedThemeId === theme.id ? 'border-4 border-purple-500 dark:border-purple-400' : 'border border-gray-200 dark:border-gray-700'}
+                    hover:shadow-lg`}
+                  onClick={() => setSelectedThemeId(theme.id)}
+                >
+                  <div className="w-full h-24 bg-gray-100 dark:bg-gray-800 flex items-center justify-center relative">
+                    {theme.imageUrl ? (
+                      <img
+                        src={theme.imageUrl}
+                        alt={theme.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-gray-500 dark:text-gray-400 text-sm">No Image</div>
+                    )}
+                    {theme.imageUrl && <div className={`absolute inset-0 ${theme.overlayColor}`}></div>}
+                  </div>
+                  <CardContent className="p-2 text-center">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{theme.name}</p>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowChangeChatColorModal(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setShowChatThemeModal(false)}>Close</Button>
+            <Button onClick={handleSetChatTheme} disabled={!selectedThemeId || !isHost}>
+              Set Theme
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
