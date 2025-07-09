@@ -648,7 +648,7 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSendMessage} className="flex space-x-2 p-4 border-t border-purple-200 dark:border-purple-800 bg-white dark:bg-gray-900 rounded-lg absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[85%] z">
+      <form onSubmit={handleSendMessage} className="flex space-x-2 p-4 border-t border-purple-200 dark:border-purple-800 bg-white dark:bg-gray-900 rounded-lg absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[85%] z-[999]">
         <Input
           value={newMessageContent}
           onChange={(e) => setNewMessageContent(e.target.value)}
