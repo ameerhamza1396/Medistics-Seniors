@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react'; // Added useState
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox'; // Not used, can remove
 import { Plus, MessageSquare, Users, Copy, ClipboardCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@supabase/supabase-js'; // Import User type
+import { User } from '@supabase/supabase-js';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
-// Type definitions (re-defined here for component self-containment)
+// Import the new ManageInviteCodeModal
+import { ManageInviteCodeModal } from './modals/ManageInviteCodeModal'; // Adjust path if needed
+
+// Type definitions
 interface Classroom {
   id: string;
   created_at: string;
@@ -22,39 +27,41 @@ interface Classroom {
   host_name?: string;
 }
 
-type ClassroomView = 'list' | 'chat'; // Re-defined for clarity
+type ClassroomView = 'list' | 'chat';
 
 interface GroupsDisplayProps {
-  myClassrooms: Classroom[]; // Classrooms user is a member of
-  discoverClassrooms: Classroom[]; // Public classrooms user is not a member of
+  myClassrooms: Classroom[];
+  discoverClassrooms: Classroom[];
   user: User | null;
   fetchClassrooms: () => Promise<void>;
   setSelectedClassroom: React.Dispatch<React.SetStateAction<Classroom | null>>;
   setCurrentView: React.Dispatch<React.SetStateAction<ClassroomView>>;
-  
-  // Modal states and handlers for creating/joining classrooms
+
+  // Modal states and handlers for creating classrooms
   showCreateClassroomModal: boolean;
   setShowCreateClassroomModal: React.Dispatch<React.SetStateAction<boolean>>;
-  showJoinClassroomModal: boolean;
-  setShowJoinClassroomModal: React.Dispatch<React.SetStateAction<boolean>>;
   newClassroomName: string;
   setNewClassroomName: React.Dispatch<React.SetStateAction<string>>;
   newClassroomDescription: string;
   setNewClassroomDescription: React.Dispatch<React.SetStateAction<string>>;
   newClassroomIsPublic: boolean;
   setNewClassroomIsPublic: React.Dispatch<React.SetStateAction<boolean>>;
-  joinInviteCode: string;
-  setJoinInviteCode: React.Dispatch<React.SetStateAction<string>>;
   isCreatingClassroom: boolean;
   setIsCreatingClassroom: React.Dispatch<React.SetStateAction<boolean>>;
-  isJoiningClassroom: boolean;
-  setIsJoiningClassroom: React.Dispatch<React.SetStateAction<boolean>>;
-  copiedInviteCode: string | null; // This is for the modal after creation
-  setCopiedInviteCode: React.Dispatch<React.SetStateAction<string | null>>; // This is for the modal after creation
+  isJoiningClassroom: boolean; // Keep for public join status
+  setIsJoiningClassroom: React.Dispatch<React.SetStateAction<boolean>>; // Keep for public join status
+
+  // **CHANGED:** Prop for the generated invite link (full URL)
+  generatedInviteLink: string | null;
+  setGeneratedInviteLink: React.Dispatch<React.SetStateAction<string | null>>;
+
   handleCreateClassroom: () => Promise<void>;
-  handleJoinClassroom: (classroomId?: string) => Promise<void>; // Modified to accept classroomId for public joins
-  handleCopyInviteCode: (code: string) => void; // Modified to accept code
+  handleJoinClassroom: (classroomId: string) => Promise<void>; // Only for public joins now
+  handleCopyInviteLink: (link: string) => void; // Now copies full link
   toast: ReturnType<typeof useToast>['toast'];
+
+  // New prop for app domain to generate links within the modal
+  appDomain: string;
 }
 
 export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
@@ -66,29 +73,82 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
   setCurrentView,
   showCreateClassroomModal,
   setShowCreateClassroomModal,
-  showJoinClassroomModal,
-  setShowJoinClassroomModal,
   newClassroomName,
   setNewClassroomName,
   newClassroomDescription,
   setNewClassroomDescription,
   newClassroomIsPublic,
   setNewClassroomIsPublic,
-  joinInviteCode,
-  setJoinInviteCode,
   isCreatingClassroom,
   setIsCreatingClassroom,
   isJoiningClassroom,
   setIsJoiningClassroom,
-  copiedInviteCode,
-  setCopiedInviteCode,
+  generatedInviteLink, // Updated prop name
+  setGeneratedInviteLink, // Updated prop name
   handleCreateClassroom,
-  handleJoinClassroom,
-  handleCopyInviteCode,
+  handleJoinClassroom, // Only for public joins now
+  handleCopyInviteLink, // Now copies full link
   toast,
+  appDomain, // New prop
 }) => {
+  // State for the ManageInviteCodeModal
+  const [showManageInviteCodeModal, setShowManageInviteCodeModal] = useState(false);
+  const [classroomToManageInviteCode, setClassroomToManageInviteCode] = useState<Classroom | null>(null);
+
+  // Unified handler for generating/revoking invite link (passed to ManageInviteCodeModal)
+  const handleGenerateRevokeInviteLink = async () => {
+    if (!user || !classroomToManageInviteCode) return;
+
+    // This logic should ideally be lifted to Classroom.tsx or an API utility
+    // and passed down, but for demonstration, we'll put a placeholder.
+    // In a real app, this would be an API call to your backend/Supabase
+    // to update the classroom's invite_code.
+
+    // Placeholder: Simulate API call
+    console.log(`Simulating API call to ${classroomToManageInviteCode.invite_code ? 'revoke' : 'generate'} invite code for classroom: ${classroomToManageInviteCode.id}`);
+
+    try {
+        let newInviteCode = null;
+        if (!classroomToManageInviteCode.invite_code) {
+            // Generate a new code if one doesn't exist
+            newInviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        }
+
+        // --- Supabase Update (THIS PART SHOULD BE HANDLED IN CLASSROOM.TSX) ---
+        // For demonstration purposes, this is a placeholder.
+        // You would usually have this logic in Classroom.tsx and pass it down.
+        // For GroupsDisplay, we'll just update local state for demonstration
+        // For proper implementation, you need to lift this state up or use context.
+        const { error } = await (window as any).supabase.from('classrooms')
+            .update({ invite_code: newInviteCode })
+            .eq('id', classroomToManageInviteCode.id);
+
+        if (error) throw error;
+        // --- END SUPABASE UPDATE PLACEHOLDER ---
+
+        toast({
+            title: "Success",
+            description: newInviteCode ? "New invite link generated!" : "Invite link revoked!",
+        });
+
+        // Update local state to reflect the change immediately
+        // IMPORTANT: In a real app, `fetchClassrooms()` would ideally refresh this.
+        setClassroomToManageInviteCode(prev => prev ? { ...prev, invite_code: newInviteCode } : null);
+        fetchClassrooms(); // Re-fetch to ensure all lists are up-to-date
+
+    } catch (error: any) {
+        console.error('Error managing invite link:', error.message);
+        toast({
+            title: "Error",
+            description: `Failed to manage invite link: ${error.message}`,
+            variant: "destructive",
+        });
+    }
+  };
+
+
   return (
-    <div className="space-y-8"> {/* Increased space-y for separation */}
+    <div className="space-y-8">
       {/* Your Classrooms Section */}
       <div className="space-y-4">
         <div className="flex justify-between items-center mb-6">
@@ -97,9 +157,7 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
             <Button onClick={() => setShowCreateClassroomModal(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
               <Plus className="w-4 h-4 mr-2" /> Create
             </Button>
-            <Button onClick={() => setShowJoinClassroomModal(true)} variant="outline" className="border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30">
-              Join Private
-            </Button>
+            {/* Removed 'Join Private' button as it's handled by URL now */}
           </div>
         </div>
 
@@ -107,7 +165,7 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
           <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm text-center py-8">
             <CardTitle className="text-xl text-gray-800 dark:text-gray-200 mb-2">No Classrooms Yet</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
-              Create your first classroom or join an existing one!
+              Create your first classroom or share an invite link to join one!
             </CardDescription>
           </Card>
         ) : (
@@ -115,11 +173,7 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
             {myClassrooms.map((classroom) => (
               <Card
                 key={classroom.id}
-                className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-                onClick={() => {
-                  setSelectedClassroom(classroom);
-                  setCurrentView('chat');
-                }}
+                className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm hover:shadow-lg transition-shadow duration-200" // Removed cursor-pointer from Card as button inside will handle interaction
               >
                 <CardHeader>
                   <CardTitle className="text-lg text-gray-900 dark:text-white flex items-center justify-between">
@@ -133,14 +187,35 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
                 <CardContent className="text-xs text-gray-500 dark:text-gray-400">
                   <p>Host: {classroom.host_name || 'Loading...'}</p>
                   <p>Type: {classroom.is_public ? 'Public' : 'Private'}</p>
-                  {classroom.invite_code && (
-                    <p className="flex items-center mt-1">
-                      Invite Code: <span className="font-mono bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-gray-800 dark:text-gray-200 ml-1 text-xs">{classroom.invite_code}</span>
-                      <Button variant="ghost" size="sm" className="ml-1 h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); handleCopyInviteCode(classroom.invite_code || ''); }}>
-                        <Copy className="h-3 w-3" />
+                  <div className="flex items-center justify-between mt-2">
+                    {/* View Chat Button */}
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1"
+                      onClick={() => {
+                        setSelectedClassroom(classroom);
+                        setCurrentView('chat');
+                      }}
+                    >
+                      View Chat
+                    </Button>
+
+                    {/* Manage Invite Link Button (Host Only, Private Classrooms) */}
+                    {user?.id === classroom.host_id && !classroom.is_public && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-purple-600 dark:text-purple-400 ml-2"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent card onClick
+                          setClassroomToManageInviteCode(classroom);
+                          setShowManageInviteCodeModal(true);
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" /> Manage Link
                       </Button>
-                    </p>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -176,8 +251,8 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
                 </CardHeader>
                 <CardContent className="text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center">
                   <p>Host: {classroom.host_name || 'Loading...'}</p>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
                     onClick={() => handleJoinClassroom(classroom.id)}
                     disabled={isJoiningClassroom}
@@ -192,63 +267,76 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
         )}
       </div>
 
-
       {/* Create Classroom Modal */}
-      <Dialog open={showCreateClassroomModal} onOpenChange={setShowCreateClassroomModal}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 border-purple-200 dark:border-purple-800">
-          <DialogHeader>
-            <DialogTitle>Create New Classroom</DialogTitle>
-            <DialogDescription>
+      <Dialog open={showCreateClassroomModal} onOpenChange={(open) => {
+        setShowCreateClassroomModal(open);
+        // Clear generated link when modal closes if it was just shown for creation
+        if (!open) setGeneratedInviteLink(null);
+      }}>
+        <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-900 dark:to-purple-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Create New Classroom</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
               Set up your new study group or discussion forum.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Classroom Name
               </Label>
               <Input
                 id="name"
                 value={newClassroomName}
                 onChange={(e) => setNewClassroomName(e.target.value)}
-                className="col-span-3"
+                className="w-full bg-white/50 dark:bg-gray-800/50 border-purple-300 dark:border-purple-700 focus:ring-purple-500 focus:border-purple-500"
                 disabled={isCreatingClassroom}
+                placeholder="e.g., Biology Study Group"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Description (Optional)
               </Label>
-              <Input
+              <Textarea
                 id="description"
                 value={newClassroomDescription}
                 onChange={(e) => setNewClassroomDescription(e.target.value)}
-                className="col-span-3"
+                className="w-full bg-white/50 dark:bg-gray-800/50 border-purple-300 dark:border-purple-700 focus:ring-purple-500 focus:border-purple-500 resize-y min-h-[80px]"
+                placeholder="A brief overview of your classroom's purpose."
                 disabled={isCreatingClassroom}
               />
             </div>
-            <div className="flex items-center space-x-2 col-span-4 justify-end">
-              <Checkbox
+            <div className="flex items-center justify-between mt-2">
+              <Label htmlFor="is_public" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                Public Classroom
+              </Label>
+              <Switch
                 id="is_public"
                 checked={newClassroomIsPublic}
                 onCheckedChange={(checked) => setNewClassroomIsPublic(!!checked)}
                 disabled={isCreatingClassroom}
+                className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=checked]:bg-purple-700 dark:data-[state=unchecked]:bg-gray-700"
               />
-              <Label htmlFor="is_public">
-                Public Classroom (Anyone can join without invite code)
-              </Label>
             </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-right mt-1">
+              {newClassroomIsPublic ? 'Anyone can join without an invite code.' : 'An invite code will be generated for private access.'}
+            </p>
           </div>
-          {copiedInviteCode && !newClassroomIsPublic && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 p-3 rounded-md text-sm text-green-700 dark:text-green-300 flex items-center justify-between mt-2">
-              <span>Invite Code: <span className="font-bold">{copiedInviteCode}</span></span>
-              <Button variant="ghost" size="sm" onClick={() => handleCopyInviteCode(copiedInviteCode)} className="ml-2 h-7 w-7 p-0">
+          {/* Display generated invite link (full URL) */}
+          {generatedInviteLink && !newClassroomIsPublic && (
+            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/10 border border-green-200 dark:border-green-700 p-3 rounded-md text-sm text-green-800 dark:text-green-300 flex items-center justify-between mt-4">
+              <span className="break-all">Invite Link: <span className="font-bold font-mono">{generatedInviteLink}</span></span>
+              <Button variant="ghost" size="sm" onClick={() => handleCopyInviteLink(generatedInviteLink)} className="ml-2 h-7 w-7 p-0 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-800/50">
                 <ClipboardCheck className="h-4 w-4" />
               </Button>
             </div>
           )}
-          <DialogFooter>
-            <Button onClick={handleCreateClassroom} disabled={isCreatingClassroom}>
+          <DialogFooter className="mt-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setShowCreateClassroomModal(false); setGeneratedInviteLink(null); }} disabled={isCreatingClassroom} className="border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-700 dark:text-gray-300">
+              Cancel
+            </Button>
+            <Button onClick={handleCreateClassroom} disabled={isCreatingClassroom || !newClassroomName.trim()} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
               {isCreatingClassroom ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Create Classroom
             </Button>
@@ -256,38 +344,24 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Join Classroom Modal (for private invite codes) */}
-      <Dialog open={showJoinClassroomModal} onOpenChange={setShowJoinClassroomModal}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 border-purple-200 dark:border-purple-800">
-          <DialogHeader>
-            <DialogTitle>Join Private Classroom</DialogTitle>
-            <DialogDescription>
-              Enter the invite code to join a private classroom.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="invite_code" className="text-right">
-                Invite Code
-              </Label>
-              <Input
-                id="invite_code"
-                value={joinInviteCode}
-                onChange={(e) => setJoinInviteCode(e.target.value)}
-                className="col-span-3"
-                disabled={isJoiningClassroom}
-                placeholder="e.g., ABCDEF"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => handleJoinClassroom()} disabled={isJoiningClassroom}> {/* No classroomId for invite code join */}
-              {isJoiningClassroom ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Join Classroom
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Removed the old Join Classroom Modal (for private invite codes) as it's now handled by URL */}
+      {/* The `Join Private` button has also been removed from the header */}
+
+      {/* Manage Invite Code Modal */}
+      {classroomToManageInviteCode && (
+        <ManageInviteCodeModal
+          isOpen={showManageInviteCodeModal}
+          onOpenChange={(open) => {
+            setShowManageInviteCodeModal(open);
+            if (!open) setClassroomToManageInviteCode(null); // Clear selected classroom when modal closes
+          }}
+          selectedClassroom={classroomToManageInviteCode}
+          isHost={user?.id === classroomToManageInviteCode.host_id}
+          handleGenerateRevokeInviteLink={handleGenerateRevokeInviteLink} // This needs to be correctly implemented or passed down
+          appDomain={appDomain} // Pass the appDomain
+          handleCopyInviteLink={handleCopyInviteLink} // Pass the handler from Classroom.tsx
+        />
+      )}
     </div>
   );
 };

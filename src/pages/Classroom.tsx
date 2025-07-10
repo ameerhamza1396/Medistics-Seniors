@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Import useLocation and useNavigate
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock, ArrowLeft } from 'lucide-react';
@@ -46,34 +46,34 @@ type ClassroomView = 'list' | 'chat';
 export const Classroom = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const location = useLocation(); // Hook to access URL parameters
+  const navigate = useNavigate(); // Hook to navigate programmatically
+
   const [currentView, setCurrentView] = useState<ClassroomView>('list');
-  const [myClassrooms, setMyClassrooms] = useState<Classroom[]>([]); // Classrooms user is a member of
-  const [discoverClassrooms, setDiscoverClassrooms] = useState<Classroom[]>([]); // Public classrooms user is NOT a member of
+  const [myClassrooms, setMyClassrooms] = useState<Classroom[]>([]);
+  const [discoverClassrooms, setDiscoverClassrooms] = useState<Classroom[]>([]);
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [messages, setMessages] = useState<ClassroomMessage[]>([]);
   const [members, setMembers] = useState<ClassroomMember[]>([]);
   const [newMessageContent, setNewMessageContent] = useState('');
-  
-  // States for modals and loading
+
   const [showCreateClassroomModal, setShowCreateClassroomModal] = useState(false);
-  const [showJoinClassroomModal, setShowJoinClassroomModal] = useState(false);
   const [newClassroomName, setNewClassroomName] = useState('');
   const [newClassroomDescription, setNewClassroomDescription] = useState('');
   const [newClassroomIsPublic, setNewClassroomIsPublic] = useState(true);
-  const [joinInviteCode, setJoinInviteCode] = useState('');
   const [isCreatingClassroom, setIsCreatingClassroom] = useState(false);
   const [isJoiningClassroom, setIsJoiningClassroom] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [copiedInviteCode, setCopiedInviteCode] = useState<string | null>(null);
+  const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null); // New state for the invite link
+
+  const appDomain = import.meta.env.VITE_APP_DOMAIN || window.location.origin; // Get your app's domain
 
 
-  // Fetch classrooms (public and user's private/member ones)
-  const fetchClassrooms = async () => {
+  const fetchClassrooms = useCallback(async () => {
     if (!user) return;
 
     try {
-      // 1. Fetch all public classrooms
       const { data: publicClassroomsRaw, error: publicError } = await supabase
         .from('classrooms')
         .select('*')
@@ -81,7 +81,6 @@ export const Classroom = () => {
 
       if (publicError) throw publicError;
 
-      // 2. Fetch all classroom memberships for the current user
       const { data: userMemberships, error: membershipsError } = await supabase
         .from('classroom_members')
         .select('classroom_id')
@@ -91,7 +90,6 @@ export const Classroom = () => {
 
       const userMemberClassroomIds = new Set(userMemberships.map(m => m.classroom_id));
 
-      // 3. Fetch all classrooms where the user is explicitly a member (including private ones)
       const { data: memberClassroomsData, error: memberClassroomsError } = await supabase
         .from('classroom_members')
         .select('classroom_id, classrooms(*)')
@@ -101,13 +99,11 @@ export const Classroom = () => {
 
       const myClassroomsRaw = memberClassroomsData.map(m => m.classrooms).filter(Boolean) as Classroom[];
 
-      // Collect all unique host_ids and user_ids from all relevant classrooms for profile fetching
       const allRelevantClassrooms = [...publicClassroomsRaw, ...myClassroomsRaw];
       const allUserIdsToFetchProfiles = new Set<string>();
       allRelevantClassrooms.forEach(c => allUserIdsToFetchProfiles.add(c.host_id));
-      myClassroomsRaw.forEach(c => allUserIdsToFetchProfiles.add(c.host_id)); // Ensure host of my classrooms are included
+      myClassroomsRaw.forEach(c => allUserIdsToFetchProfiles.add(c.host_id));
 
-      // 4. Fetch profiles for all collected user IDs
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name')
@@ -117,14 +113,12 @@ export const Classroom = () => {
 
       const profilesMap = new Map(profilesData.map(p => [p.id, p.full_name]));
 
-      // 5. Populate myClassrooms with host names
       const myClassroomsWithHostNames = myClassroomsRaw.map(c => ({
         ...c,
         host_name: profilesMap.get(c.host_id) || 'Unknown Host'
       }));
       setMyClassrooms(myClassroomsWithHostNames);
 
-      // 6. Populate discoverClassrooms (public classrooms user is not a member of)
       const discoverable = publicClassroomsRaw.filter(
         (classroom: Classroom) => !userMemberClassroomIds.has(classroom.id)
       ).map((classroom: Classroom) => ({
@@ -141,23 +135,20 @@ export const Classroom = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [user, toast]);
 
-  // Fetch messages for a specific classroom
-  const fetchMessages = async (classroomId: string) => {
+  const fetchMessages = useCallback(async (classroomId: string) => {
     try {
       const { data: messagesRaw, error } = await supabase
         .from('classroom_messages')
-        .select('*') // Select all columns from messages
+        .select('*')
         .eq('classroom_id', classroomId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      // Collect all unique user_ids from messages
       const userIds = Array.from(new Set(messagesRaw.map(msg => msg.user_id)));
-      
-      // Fetch profiles for all collected user_ids in a single query
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name')
@@ -167,7 +158,6 @@ export const Classroom = () => {
 
       const profilesMap = new Map(profilesData.map(p => [p.id, p.full_name]));
 
-      // Map user_names to messages
       setMessages(messagesRaw.map(msg => ({
         ...msg,
         user_name: profilesMap.get(msg.user_id) || 'Unknown User'
@@ -180,22 +170,19 @@ export const Classroom = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [supabase, toast]);
 
-  // Fetch members for a specific classroom
-  const fetchMembers = async (classroomId: string) => {
+  const fetchMembers = useCallback(async (classroomId: string) => {
     try {
       const { data: membersRaw, error } = await supabase
         .from('classroom_members')
-        .select('*') // Select all columns from members
+        .select('*')
         .eq('classroom_id', classroomId);
 
       if (error) throw error;
 
-      // Collect all unique user_ids from members
       const userIds = Array.from(new Set(membersRaw.map(member => member.user_id)));
-      
-      // Fetch profiles for all collected user_ids in a single query
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name')
@@ -205,7 +192,6 @@ export const Classroom = () => {
 
       const profilesMap = new Map(profilesData.map(p => [p.id, p.full_name]));
 
-      // Map user_names to members
       setMembers(membersRaw.map(member => ({
         ...member,
         user_name: profilesMap.get(member.user_id) || 'Unknown User'
@@ -218,181 +204,35 @@ export const Classroom = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [supabase, toast]);
 
-  useEffect(() => {
-    if (!user) return;
-    fetchClassrooms();
-  }, [user]);
-
-  useEffect(() => {
-    if (selectedClassroom) {
-      fetchMessages(selectedClassroom.id);
-      fetchMembers(selectedClassroom.id);
-
-      // Set up real-time listener for messages
-      const messageChannel = supabase
-        .channel(`classroom_messages:${selectedClassroom.id}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'classroom_messages', filter: `classroom_id=eq.${selectedClassroom.id}` },
-          async (payload: any) => {
-            if (payload.eventType === 'INSERT') {
-              // Fetch the full profile for the new message sender
-              const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', payload.new.user_id)
-                .maybeSingle();
-
-              if (profileError) {
-                console.error('Error fetching profile for new message:', profileError.message);
-              }
-
-              setMessages(prev => [
-                ...prev,
-                {
-                  ...payload.new,
-                  user_name: profileData?.full_name || 'Unknown User'
-                }
-              ]);
-            }
-            // Add logic for UPDATE or DELETE if needed
-          }
-        )
-        .subscribe();
-
-      // Set up real-time listener for members (e.g., new members joining)
-      const memberChannel = supabase
-        .channel(`classroom_members:${selectedClassroom.id}`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'classroom_members', filter: `classroom_id=eq.${selectedClassroom.id}` },
-          async (payload: any) => {
-            if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
-              fetchMembers(selectedClassroom.id); // Re-fetch members list on change
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(messageChannel);
-        supabase.removeChannel(memberChannel);
-      };
-    }
-  }, [selectedClassroom]);
-
-  const handleCreateClassroom = async () => {
-    if (!user || !newClassroomName.trim()) {
+  // --- NEW: handleInviteLinkJoin function to process the invite code ---
+  const handleInviteLinkJoin = useCallback(async (inviteCode: string) => {
+    if (!user) {
+      // If user is not logged in, redirect to login with a comeback URL
+      navigate(`/login?redirectTo=/classrooms?code=${inviteCode}`);
       toast({
-        title: "Validation Error",
-        description: "Classroom name cannot be empty.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsCreatingClassroom(true);
-    try {
-      let inviteCode = null;
-      if (!newClassroomIsPublic) {
-        // Generate a simple invite code (e.g., 6 random alphanumeric characters)
-        inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      }
-
-      const { data: newClassroom, error: classroomError } = await supabase
-        .from('classrooms')
-        .insert({
-          name: newClassroomName.trim(),
-          description: newClassroomDescription.trim() || null,
-          is_public: newClassroomIsPublic,
-          host_id: user.id,
-          invite_code: inviteCode,
-        })
-        .select()
-        .single();
-
-      if (classroomError) throw classroomError;
-
-      // Add host as a member
-      const { error: memberError } = await supabase
-        .from('classroom_members')
-        .insert({
-          user_id: user.id,
-          classroom_id: newClassroom.id,
-          role: 'host',
-        });
-
-      if (memberError) throw memberError;
-
-      toast({
-        title: "Success!",
-        description: `Classroom "${newClassroom.name}" created successfully.`,
-      });
-
-      if (!newClassroomIsPublic && newClassroom.invite_code) {
-        setCopiedInviteCode(newClassroom.invite_code); // Show invite code for copying
-      }
-      
-      setShowCreateClassroomModal(false);
-      setNewClassroomName('');
-      setNewClassroomDescription('');
-      setNewClassroomIsPublic(true);
-      fetchClassrooms(); // Refresh list
-    } catch (error: any) {
-      console.error('Error creating classroom:', error.message);
-      toast({
-        title: "Error",
-        description: `Failed to create classroom: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingClassroom(false);
-    }
-  };
-
-  const handleJoinClassroom = async (classroomId?: string) => {
-    // If classroomId is provided, it's a public join from discover section
-    // If not, it's a private join via invite code from the modal
-    const targetClassroomId = classroomId || (joinInviteCode.trim() ? '' : null); // Placeholder, will fetch by invite code
-
-    if (!user || (!targetClassroomId && !joinInviteCode.trim())) {
-      toast({
-        title: "Validation Error",
-        description: "Classroom ID or Invite code cannot be empty.",
-        variant: "destructive",
+        title: "Login Required",
+        description: "Please log in to join the classroom via invite link.",
+        variant: "default",
       });
       return;
     }
 
     setIsJoiningClassroom(true);
     try {
-      let classroomToJoin: Classroom | null = null;
-      if (targetClassroomId) {
-        // Joining a public classroom via its ID
-        const { data, error } = await supabase
-          .from('classrooms')
-          .select('id, name, host_id, is_public')
-          .eq('id', targetClassroomId)
-          .maybeSingle();
-        if (error) throw error;
-        classroomToJoin = data;
-      } else if (joinInviteCode.trim()) {
-        // Joining a private classroom via invite code
-        const { data, error } = await supabase
-          .from('classrooms')
-          .select('id, name, host_id, is_public')
-          .eq('invite_code', joinInviteCode.trim())
-          .maybeSingle();
-        if (error) throw error;
-        classroomToJoin = data;
-      }
+      const { data: classroomToJoin, error } = await supabase
+        .from('classrooms')
+        .select('id, name, host_id, is_public')
+        .eq('invite_code', inviteCode)
+        .maybeSingle();
+
+      if (error) throw error;
 
       if (!classroomToJoin) {
         toast({
           title: "Error",
-          description: "Invalid invite code or classroom not found.",
+          description: "Invalid or expired invite link.",
           variant: "destructive",
         });
         return;
@@ -414,17 +254,267 @@ export const Classroom = () => {
           description: `You are already a member of "${classroomToJoin.name}".`,
           variant: "default",
         });
-        setShowJoinClassroomModal(false);
-        setJoinInviteCode('');
-        // Fetch host_name for the classroom just joined
+        // Select the classroom and go to chat if already a member
         const { data: hostProfile, error: hostProfileError } = await supabase
           .from('profiles')
           .select('full_name')
           .eq('id', classroomToJoin.host_id)
           .maybeSingle();
+        if (hostProfileError) console.error('Error fetching host profile:', hostProfileError.message);
+        setSelectedClassroom({ ...classroomToJoin, host_name: hostProfile?.full_name || 'Unknown' });
+        setCurrentView('chat');
+        // Clear the URL parameter after successful processing
+        navigate('/classrooms', { replace: true });
+        return;
+      }
 
+      // Add user as a member
+      const { error: joinError } = await supabase
+        .from('classroom_members')
+        .insert({
+          user_id: user.id,
+          classroom_id: classroomToJoin.id,
+          role: 'member',
+        });
+
+      if (joinError) throw joinError;
+
+      toast({
+        title: "Success!",
+        description: `Successfully joined "${classroomToJoin.name}".`,
+      });
+      fetchClassrooms();
+
+      const { data: hostProfile, error: hostProfileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', classroomToJoin.host_id)
+        .maybeSingle();
+
+      if (hostProfileError) console.error('Error fetching host profile after join:', hostProfileError.message);
+
+      setSelectedClassroom({ ...classroomToJoin, host_name: hostProfile?.full_name || 'Unknown' });
+      setCurrentView('chat');
+      // Clear the URL parameter after successful processing
+      navigate('/classrooms', { replace: true });
+
+    } catch (error: any) {
+      console.error('Error joining classroom via invite link:', error.message);
+      toast({
+        title: "Error",
+        description: `Failed to join classroom: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsJoiningClassroom(false);
+    }
+  }, [user, supabase, toast, fetchClassrooms, navigate, setSelectedClassroom, setCurrentView]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchClassrooms();
+
+    // Check for invite code in URL on initial load or user change
+    const queryParams = new URLSearchParams(location.search);
+    const inviteCode = queryParams.get('code');
+    if (inviteCode) {
+      handleInviteLinkJoin(inviteCode);
+    }
+  }, [user, fetchClassrooms, location.search, handleInviteLinkJoin]);
+
+  useEffect(() => {
+    if (selectedClassroom) {
+      fetchMessages(selectedClassroom.id);
+      fetchMembers(selectedClassroom.id);
+
+      const messageChannel = supabase
+        .channel(`classroom_messages:${selectedClassroom.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'classroom_messages', filter: `classroom_id=eq.${selectedClassroom.id}` },
+          async (payload: any) => {
+            if (payload.eventType === 'INSERT') {
+              const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', payload.new.user_id)
+                .maybeSingle();
+
+              if (profileError) {
+                console.error('Error fetching profile for new message:', profileError.message);
+              }
+
+              setMessages(prev => [
+                ...prev,
+                {
+                  ...payload.new,
+                  user_name: profileData?.full_name || 'Unknown User'
+                }
+              ]);
+            }
+          }
+        )
+        .subscribe();
+
+      const memberChannel = supabase
+        .channel(`classroom_members:${selectedClassroom.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'classroom_members', filter: `classroom_id=eq.${selectedClassroom.id}` },
+          async (payload: any) => {
+            if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+              fetchMembers(selectedClassroom.id);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(messageChannel);
+        supabase.removeChannel(memberChannel);
+      };
+    }
+  }, [selectedClassroom, supabase, fetchMessages, fetchMembers]);
+
+  const handleCreateClassroom = useCallback(async () => {
+    if (!user || !newClassroomName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Classroom name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreatingClassroom(true);
+    try {
+      let inviteCode = null;
+      if (!newClassroomIsPublic) {
+        inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase(); // Longer code for better uniqueness
+      }
+
+      const { data: newClassroom, error: classroomError } = await supabase
+        .from('classrooms')
+        .insert({
+          name: newClassroomName.trim(),
+          description: newClassroomDescription.trim() || null,
+          is_public: newClassroomIsPublic,
+          host_id: user.id,
+          invite_code: inviteCode,
+        })
+        .select()
+        .single();
+
+      if (classroomError) throw classroomError;
+
+      const { error: memberError } = await supabase
+        .from('classroom_members')
+        .insert({
+          user_id: user.id,
+          classroom_id: newClassroom.id,
+          role: 'host',
+        });
+
+      if (memberError) throw memberError;
+
+      toast({
+        title: "Success!",
+        description: `Classroom "${newClassroom.name}" created successfully.`,
+      });
+
+      if (!newClassroomIsPublic && newClassroom.invite_code) {
+        // Construct the full invite link
+        const fullInviteLink = `${appDomain}/classrooms?code=${newClassroom.invite_code}`;
+        setGeneratedInviteLink(fullInviteLink); // Set the generated link for display
+      }
+
+      setShowCreateClassroomModal(false);
+      setNewClassroomName('');
+      setNewClassroomDescription('');
+      setNewClassroomIsPublic(true);
+      fetchClassrooms();
+    } catch (error: any) {
+      console.error('Error creating classroom:', error.message);
+      toast({
+        title: "Error",
+        description: `Failed to create classroom: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingClassroom(false);
+    }
+  }, [
+    user,
+    newClassroomName,
+    newClassroomDescription,
+    newClassroomIsPublic,
+    supabase,
+    toast,
+    setGeneratedInviteLink, // Updated state setter
+    setShowCreateClassroomModal,
+    setNewClassroomName,
+    setNewClassroomDescription,
+    setNewClassroomIsPublic,
+    fetchClassrooms,
+    setIsCreatingClassroom,
+    appDomain // Add appDomain to dependencies
+  ]);
+
+  // handleJoinClassroom is now only for public joins from the discover section
+  // Private joins are handled by handleInviteLinkJoin via URL parameter
+  const handleJoinClassroom = useCallback(async (classroomId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to join a classroom.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsJoiningClassroom(true);
+    try {
+      // Fetch the classroom to ensure it's public before joining
+      const { data: classroomToJoin, error: classroomFetchError } = await supabase
+        .from('classrooms')
+        .select('id, name, host_id, is_public')
+        .eq('id', classroomId)
+        .eq('is_public', true) // Ensure it's a public classroom
+        .maybeSingle();
+
+      if (classroomFetchError) throw classroomFetchError;
+
+      if (!classroomToJoin) {
+        toast({
+          title: "Error",
+          description: "Public classroom not found or not accessible.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if user is already a member
+      const { data: existingMember, error: memberCheckError } = await supabase
+        .from('classroom_members')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('classroom_id', classroomToJoin.id)
+        .maybeSingle();
+
+      if (memberCheckError) throw memberCheckError;
+
+      if (existingMember) {
+        toast({
+          title: "Already a Member",
+          description: `You are already a member of "${classroomToJoin.name}".`,
+          variant: "default",
+        });
+        const { data: hostProfile, error: hostProfileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', classroomToJoin.host_id)
+          .maybeSingle();
         if (hostProfileError) console.error('Error fetching host profile after join:', hostProfileError.message);
-
         setSelectedClassroom({ ...classroomToJoin, host_name: hostProfile?.full_name || 'Unknown' });
         setCurrentView('chat');
         return;
@@ -445,11 +535,8 @@ export const Classroom = () => {
         title: "Success!",
         description: `Successfully joined "${classroomToJoin.name}".`,
       });
-      setShowJoinClassroomModal(false);
-      setJoinInviteCode('');
-      fetchClassrooms(); // Refresh list to include the newly joined classroom
-      
-      // Fetch host_name for the classroom just joined
+      fetchClassrooms(); // Refresh classroom list
+
       const { data: hostProfile, error: hostProfileError } = await supabase
         .from('profiles')
         .select('full_name')
@@ -461,7 +548,7 @@ export const Classroom = () => {
       setSelectedClassroom({ ...classroomToJoin, host_name: hostProfile?.full_name || 'Unknown' });
       setCurrentView('chat');
     } catch (error: any) {
-      console.error('Error joining classroom:', error.message);
+      console.error('Error joining public classroom:', error.message);
       toast({
         title: "Error",
         description: `Failed to join classroom: ${error.message}`,
@@ -470,9 +557,17 @@ export const Classroom = () => {
     } finally {
       setIsJoiningClassroom(false);
     }
-  };
+  }, [
+    user,
+    supabase,
+    toast,
+    fetchClassrooms,
+    setSelectedClassroom,
+    setCurrentView,
+    setIsJoiningClassroom
+  ]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedClassroom || !newMessageContent.trim()) return;
 
@@ -487,7 +582,6 @@ export const Classroom = () => {
       if (error) throw error;
 
       setNewMessageContent('');
-      // Messages will be updated via real-time listener
     } catch (error: any) {
       console.error('Error sending message:', error.message);
       toast({
@@ -498,27 +592,28 @@ export const Classroom = () => {
     } finally {
       setIsSendingMessage(false);
     }
-  };
+  }, [user, selectedClassroom, newMessageContent, supabase, toast, setNewMessageContent, setIsSendingMessage]);
 
-  const handleCopyInviteCode = (code: string) => {
-    if (code) {
-      navigator.clipboard.writeText(code)
+  const handleCopyInviteLink = useCallback((link: string) => { // Updated to copy link
+    if (link) {
+      navigator.clipboard.writeText(link)
         .then(() => {
           toast({
             title: "Copied!",
-            description: "Invite code copied to clipboard.",
+            description: "Invite link copied to clipboard.",
           });
+          setGeneratedInviteLink(null); // Hide the link after copying
         })
         .catch(err => {
           console.error('Failed to copy text: ', err);
           toast({
             title: "Error",
-            description: "Failed to copy invite code.",
+            description: "Failed to copy invite link.",
             variant: "destructive",
           });
         });
     }
-  };
+  }, [toast, setGeneratedInviteLink]);
 
   if (!user) {
     return (
@@ -543,7 +638,6 @@ export const Classroom = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-      {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex justify-between items-center max-w-full">
           <Link to="/dashboard" className="flex items-center space-x-1 sm:space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
@@ -575,25 +669,22 @@ export const Classroom = () => {
             setCurrentView={setCurrentView}
             showCreateClassroomModal={showCreateClassroomModal}
             setShowCreateClassroomModal={setShowCreateClassroomModal}
-            showJoinClassroomModal={showJoinClassroomModal}
-            setShowJoinClassroomModal={setShowJoinClassroomModal}
+            // Removed showJoinClassroomModal, setShowJoinClassroomModal, joinInviteCode, setJoinInviteCode
             newClassroomName={newClassroomName}
             setNewClassroomName={setNewClassroomName}
             newClassroomDescription={newClassroomDescription}
             setNewClassroomDescription={setNewClassroomDescription}
             newClassroomIsPublic={newClassroomIsPublic}
             setNewClassroomIsPublic={setNewClassroomIsPublic}
-            joinInviteCode={joinInviteCode}
-            setJoinInviteCode={setJoinInviteCode}
             isCreatingClassroom={isCreatingClassroom}
             setIsCreatingClassroom={setIsCreatingClassroom}
-            isJoiningClassroom={isJoiningClassroom}
-            setIsJoiningClassroom={setIsJoiningClassroom}
-            copiedInviteCode={copiedInviteCode}
-            setCopiedInviteCode={setCopiedInviteCode}
+            isJoiningClassroom={isJoiningClassroom} // Keep for public join status
+            setIsJoiningClassroom={setIsJoiningClassroom} // Keep for public join status
+            generatedInviteLink={generatedInviteLink} // New prop
+            setGeneratedInviteLink={setGeneratedInviteLink} // New prop
             handleCreateClassroom={handleCreateClassroom}
-            handleJoinClassroom={handleJoinClassroom}
-            handleCopyInviteCode={handleCopyInviteCode}
+            handleJoinClassroom={handleJoinClassroom} // This is now only for public classrooms
+            handleCopyInviteLink={handleCopyInviteLink} // New prop to copy link
             toast={toast}
           />
         ) : (
@@ -609,7 +700,7 @@ export const Classroom = () => {
               isSendingMessage={isSendingMessage}
               setCurrentView={setCurrentView}
               messagesEndRef={messagesEndRef}
-              fetchMembers={fetchMembers} // Pass fetchMembers
+              fetchMembers={fetchMembers}
             />
           )
         )}
