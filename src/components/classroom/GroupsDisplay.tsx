@@ -1,11 +1,11 @@
-import React, { useState } from 'react'; // Added useState
+import React, { useState, useEffect } from 'react'; // Added useState, useEffect
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox'; // Not used, can remove
+// import { Checkbox } from '@/components/ui/checkbox'; // Not used, can remove - Removed as per original comment
 import { Plus, MessageSquare, Users, Copy, ClipboardCheck, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
@@ -28,6 +28,25 @@ interface Classroom {
 }
 
 type ClassroomView = 'list' | 'chat';
+
+// Skeleton Card Component
+const SkeletonCard: React.FC = () => (
+  <Card className="bg-gradient-to-br from-gray-100/70 via-gray-50/50 to-gray-50/30 dark:from-gray-900/30 dark:via-gray-800/20 dark:to-gray-900/10 border-gray-200 dark:border-gray-800 backdrop-blur-sm animate-pulse">
+    <CardHeader>
+      <CardTitle className="h-6 bg-gray-300 rounded dark:bg-gray-700 w-3/4 mb-2"></CardTitle>
+      <CardDescription className="h-4 bg-gray-200 rounded dark:bg-gray-600 w-full mb-1"></CardDescription>
+      <CardDescription className="h-4 bg-gray-200 rounded dark:bg-gray-600 w-5/6"></CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-2">
+      <div className="h-3 bg-gray-200 rounded dark:bg-gray-600 w-1/2"></div>
+      <div className="h-3 bg-gray-200 rounded dark:bg-gray-600 w-1/3"></div>
+      <div className="flex justify-between items-center mt-2">
+        <div className="h-8 w-24 bg-gray-300 rounded dark:bg-gray-700"></div>
+        <div className="h-8 w-28 bg-gray-300 rounded dark:bg-gray-700"></div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 interface GroupsDisplayProps {
   myClassrooms: Classroom[];
@@ -95,6 +114,33 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
   const [showManageInviteCodeModal, setShowManageInviteCodeModal] = useState(false);
   const [classroomToManageInviteCode, setClassroomToManageInviteCode] = useState<Classroom | null>(null);
 
+  // New loading states for classrooms
+  const [isLoadingMyClassrooms, setIsLoadingMyClassrooms] = useState(true);
+  const [isLoadingDiscoverClassrooms, setIsLoadingDiscoverClassrooms] = useState(true);
+
+  // Effect to manage loading states
+  useEffect(() => {
+    const loadClassrooms = async () => {
+      setIsLoadingMyClassrooms(true);
+      setIsLoadingDiscoverClassrooms(true);
+      try {
+        await fetchClassrooms(); // Assuming this fetches both myClassrooms and discoverClassrooms
+      } catch (error) {
+        console.error("Failed to fetch classrooms:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load classrooms. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingMyClassrooms(false);
+        setIsLoadingDiscoverClassrooms(false);
+      }
+    };
+    loadClassrooms();
+  }, [fetchClassrooms, toast]);
+
+
   // Unified handler for generating/revoking invite link (passed to ManageInviteCodeModal)
   const handleGenerateRevokeInviteLink = async () => {
     if (!user || !classroomToManageInviteCode) return;
@@ -108,41 +154,41 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
     console.log(`Simulating API call to ${classroomToManageInviteCode.invite_code ? 'revoke' : 'generate'} invite code for classroom: ${classroomToManageInviteCode.id}`);
 
     try {
-        let newInviteCode = null;
-        if (!classroomToManageInviteCode.invite_code) {
-            // Generate a new code if one doesn't exist
-            newInviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-        }
+      let newInviteCode = null;
+      if (!classroomToManageInviteCode.invite_code) {
+        // Generate a new code if one doesn't exist
+        newInviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      }
 
-        // --- Supabase Update (THIS PART SHOULD BE HANDLED IN CLASSROOM.TSX) ---
-        // For demonstration purposes, this is a placeholder.
-        // You would usually have this logic in Classroom.tsx and pass it down.
-        // For GroupsDisplay, we'll just update local state for demonstration
-        // For proper implementation, you need to lift this state up or use context.
-        const { error } = await (window as any).supabase.from('classrooms')
-            .update({ invite_code: newInviteCode })
-            .eq('id', classroomToManageInviteCode.id);
+      // --- Supabase Update (THIS PART SHOULD BE HANDLED IN CLASSROOM.TSX) ---
+      // For demonstration purposes, this is a placeholder.
+      // You would usually have this logic in Classroom.tsx and pass it down.
+      // For GroupsDisplay, we'll just update local state for demonstration
+      // For proper implementation, you need to lift this state up or use context.
+      const { error } = await (window as any).supabase.from('classrooms')
+        .update({ invite_code: newInviteCode })
+        .eq('id', classroomToManageInviteCode.id);
 
-        if (error) throw error;
-        // --- END SUPABASE UPDATE PLACEHOLDER ---
+      if (error) throw error;
+      // --- END SUPABASE UPDATE PLACEHOLDER ---
 
-        toast({
-            title: "Success",
-            description: newInviteCode ? "New invite link generated!" : "Invite link revoked!",
-        });
+      toast({
+        title: "Success",
+        description: newInviteCode ? "New invite link generated!" : "Invite link revoked!",
+      });
 
-        // Update local state to reflect the change immediately
-        // IMPORTANT: In a real app, `fetchClassrooms()` would ideally refresh this.
-        setClassroomToManageInviteCode(prev => prev ? { ...prev, invite_code: newInviteCode } : null);
-        fetchClassrooms(); // Re-fetch to ensure all lists are up-to-date
+      // Update local state to reflect the change immediately
+      // IMPORTANT: In a real app, `fetchClassrooms()` would ideally refresh this.
+      setClassroomToManageInviteCode(prev => prev ? { ...prev, invite_code: newInviteCode } : null);
+      fetchClassrooms(); // Re-fetch to ensure all lists are up-to-date
 
     } catch (error: any) {
-        console.error('Error managing invite link:', error.message);
-        toast({
-            title: "Error",
-            description: `Failed to manage invite link: ${error.message}`,
-            variant: "destructive",
-        });
+      console.error('Error managing invite link:', error.message);
+      toast({
+        title: "Error",
+        description: `Failed to manage invite link: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -161,7 +207,13 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
           </div>
         </div>
 
-        {myClassrooms.length === 0 ? (
+        {isLoadingMyClassrooms ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => ( // Display 3 skeleton cards while loading
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : myClassrooms.length === 0 ? (
           <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm text-center py-8">
             <CardTitle className="text-xl text-gray-800 dark:text-gray-200 mb-2">No Classrooms Yet</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
@@ -226,7 +278,13 @@ export const GroupsDisplay: React.FC<GroupsDisplayProps> = ({
       {/* Discover Public Classrooms Section */}
       <div className="space-y-4 pt-8 border-t border-purple-200 dark:border-purple-800">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Discover Public Classrooms</h2>
-        {discoverClassrooms.length === 0 ? (
+        {isLoadingDiscoverClassrooms ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => ( // Display 3 skeleton cards while loading
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : discoverClassrooms.length === 0 ? (
           <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm text-center py-8">
             <CardTitle className="text-xl text-gray-800 dark:text-gray-200 mb-2">No Public Classrooms to Discover</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
