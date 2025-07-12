@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getUserStats, Subject, Chapter } from '@/utils/mcqData';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 type Screen = 'subjects' | 'chapters' | 'settings' | 'quiz';
 
@@ -207,11 +208,8 @@ const MCQs = () => {
             >
               {userPlanDisplayName}
             </Badge>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs sm:text-sm">
-                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+              {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+              <ProfileDropdown />
           </div>
         </div>
       </header>

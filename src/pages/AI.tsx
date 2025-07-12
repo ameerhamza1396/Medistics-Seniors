@@ -8,6 +8,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query'; // Import useQuery
 import { supabase } from '@/integrations/supabase/client'; // Import supabase client
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 const AI = () => {
   const { theme, setTheme } = useTheme();
@@ -86,11 +87,8 @@ const AI = () => {
             >
               {userPlanDisplayName}
             </Badge>
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
-                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+              {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+              <ProfileDropdown />
           </div>
         </div>
       </header>

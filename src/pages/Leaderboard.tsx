@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
 import React, { useState, useEffect } from 'react'; // Import React and useEffect
 
+
 const Leaderboard = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
@@ -271,9 +272,8 @@ const Leaderboard = () => {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center space-x-3 md:space-x-4">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm md:text-base">
-                      {currentUserData.username?.substring(0, 2).toUpperCase() || 'U'}
-                    </span>
+                    {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+                    <ProfileDropdown />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">{currentUserData.username}</p>
@@ -312,11 +312,8 @@ const Leaderboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-center p-4 lg:p-6 pt-0">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-white font-bold text-sm md:text-lg">
-                      {entry.username?.substring(0, 2).toUpperCase() || 'U'}
-                    </span>
-                  </div>
+                    {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+                    <ProfileDropdown />
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm md:text-base truncate">
                     {entry.username || 'Anonymous'}
                   </h3>

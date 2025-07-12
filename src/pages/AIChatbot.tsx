@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 interface ChatMessage {
   sender: 'user' | 'ai';
@@ -37,7 +37,6 @@ type Profile = {
   medical_school?: string;
   updated_at: string | null;
   username: string | null;
-  year_of_study?: number;
   plan: string;
   plan_expiry_date: string | null;
   role: string | null;
@@ -395,6 +394,8 @@ const DrSultanChat: React.FC = () => {
         <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800">
           <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200 dark:border-purple-800">
             <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Sultan Chat</CardTitle>
+            {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+            <ProfileDropdown />
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 max-h-[calc(100vh-250px)] bg-white dark:bg-gray-800">
             {messages.length === 0 && (
@@ -425,9 +426,7 @@ const DrSultanChat: React.FC = () => {
                     )}
                   </div>
                   {isUser && (
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center ml-2 text-white font-bold text-sm">
-                      {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-                    </div>
+                    <ProfileDropdown />
                   )}
                 </div>
               );

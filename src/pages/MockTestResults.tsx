@@ -8,6 +8,7 @@ import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 // IMPORTANT: Updated Profile type (assuming 'plan' might be nullable)
 type Profile = {
@@ -211,11 +212,8 @@ const MockTestResults = () => {
             >
               {userPlanDisplayName}
             </Badge>
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
-                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+                {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+                <ProfileDropdown />
           </div>
         </div>
       </header>

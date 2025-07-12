@@ -6,6 +6,7 @@ import { Lock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 // Import the new components
 import { GroupsDisplay } from '@/components/classroom/GroupsDisplay';
@@ -651,9 +652,8 @@ export const Classroom = () => {
           </div>
 
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xs sm:text-sm">
-              {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-            </span>
+            {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+            <ProfileDropdown />
           </div>
         </div>
       </header>

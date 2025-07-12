@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 const UsernamePage = () => {
   const { theme, setTheme } = useTheme();
@@ -239,11 +240,8 @@ const UsernamePage = () => {
             <Badge variant="secondary" className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}>
               {userPlanDisplayName}
             </Badge>
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
-                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+{/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+              <ProfileDropdown />
           </div>
         </div>
       </header>

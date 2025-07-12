@@ -23,6 +23,7 @@ import { CheckCircle, XCircle, MinusCircle, History, Trophy, ArrowLeft, Bot, Zap
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from 'next-themes';
 import { Link } from 'react-router-dom';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 type Profile = {
     avatar_url: string;
@@ -210,11 +211,8 @@ const MyTestResults = () => {
                         >
                             {userPlanDisplayName}
                         </Badge>
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">
-                                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-                            </span>
-                        </div>
+                            {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+                            <ProfileDropdown />
                     </div>
                 </div>
             </header>

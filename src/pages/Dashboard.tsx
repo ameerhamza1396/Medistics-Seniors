@@ -362,7 +362,7 @@ darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shad
   ];
 
   // Safe display name with proper fallback
-  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
+  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medistics User';
 
   // Define plan color schemes
   const planColors = {

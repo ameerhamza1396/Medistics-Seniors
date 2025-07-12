@@ -13,17 +13,18 @@ import { ChatThemeModal } from '@/components/classroom/modals/ChatThemeModal';
 import { ManageRolesModal } from '@/components/classroom/modals/ManageRolesModal';
 import { ManageInviteCodeModal } from '@/components/classroom/modals/ManageInviteCodeModal';
 
-// Define Chat Themes (kept here as it's static data used across components but originates here)
+
+// Define Chat Themes (kept here as it's static data used across components)
 const chatThemes = [
   { id: 'default', name: 'Default', imageUrl: '', otherBubbleColor: 'bg-gray-200 dark:bg-gray-700', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-gray-900 dark:text-gray-100', overlayColor: 'bg-transparent' },
-  { id: 'medical', name: 'Medical', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981710/1_njsrwz.jpg', otherBubbleColor: 'bg-green-800 dark:bg-green-800', myBubbleColor: 'bg-gray-400 dark:bg-gray-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/60' },
-  { id: 'sunflowers', name: 'Sunflowers', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981710/2_zyq71a.jpg', otherBubbleColor: 'bg-yellow-400 dark:bg-yellow-600', myBubbleColor: 'bg-green-300 dark:bg-green-500', myBubbleTextColor: 'text-gray-900', otherBubbleTextColor: 'text-gray-900', overlayColor: 'bg-black/40' },
-  { id: 'girlies', name: 'Girlies', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981709/5_zav5ex.jpg', otherBubbleColor: 'bg-pink-700 dark:bg-pink-700', myBubbleColor: 'bg-white dark:bg-gray-100', myBubbleTextColor: 'text-black', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/50' },
-  { id: 'art_colors', name: 'Art Colors', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981709/4_oltakt.jpg', otherBubbleColor: 'bg-purple-800 dark:bg-purple-800', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/60' },
-  { id: 'king', name: 'King', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751981709/4_oltakt.jpg', otherBubbleColor: 'bg-yellow-700 dark:bg-yellow-700', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/60' },
-  { id: 'black', name: 'Black', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751982360/6_n80ruf.jpg', otherBubbleColor: 'bg-blue-800 dark:bg-blue-800', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-white/60' },
-  { id: 'cats', name: 'Cats', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751982360/7_u53i8q.jpg', otherBubbleColor: 'bg-yellow-700 dark:bg-yellow-700', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/50' },
-  { id: 'nature', name: 'Nature', imageUrl: 'https://res.cloudinary.com/dabgjalqp/image/upload/v1751982359/8_hlpokg.jpg', otherBubbleColor: 'bg-gradient-to-r from-blue-500 to-white dark:from-blue-700 dark:to-gray-200', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/40' },
+  { id: 'medical', name: 'Medical', imageUrl: '/images/chat_themes/medical.jpg', otherBubbleColor: 'bg-green-800 dark:bg-green-800', myBubbleColor: 'bg-gray-400 dark:bg-gray-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/60' },
+  { id: 'sunflowers', name: 'Sunflowers', imageUrl: '/images/chat_themes/sunflowers.jpg', otherBubbleColor: 'bg-yellow-400 dark:bg-yellow-600', myBubbleColor: 'bg-green-300 dark:bg-green-500', myBubbleTextColor: 'text-gray-900', otherBubbleTextColor: 'text-gray-900', overlayColor: 'bg-black/40' },
+  { id: 'girlies', name: 'Girlies', imageUrl: '/images/chat_themes/girlies.jpg', otherBubbleColor: 'bg-pink-700 dark:bg-pink-700', myBubbleColor: 'bg-white dark:bg-gray-100', myBubbleTextColor: 'text-black', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/50' },
+  { id: 'art_colors', name: 'Art Colors', imageUrl: '/images/chat_themes/art_colors.jpg', otherBubbleColor: 'bg-purple-800 dark:bg-purple-800', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/60' },
+  { id: 'king', name: 'King', imageUrl: '/images/chat_themes/king.jpg', otherBubbleColor: 'bg-yellow-700 dark:bg-yellow-700', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/60' },
+  { id: 'black', name: 'Black', imageUrl: '/images/chat_themes/black.jpg', otherBubbleColor: 'bg-blue-800 dark:bg-blue-800', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-white/60' },
+  { id: 'cats', name: 'Cats', imageUrl: '/images/chat_themes/cats.jpg', otherBubbleColor: 'bg-yellow-700 dark:bg-yellow-700', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/50' },
+  { id: 'nature', name: 'Nature', imageUrl: '/images/chat_themes/nature.jpg', otherBubbleColor: 'bg-gradient-to-r from-blue-500 to-white dark:from-blue-700 dark:to-gray-200', myBubbleColor: 'bg-purple-600', myBubbleTextColor: 'text-white', otherBubbleTextColor: 'text-white', overlayColor: 'bg-black/40' },
 ];
 
 // Type definitions (Centralized for MessageScreen)
@@ -36,6 +37,7 @@ interface Classroom {
   host_id: string;
   invite_code: string | null;
   host_name?: string;
+  chat_theme_id?: string | null; // Keep this, as it's used to store in DB
 }
 
 interface ClassroomMember {
@@ -65,6 +67,17 @@ interface UserProfile {
   avatar_url?: string | null;
 }
 
+interface ChatTheme { // Re-define interface for clarity, even if the array is imported
+  id: string;
+  name: string;
+  imageUrl: string;
+  otherBubbleColor: string;
+  myBubbleColor: string;
+  myBubbleTextColor: string;
+  otherBubbleTextColor: string;
+  overlayColor: string;
+}
+
 type ClassroomView = 'list' | 'chat';
 
 interface MessageScreenProps {
@@ -79,7 +92,7 @@ interface MessageScreenProps {
   setCurrentView: React.Dispatch<React.SetStateAction<ClassroomView>>;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   fetchMembers: (classroomId: string) => Promise<void>;
-  fetchClassrooms: () => Promise<void>;
+  fetchClassrooms?: () => Promise<void>;
 }
 
 export const MessageScreen: React.FC<MessageScreenProps> = ({
@@ -105,6 +118,26 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
   const [showManageInviteCodeModal, setShowManageInviteCodeModal] = useState(false);
   const [showManageRolesModal, setShowManageRolesModal] = useState(false);
 
+  // New state to track if ANY modal is open
+  const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
+
+  // Effect to update isAnyModalOpen whenever a modal's visibility changes
+  useEffect(() => {
+    setIsAnyModalOpen(
+      showAddMemberModal ||
+      showMembersListModal ||
+      showChatThemeModal ||
+      showManageInviteCodeModal ||
+      showManageRolesModal
+    );
+  }, [
+    showAddMemberModal,
+    showMembersListModal,
+    showChatThemeModal,
+    showManageInviteCodeModal,
+    showManageRolesModal,
+  ]);
+
   // States for AddMemberModal
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
@@ -113,7 +146,7 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
 
   // States for ChatThemeModal
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
-  const [currentChatTheme, setCurrentChatTheme] = useState(chatThemes[0]); // Initialize with default theme
+  const [currentChatTheme, setCurrentChatTheme] = useState<ChatTheme | null>(chatThemes.length > 0 ? chatThemes[0] : null);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -123,7 +156,14 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
   // Fetch current chat theme for the classroom
   useEffect(() => {
     const fetchChatTheme = async () => {
+      if (!chatThemes || chatThemes.length === 0) {
+        console.warn("chatThemes array is empty. Cannot load chat theme.");
+        setCurrentChatTheme(null);
+        return;
+      }
+
       if (!selectedClassroom) return;
+
       try {
         const { data, error } = await supabase
           .from('classroom_settings')
@@ -148,7 +188,7 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
       }
     };
     fetchChatTheme();
-  }, [selectedClassroom, toast]); // Re-fetch when classroom changes
+  }, [selectedClassroom, toast]);
 
   const isHost = user?.id === selectedClassroom.host_id;
 
@@ -315,7 +355,9 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         description: `${memberName} is now the host of "${selectedClassroom.name}".`,
       });
       fetchMembers(selectedClassroom.id);
-      fetchClassrooms();
+      if (fetchClassrooms) {
+        fetchClassrooms();
+      }
     } catch (error: any) {
       console.error('Error changing host:', error.message);
       toast({
@@ -354,7 +396,9 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         title: "Success",
         description: toastMessage,
       });
-      fetchClassrooms();
+      if (fetchClassrooms) {
+        fetchClassrooms();
+      }
       setShowManageInviteCodeModal(false);
     } catch (error: any) {
       console.error('Error managing invite code:', error.message);
@@ -397,6 +441,9 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
           title: "Chat Theme Updated",
           description: `Chat theme set to "${newTheme.name}".`,
         });
+        if (fetchClassrooms) {
+          fetchClassrooms();
+        }
       } else {
         toast({
           title: "Error",
@@ -417,34 +464,51 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-160px)]">
-      <ChatHeader
-        selectedClassroom={selectedClassroom}
-        user={user}
-        membersCount={members.length}
-        setCurrentView={setCurrentView}
-        handleLeaveGroup={handleLeaveGroup}
-        setShowMembersListModal={setShowMembersListModal}
-        setShowChatThemeModal={setShowChatThemeModal}
-        setShowManageRolesModal={setShowManageRolesModal}
-        setShowManageInviteCodeModal={setShowManageInviteCodeModal}
-      />
+    // Apply background color from currentChatTheme defensively
+    <div
+      className="flex flex-col h-[calc(100vh-160px)]"
+      style={{
+        backgroundColor: currentChatTheme?.overlayColor || '#FFFFFF', // Fallback to white if theme not loaded
+      }}
+    >
+      {/* Main content area that gets hidden/dimmed */}
+      <div className={`${isAnyModalOpen ? 'opacity-0 pointer-events-none' : ''} transition-opacity duration-300 flex flex-col h-full`}>
+        <ChatHeader
+          selectedClassroom={selectedClassroom}
+          user={user}
+          membersCount={members.length}
+          setCurrentView={setCurrentView}
+          handleLeaveGroup={handleLeaveGroup}
+          setShowMembersListModal={setShowMembersListModal}
+          setShowChatThemeModal={setShowChatThemeModal}
+          setShowManageRolesModal={setShowManageRolesModal}
+          setShowManageInviteCodeModal={setShowManageInviteCodeModal}
+        />
 
-      <ChatMessageList
-        messages={messages}
-        user={user}
-        messagesEndRef={messagesEndRef}
-        currentChatTheme={currentChatTheme}
-      />
+        {/* Conditionally render ChatMessageList only when currentChatTheme is loaded */}
+        {currentChatTheme ? (
+          <ChatMessageList
+            messages={messages}
+            user={user}
+            messagesEndRef={messagesEndRef}
+            currentChatTheme={currentChatTheme}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Loading messages and chat theme...
+          </div>
+        )}
 
-      <ChatMessageInput
-        newMessageContent={newMessageContent}
-        setNewMessageContent={setNewMessageContent}
-        handleSendMessage={handleSendMessage}
-        isSendingMessage={isSendingMessage}
-      />
+        <ChatMessageInput
+          newMessageContent={newMessageContent}
+          setNewMessageContent={setNewMessageContent}
+          handleSendMessage={handleSendMessage}
+          isSendingMessage={isSendingMessage}
+          selectedClassroom={selectedClassroom}
+        />
+      </div>
 
-      {/* Modals */}
+      {/* Modals are rendered directly within MessageScreen and will appear on top */}
       <AddMemberModal
         isOpen={showAddMemberModal}
         onOpenChange={setShowAddMemberModal}
@@ -470,7 +534,7 @@ export const MessageScreen: React.FC<MessageScreenProps> = ({
         onOpenChange={setShowChatThemeModal}
         isHost={isHost}
         chatThemes={chatThemes}
-        selectedThemeId={selectedThemeId}
+        selectedThemeId={selectedThemeId || currentChatTheme?.id || null}
         setSelectedThemeId={setSelectedThemeId}
         handleSetChatTheme={handleSetChatTheme}
       />

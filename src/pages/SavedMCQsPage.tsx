@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 // Assuming MCQ interface is available from mcqData or defined here
 interface MCQ {
@@ -31,14 +32,14 @@ const SavedMCQsPage = () => {
   // State to manage expanded MCQ
   const [expandedMcqId, setExpandedMcqId] = useState<string | null>(null);
 
-  // Get user profile data for plan badge
+  // Get user profile data for plan badge and avatar
   const { data: profile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('plan')
+        .select('plan, avatar_url') // Select avatar_url here
         .eq('id', user.id)
         .maybeSingle();
 
@@ -196,11 +197,9 @@ const SavedMCQsPage = () => {
             >
               {userPlanDisplayName}
             </Badge>
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">
-                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+            {/* User Avatar with fallback */}
+{/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+<ProfileDropdown />
           </div>
         </div>
       </header>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -18,9 +17,36 @@ import {
   Crown, 
   LogOut 
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // NEW: Import Avatar components
+import { useQuery } from '@tanstack/react-query'; // NEW: Import useQuery
+import { supabase } from '@/integrations/supabase/client'; // NEW: Import supabase client
 
 export const ProfileDropdown = () => {
   const { user, signOut } = useAuth();
+
+  // NEW: Fetch user profile data to get avatar_url and full_name/username
+  const { data: profile } = useQuery({
+    queryKey: ['profileDropdownProfile', user?.id], // Unique key for this component's fetch
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, username, avatar_url') // Select necessary fields
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching profile for dropdown:', error);
+        return null;
+      }
+      return data;
+    },
+    enabled: !!user?.id, // Only fetch if user is logged in
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
+  });
+
+  // NEW: Robust displayName logic
+  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
 
   const handleLogout = async () => {
     await signOut();
@@ -29,13 +55,17 @@ export const ProfileDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
+        {/* UPDATED: Replaced custom avatar div with Avatar component */}
         <Button
           variant="ghost"
-          className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200 p-0"
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200 p-0 overflow-hidden" // Added overflow-hidden
         >
-          <span className="text-white font-bold text-sm">
-            {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-          </span>
+          <Avatar className="w-full h-full"> {/* Avatar takes full size of the button */}
+            <AvatarImage src={profile?.avatar_url || undefined} alt={`${displayName} avatar`} />
+            <AvatarFallback className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-sm">
+              {displayName.substring(0, 2).toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       
@@ -43,7 +73,8 @@ export const ProfileDropdown = () => {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user?.user_metadata?.full_name || 'User'}
+              {/* UPDATED: Use the more robust displayName */}
+              {displayName}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email}

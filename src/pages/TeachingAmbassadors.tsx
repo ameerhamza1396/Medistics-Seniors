@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea'; // Assuming you have this
 import ReCAPTCHA from 'react-google-recaptcha';
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 const TeachingAmbassadors = () => {
     const { theme, setTheme } = useTheme();
@@ -216,11 +217,8 @@ const TeachingAmbassadors = () => {
                         >
                             {userPlanDisplayName}
                         </Badge>
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">
-                                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-                            </span>
-                        </div>
+                            {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+                            <ProfileDropdown />
                     </div>
                 </div>
             </header>

@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner'; // Assuming you have a toast notification library like sonner
+import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
 
 // Main Classroom component
 const Classroom = () => {
@@ -256,11 +257,8 @@ const Classroom = () => {
             >
               {userPlanDisplayName}
             </Badge>
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-md"> {/* Added shadow */}
-              <span className="text-white font-bold text-sm">
-                {user?.email?.substring(0, 2).toUpperCase() || 'U'}
-              </span>
-            </div>
+                {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+                <ProfileDropdown />
           </div>
         </div>
       </header>
