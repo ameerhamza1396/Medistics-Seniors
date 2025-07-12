@@ -44,6 +44,7 @@ import TestCompletion from '@/pages/TestResults';
 import Career from '@/pages/Career';
 import TeachingAmbassadors from '@/pages/TeachingAmbassadors';
 import InternshipApplication from '@/pages/InternshipApplication';
+import SavedMCQsPage from '@/pages/SavedMCQsPage';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -102,6 +103,7 @@ function App() {
               <Route path="/career" element={<Career />} />
               <Route path="/teaching-career" element={<TeachingAmbassadors />} />
               <Route path="/summerinternship2025" element={<InternshipApplication />} />
+              <Route path="/saved-mcqs" element={<SavedMCQsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

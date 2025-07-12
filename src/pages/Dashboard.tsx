@@ -21,7 +21,8 @@ import {
   BellRing,
   Book, // New icon for Study Materials
   Instagram, // New icon for Instagram
-  Construction // Icon for maintenance message
+  Construction, // Icon for maintenance message
+  Bookmark
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useTheme } from 'next-themes';
@@ -212,6 +213,17 @@ useEffect(() => {
     bgGradient: 'from-amber-50 to-orange-50', // Lighter shades for background
 darkBgGradient: 'from-red-900/20 to-orange-900/20', // Using 950 for darker shades    tag: 'Stay Updated',
     tagColor: 'bg-orange-700 text-white' // A deep orange for the tag
+},
+
+{
+  title: 'Saved MCQs',
+  description: 'Review your bookmarked questions',
+  icon: Bookmark, // Make sure to import Bookmark from 'lucide-react'
+  link: '/saved-mcqs',
+  type: 'internal',
+  gradient: 'from-purple-500 to-pink-500', // Example gradient, adjust as desired
+  bgGradient: 'from-purple-50 to-pink-50',
+  darkBgGradient: 'from-purple-900/30 to-pink-900/30'
 },
     // {
     //   title: 'Study Materials',
