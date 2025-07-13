@@ -45,6 +45,7 @@ import TeachingAmbassadors from '@/pages/TeachingAmbassadors';
 import InternshipApplication from '@/pages/InternshipApplication';
 import SavedMCQsPage from '@/pages/SavedMCQsPage';
 import Announcements from '@/pages/Announcements';
+import ContactUsPage from '@/pages/ContactUsPage';
 import './App.css';
 
 // Import the VideoCallProvider
@@ -110,6 +111,7 @@ function App() {
                 <Route path="/summerinternship2025" element={<InternshipApplication />} />
                 <Route path="/saved-mcqs" element={<SavedMCQsPage />} />
                 <Route path="/announcements" element={<Announcements />} />
+                <Route path="/contact-us" element={<ContactUsPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
