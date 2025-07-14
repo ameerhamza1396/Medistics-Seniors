@@ -207,7 +207,7 @@ const MyTestResults = () => {
                         </Button>
                         <Badge
                             variant="secondary"
-                            className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
+                            className={`hidden sm:flex ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
                         >
                             {userPlanDisplayName}
                         </Badge>

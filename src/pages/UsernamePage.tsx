@@ -237,7 +237,7 @@ const UsernamePage = () => {
             <Button variant="ghost" size="sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Badge variant="secondary" className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}>
+            <Badge variant="secondary" className={`hidden sm:flex ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}>
               {userPlanDisplayName}
             </Badge>
 {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}

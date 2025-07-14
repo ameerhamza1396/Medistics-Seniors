@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen, Crown } from 'lucide-react'; // Added Crown icon
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -151,8 +151,8 @@ const DrSultanChat: React.FC = () => {
   // Get the color classes for the current plan
   const currentPlanColorClasses = planColors[rawUserPlan as keyof typeof planColors] || planColors['default'];
 
-  // Access control logic
-  const hasAccess = ['premium', 'iconic'].includes(rawUserPlan);
+  // Access control logic: Only 'premium' plan has access
+  const canUseChat = rawUserPlan === 'premium';
 
   // Fetch saved chats using ai_chat_sessions table
   const { data: chatHistory, isLoading: isHistoryLoading } = useQuery({
@@ -171,7 +171,7 @@ const DrSultanChat: React.FC = () => {
         messages: r.messages as ChatMessage[]
       }));
     },
-    enabled: !!user?.id && hasAccess
+    enabled: !!user?.id && canUseChat
   });
 
   // Mutation: save current chat
@@ -229,7 +229,7 @@ const DrSultanChat: React.FC = () => {
   // Send a message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || apiLoading || !hasAccess) return;
+    if (!inputMessage.trim() || apiLoading || !canUseChat) return;
     const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: ChatMessage = { sender: 'user', text: inputMessage.trim(), time: ts };
     setMessages(m => [...m, userMsg]);
@@ -262,8 +262,8 @@ const DrSultanChat: React.FC = () => {
 
   // Voice-to-text handler
   const handleMicClick = () => {
-    if (!hasAccess) {
-      showTemporaryNotification('Upgrade your plan to use voice input.', 'error');
+    if (!canUseChat) {
+      showTemporaryNotification('Your current plan is not compatible with voice input; upgrade to Premium to continue.', 'error');
       return;
     }
     if (recording) {
@@ -319,6 +319,29 @@ const DrSultanChat: React.FC = () => {
     );
   }
 
+  // Redirect users without access to the purchase plan page
+  if (!canUseChat) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center p-4">
+          <Crown className="w-20 h-20 mx-auto mb-6 text-purple-600 dark:text-purple-400" /> {/* Added Crown icon */}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Upgrade Required</h1>
+          <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+            Your current plan is not compatible with this feature; upgrade to <span className="text-purple-600 font-bold dark:text-purple-400">Premium</span> to continue.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/pricing">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto">Upgrade Your Plan</Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 w-full sm:w-auto">Go to Dashboard</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-full flex bg-white dark:bg-gray-900 font-sans">
       {/* Global CSS for typing indicator */}
@@ -361,31 +384,27 @@ const DrSultanChat: React.FC = () => {
             >
               <X className="h-4 w-4" />
             </Button>
-            <Link to="/ai" className="hidden lg:block">
+            <Link to="/ai" className="lg:block hidden">
               <Button variant="ghost" size="sm" className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
           </div>
         </div>
-        {hasAccess ? (
-          isHistoryLoading ? (
-            <p className="text-gray-500">Loading chat history...</p>
-          ) : chatHistory && chatHistory.length > 0 ? (
-            chatHistory.map(chat => (
-              <button
-                key={chat.id}
-                onClick={() => loadSavedChat(chat)}
-                className="w-full text-left py-2 px-3 mb-2 rounded hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-200 transition-colors duration-200"
-              >
-                {new Date(chat.created_at).toLocaleString()}
-              </button>
-            ))
-          ) : (
-            <p className="text-gray-500">No chats yet.</p>
-          )
+        {isHistoryLoading ? (
+          <p className="text-gray-500">Loading chat history...</p>
+        ) : chatHistory && chatHistory.length > 0 ? (
+          chatHistory.map(chat => (
+            <button
+              key={chat.id}
+              onClick={() => loadSavedChat(chat)}
+              className="w-full text-left py-2 px-3 mb-2 rounded hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-700 dark:text-gray-200 transition-colors duration-200"
+            >
+              {new Date(chat.created_at).toLocaleString()}
+            </button>
+          ))
         ) : (
-          <p className="text-gray-500">Upgrade for chat history.</p>
+          <p className="text-gray-500">No chats yet.</p>
         )}
       </aside>
 
@@ -425,9 +444,6 @@ const DrSultanChat: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  {isUser && (
-                    <ProfileDropdown />
-                  )}
                 </div>
               );
             })}
@@ -458,7 +474,7 @@ const DrSultanChat: React.FC = () => {
               placeholder="Type or speak your medical question..."
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
-              disabled={apiLoading || !hasAccess}
+              disabled={apiLoading}
               className="flex-1 border-purple-300 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-purple-500 focus:border-purple-500 dark:border-purple-700 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
             />
             <Button
@@ -466,12 +482,12 @@ const DrSultanChat: React.FC = () => {
               variant="outline"
               size="icon"
               onClick={handleMicClick}
-              disabled={apiLoading || !hasAccess}
+              disabled={apiLoading}
               className={`w-10 h-10 transition-colors duration-200 ${recording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-purple-100 text-purple-600 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800'}`}
             >
               {recording ? <X className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </Button>
-            <Button type="submit" disabled={apiLoading || !hasAccess} className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Button type="submit" disabled={apiLoading} className="bg-purple-600 hover:bg-purple-700 text-white">
               <Send className="w-5 h-5" />
             </Button>
           </form>

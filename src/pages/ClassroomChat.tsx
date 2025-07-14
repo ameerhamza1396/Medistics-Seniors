@@ -253,7 +253,7 @@ const Classroom = () => {
             </Button>
             <Badge
               variant="secondary"
-              className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark} rounded-full px-3 py-1`} // Rounded badge
+              className={`hidden sm:flex ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
             >
               {userPlanDisplayName}
             </Badge>

@@ -410,7 +410,7 @@ const Profile = () => {
                         </Button>
                         <Badge
                             variant="secondary"
-                            className={`text-xs px-2 py-1 ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
+                            className={`hidden sm:flex ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
                         >
                             {userPlanDisplayName}
                         </Badge>

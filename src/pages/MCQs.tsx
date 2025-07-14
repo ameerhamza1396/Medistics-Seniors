@@ -204,7 +204,7 @@ const MCQs = () => {
             {/* Dynamic Plan Badge with dynamic colors */}
             <Badge
               variant="secondary"
-              className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark} text-xs sm:text-sm px-2 py-1`}
+              className={`hidden sm:flex ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
             >
               {userPlanDisplayName}
             </Badge>

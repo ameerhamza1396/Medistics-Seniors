@@ -376,7 +376,7 @@ const InternshipApplication = () => {
             </Button>
             <Badge
               variant="secondary"
-              className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark} text-xs sm:text-sm px-2 py-1`}
+              className={`hidden sm:flex ${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
             >
               {userPlanDisplayName}
             </Badge>
