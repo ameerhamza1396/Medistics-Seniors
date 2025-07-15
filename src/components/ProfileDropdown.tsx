@@ -16,7 +16,8 @@ import {
     Lock,
     Crown,
     LogOut,
-    Mail // Added Mail icon for Contact Us
+    Mail,
+    Megaphone // Added Megaphone icon for News and Announcements
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
@@ -114,8 +115,18 @@ export const ProfileDropdown = () => {
                     </Link>
                 </DropdownMenuItem>
 
-                {/* NEW: Separator and Contact Us option */}
                 <DropdownMenuSeparator />
+
+                {/* NEW: News and Announcements option */}
+                <DropdownMenuItem asChild>
+                    <Link
+                        to="/announcements"
+                        className="flex items-center cursor-pointer"
+                    >
+                        <Megaphone className="mr-2 h-4 w-4" />
+                        <span>News & Announcements</span>
+                    </Link>
+                </DropdownMenuItem>
 
                 <DropdownMenuItem asChild>
                     <Link
