@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   const { data: room, isLoading: roomLoading, error: roomError } = useQuery({
     queryKey: ['battleRoom', roomId],
     queryFn: async (): Promise<RoomData> => {
-      console.log('Fetching battle room for roomId:', roomId);
+      console.log('BattleRoom.tsx: Fetching battle room for roomId:', roomId);
       const { data, error } = await supabase
         .from('battle_rooms')
         .select(`
@@ -65,20 +64,20 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .single();
 
       if (error) {
-        console.error("Error fetching battle room:", error);
+        console.error("BattleRoom.tsx: Error fetching battle room:", error);
         throw error;
       }
-      console.log('Successfully fetched room data:', data);
+      console.log('BattleRoom.tsx: Successfully fetched room data:', data);
       return data as RoomData;
     },
-    refetchInterval: 3000,
-    enabled: !!roomId,
+    refetchInterval: 3000, // Refetch every 3 seconds to keep data fresh
+    enabled: !!roomId, // Only run query if roomId is available
   });
 
   // Check if battle should start immediately when room data changes
   useEffect(() => {
     if (room && room.status === 'in_progress') {
-      console.log("Room status is 'in_progress'. Starting battle immediately...");
+      console.log("BattleRoom.tsx: Room status is 'in_progress'. Starting battle immediately...");
       if (countdownTimerRef.current) {
         clearInterval(countdownTimerRef.current);
         countdownTimerRef.current = null;
@@ -94,7 +93,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   useEffect(() => {
     if (!roomId) return;
 
-    console.log('Setting up real-time subscriptions for roomId:', roomId);
+    console.log('BattleRoom.tsx: Setting up real-time subscriptions for roomId:', roomId);
 
     const participantChannel = supabase
       .channel(`battle_room_${roomId}_participants`)
@@ -107,7 +106,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           filter: `battle_room_id=eq.${roomId}`
         },
         (payload) => {
-          console.log('Real-time participant change:', payload);
+          console.log('BattleRoom.tsx: Real-time participant change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
         }
       )
@@ -124,11 +123,11 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           filter: `id=eq.${roomId}`
         },
         (payload) => {
-          console.log('Real-time room status change:', payload);
+          console.log('BattleRoom.tsx: Real-time room status change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
-          const updatedRoom = payload.new as any;
+          const updatedRoom = payload.new as RoomData; // Cast to RoomData
           if (updatedRoom.status === 'in_progress') {
-            console.log("Room status changed to 'in_progress' via real-time. Starting battle...");
+            console.log("BattleRoom.tsx: Room status changed to 'in_progress' via real-time. Triggering battle start.");
             if (countdownTimerRef.current) {
               clearInterval(countdownTimerRef.current);
               countdownTimerRef.current = null;
@@ -138,7 +137,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
               onBattleStart(updatedRoom);
             }, 500);
           } else if (updatedRoom.status === 'completed') {
-            console.log("Room status changed to 'completed'. Leaving room.");
+            console.log("BattleRoom.tsx: Room status changed to 'completed'. Leaving room.");
             onLeave();
             toast({
               title: "Room Closed",
@@ -151,7 +150,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
       .subscribe();
 
     return () => {
-      console.log('Cleaning up real-time channels');
+      console.log('BattleRoom.tsx: Cleaning up real-time channels');
       supabase.removeChannel(participantChannel);
       supabase.removeChannel(roomStatusChannel);
       if (countdownTimerRef.current) {
@@ -163,14 +162,16 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
 
   // Countdown management
   useEffect(() => {
-    console.log('Countdown effect triggered. Room status:', room?.status, 'countdown_initiated_at:', room?.countdown_initiated_at);
+    console.log('BattleRoom.tsx: Countdown effect triggered. Room status:', room?.status, 'countdown_initiated_at:', room?.countdown_initiated_at);
     
     if (countdownTimerRef.current) {
+      console.log('BattleRoom.tsx: Clearing existing countdown timer.');
       clearInterval(countdownTimerRef.current);
       countdownTimerRef.current = null;
     }
 
-    if (!room || room.status === 'in_progress') {
+    if (!room || room.status === 'in_progress' || room.status === 'completed') {
+      console.log('BattleRoom.tsx: Room is not in waiting state or already in progress/completed. Resetting countdown.');
       setCountdown(null);
       return;
     }
@@ -180,73 +181,109 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
     const isWaitingStatus = room.status === 'waiting';
     const isCountdownInitiated = room.countdown_initiated_at !== null;
 
+    console.log(`BattleRoom.tsx: isRoomFull: ${isRoomFull}, isWaitingStatus: ${isWaitingStatus}, isCountdownInitiated: ${isCountdownInitiated}`);
+
     if (isWaitingStatus && (isRoomFull || isCountdownInitiated)) {
-      const initialCountdownDuration = room.battle_type === '1v1' ? 5 : 10;
+      const initialCountdownDuration = room.battle_type === '1v1' ? 5 : 10; // 5 seconds for 1v1, 10 for others
       let calculatedTimeRemaining = initialCountdownDuration;
 
       if (isCountdownInitiated && room.countdown_initiated_at) {
         const timeElapsed = (new Date().getTime() - new Date(room.countdown_initiated_at).getTime()) / 1000;
         calculatedTimeRemaining = Math.max(0, initialCountdownDuration - Math.floor(timeElapsed));
+        console.log(`BattleRoom.tsx: Countdown initiated at ${room.countdown_initiated_at}. Time elapsed: ${timeElapsed}s. Calculated remaining: ${calculatedTimeRemaining}s`);
+      } else if (isRoomFull && !isCountdownInitiated) {
+        // This block handles the first time the room becomes full and countdown needs to be initiated
+        console.log('BattleRoom.tsx: Room is full and countdown not initiated. Attempting to set countdown_initiated_at.');
+        const updateCountdownInitiated = async () => {
+          const { error } = await supabase
+            .from('battle_rooms')
+            .update({ countdown_initiated_at: new Date().toISOString() })
+            .eq('id', room.id);
+          if (error) {
+            console.error('BattleRoom.tsx: Error setting countdown_initiated_at:', error);
+            toast({
+              title: "Error",
+              description: "Failed to initiate battle countdown. Please check database permissions.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('BattleRoom.tsx: Successfully set countdown_initiated_at for room:', room.id);
+            // Invalidate query to refetch room data with new countdown_initiated_at
+            queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
+          }
+        };
+        updateCountdownInitiated();
+        // Return here to let the next render cycle (triggered by invalidateQueries) handle the countdown start
+        return;
       }
 
       setCountdown(calculatedTimeRemaining);
+      console.log(`BattleRoom.tsx: Setting countdown to: ${calculatedTimeRemaining}`);
       
       if (calculatedTimeRemaining <= 0) {
         const updateStatus = async () => {
-          console.log('Countdown finished, updating room status to in_progress');
+          console.log('BattleRoom.tsx: Countdown finished (calculatedTimeRemaining <= 0), updating room status to in_progress');
           const { error } = await supabase
             .from('battle_rooms')
             .update({ status: 'in_progress', countdown_initiated_at: null })
             .eq('id', roomId);
           if (error) {
-            console.error('Error updating room status:', error);
+            console.error('BattleRoom.tsx: Error updating room status to in_progress:', error);
             toast({
               title: "Error",
               description: "Failed to start battle automatically.",
               variant: "destructive",
             });
+          } else {
+            console.log('BattleRoom.tsx: Room status successfully updated to in_progress.');
           }
         };
         updateStatus();
-        return;
+        return; // Exit useEffect after triggering status update
       }
 
       if (calculatedTimeRemaining > 0) {
+        console.log('BattleRoom.tsx: Starting interval for countdown display.');
         countdownTimerRef.current = setInterval(() => {
           setCountdown(prev => {
             if (prev === null || prev <= 1) {
+              console.log('BattleRoom.tsx: Countdown timer reached 0 or less. Triggering status update.');
               if (countdownTimerRef.current) {
                 clearInterval(countdownTimerRef.current);
                 countdownTimerRef.current = null;
               }
               const updateStatus = async () => {
-                console.log('Countdown timer finished, updating room status to in_progress');
+                console.log('BattleRoom.tsx: Countdown timer finished, updating room status to in_progress');
                 const { error } = await supabase
                   .from('battle_rooms')
                   .update({ status: 'in_progress', countdown_initiated_at: null })
                   .eq('id', roomId);
                 if (error) {
-                  console.error('Error updating room status:', error);
+                  console.error('BattleRoom.tsx: Error updating room status from interval:', error);
+                } else {
+                  console.log('BattleRoom.tsx: Room status successfully updated to in_progress from interval.');
                 }
               };
               updateStatus();
-              return 0;
+              return 0; // Set countdown to 0
             }
             return prev - 1;
           });
         }, 1000);
       }
     } else {
+      console.log('BattleRoom.tsx: Room not full or countdown not initiated, and not in waiting state. Resetting countdown to null.');
       setCountdown(null);
     }
 
     return () => {
+      console.log('BattleRoom.tsx: Cleanup function for countdown effect.');
       if (countdownTimerRef.current) {
         clearInterval(countdownTimerRef.current);
         countdownTimerRef.current = null;
       }
     };
-  }, [room, roomId, toast]);
+  }, [room, roomId, toast, queryClient]); // Added queryClient to dependencies
 
   // Join/Leave notifications
   useEffect(() => {
@@ -261,11 +298,13 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           title: "Player Joined!",
           description: "A new player has joined the room.",
         });
+        console.log('BattleRoom.tsx: Player joined notification.');
       } else if (currentPlayers < prevParticipantsCount.current) {
         toast({
           title: "Player Left",
           description: "A player has left the room.",
         });
+        console.log('BattleRoom.tsx: Player left notification.');
       }
     }
     prevParticipantsCount.current = currentPlayers;
@@ -280,6 +319,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         description: "You have been removed from this battle room.",
         variant: "destructive",
       });
+      console.log('BattleRoom.tsx: User kicked from room notification.');
       onLeave();
     }
   }, [room, userId, onLeave, toast, isLeaving]);
@@ -297,6 +337,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         description: `${senderName} wants to start the battle!`,
         duration: 3000,
       });
+      console.log('BattleRoom.tsx: Host ping received notification.');
     }
     prevHostPingRequestedAt.current = room.host_ping_requested_at;
     prevHostPingSenderId.current = room.last_ping_sender_id;
@@ -306,6 +347,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   const leaveRoomMutation = useMutation({
     mutationFn: async () => {
       setIsLeaving(true);
+      console.log('BattleRoom.tsx: Attempting to delete participant from room.');
       const { error } = await supabase
         .from('battle_participants')
         .delete()
@@ -313,9 +355,10 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('user_id', userId);
 
       if (error) {
-        console.error("Error leaving room:", error);
+        console.error("BattleRoom.tsx: Error leaving room:", error);
         throw error;
       }
+      console.log('BattleRoom.tsx: Participant successfully deleted.');
     },
     onSuccess: async () => {
       if (room && room.host_id === userId) {
@@ -326,19 +369,24 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           )[0];
 
+          console.log('BattleRoom.tsx: Host leaving, assigning new host:', newHost.user_id);
           const { error: updateHostError } = await supabase
             .from('battle_rooms')
             .update({ host_id: newHost.user_id })
             .eq('id', roomId);
 
           if (updateHostError) {
-            console.error('Error updating new host:', updateHostError);
+            console.error('BattleRoom.tsx: Error updating new host:', updateHostError);
           } else {
             toast({
               title: "Host Changed",
               description: `${newHost.username} is now the host.`,
             });
           }
+        } else {
+          console.log('BattleRoom.tsx: Host leaving, no remaining participants. Room will likely be cleaned up by backend.');
+          // Optionally, you could set room status to 'completed' or 'empty' here if no participants are left
+          // await supabase.from('battle_rooms').update({ status: 'completed' }).eq('id', roomId);
         }
       }
 
@@ -347,9 +395,10 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         description: "You have left the battle room." 
       });
       onLeave();
+      console.log('BattleRoom.tsx: User successfully left room and transitioned to lobby.');
     },
     onError: (error: any) => {
-      console.error('Error leaving room:', error);
+      console.error('BattleRoom.tsx: Error in leaveRoomMutation:', error);
       toast({
         title: "Error",
         description: `Failed to leave room: ${error.message}`,
@@ -369,6 +418,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         throw new Error("You cannot remove yourself.");
       }
 
+      console.log('BattleRoom.tsx: Host attempting to remove participant:', participantUserId);
       const { error } = await supabase
         .from('battle_participants')
         .delete()
@@ -376,9 +426,10 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('user_id', participantUserId);
 
       if (error) {
-        console.error("Error removing participant:", error);
+        console.error("BattleRoom.tsx: Error removing participant:", error);
         throw error;
       }
+      console.log('BattleRoom.tsx: Participant removed successfully.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['battleRoom', roomId] });
@@ -388,6 +439,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
       });
     },
     onError: (error: any) => {
+      console.error('BattleRoom.tsx: Error in removeParticipantMutation:', error);
       toast({
         title: "Error",
         description: `Failed to remove participant: ${error.message}`,
@@ -409,7 +461,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         throw new Error("Battle can only be started from 'waiting' status.");
       }
 
-      console.log('Host is starting battle manually, updating countdown_initiated_at');
+      console.log('BattleRoom.tsx: Host is starting battle manually (FFA), updating countdown_initiated_at.');
       const { error } = await supabase
         .from('battle_rooms')
         .update({
@@ -421,9 +473,10 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('id', roomId);
 
       if (error) {
-        console.error("Error initiating countdown:", error);
+        console.error("BattleRoom.tsx: Error initiating countdown from manual start:", error);
         throw error;
       }
+      console.log('BattleRoom.tsx: Manual battle start initiated successfully.');
     },
     onSuccess: () => {
       toast({
@@ -432,6 +485,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
       });
     },
     onError: (error: any) => {
+      console.error('BattleRoom.tsx: Error in startBattleMutation:', error);
       toast({
         title: "Error Starting Battle",
         description: `Failed to start battle: ${error.message}`,
@@ -455,6 +509,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
 
       const senderUsername = room.battle_participants.find(p => p.user_id === userId)?.username || 'A participant';
 
+      console.log('BattleRoom.tsx: Attempting to ping host.');
       const { error } = await supabase
         .from('battle_rooms')
         .update({
@@ -465,9 +520,10 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
         .eq('id', roomId);
 
       if (error) {
-        console.error("Error pinging host:", error);
+        console.error("BattleRoom.tsx: Error pinging host:", error);
         throw error;
       }
+      console.log('BattleRoom.tsx: Host ping sent successfully.');
     },
     onSuccess: () => {
       toast({
@@ -476,6 +532,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
       });
     },
     onError: (error: any) => {
+      console.error('BattleRoom.tsx: Error in pingHostMutation:', error);
       toast({
         title: "Error Pinging Host",
         description: `Failed to send ping: ${error.message}`,
@@ -492,7 +549,9 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
           title: "Copied!",
           description: "Room code copied to clipboard.",
         });
-      }).catch(() => {
+        console.log('BattleRoom.tsx: Room code copied to clipboard.');
+      }).catch((err) => {
+        console.error('BattleRoom.tsx: Failed to copy room code:', err);
         toast({
           title: "Copy Failed",
           description: "Could not copy room code. Please try manually.",
@@ -505,18 +564,22 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   const handleLeaveClick = () => {
     const isHost = room?.host_id === userId;
     if (isHost) {
+      console.log('BattleRoom.tsx: Host attempting to leave, showing confirmation modal.');
       setShowConfirmLeaveModal(true);
     } else {
+      console.log('BattleRoom.tsx: Non-host leaving directly.');
       leaveRoomMutation.mutate();
     }
   };
 
   const confirmLeave = () => {
+    console.log('BattleRoom.tsx: Host confirmed leaving.');
     setShowConfirmLeaveModal(false);
     leaveRoomMutation.mutate();
   };
 
   const cancelLeave = () => {
+    console.log('BattleRoom.tsx: Host cancelled leaving.');
     setShowConfirmLeaveModal(false);
   };
 
@@ -530,6 +593,7 @@ export const BattleRoom = ({ roomId, userId, onLeave, onBattleStart }: BattleRoo
   }
 
   if (roomError || !room) {
+    console.error('BattleRoom.tsx: Room data error or not found:', roomError);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20 p-4 text-center">
         <XCircle className="h-16 w-16 text-red-500 mb-4" />
