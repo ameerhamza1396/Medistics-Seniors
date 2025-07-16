@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Bot, Zap, Brain, FileText, Moon, Sun, MessageSquare, User, Mail, Phone, BookOpen, UserCheck, Shield, ClipboardList, PenTool, Image as ImageIcon, CheckCircle, XCircle, Lightbulb, Laptop, Share2, Palette, BellRing, Calendar, ScrollText } from 'lucide-react'; // Added BellRing, Calendar, ScrollText
+import { ArrowLeft, Bot, Zap, Brain, FileText, Moon, Sun, MessageSquare, User, Mail, Phone, BookOpen, UserCheck, Shield, ClipboardList, PenTool, ImageIcon, CheckCircle, XCircle, Lightbulb, Laptop, Share2, Palette, BellRing, Calendar, ScrollText } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Import useMutation and useQueryClient
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,13 +14,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
+import { ProfileDropdown } from '@/components/ProfileDropdown';
 
 const AnnouncementsPage = () => {
     const { theme, setTheme } = useTheme();
     const { user } = useAuth();
+    const queryClient = useQueryClient(); // Initialize query client
 
-    // Define plan color schemes (reused from previous components for consistency)
     const planColors = {
         'free': {
             light: 'bg-purple-100 text-purple-800 border-purple-300',
@@ -40,14 +40,15 @@ const AnnouncementsPage = () => {
         }
     };
 
-    // Get user profile data for the header badge
-    const { data: profile } = useQuery({
+    type ProfileType = { role: string; plan: string } | null;
+
+    const { data: profile } = useQuery<ProfileType>({
         queryKey: ['profile', user?.id],
         queryFn: async () => {
             if (!user?.id) return null;
             const { data, error } = await supabase
                 .from('profiles')
-                .select('role, plan, name')
+                .select('role, plan')
                 .eq('id', user.id)
                 .maybeSingle();
 
@@ -55,12 +56,12 @@ const AnnouncementsPage = () => {
                 console.error('Error fetching profile:', error);
                 return null;
             }
-            return data;
+            return data as ProfileType;
         },
         enabled: !!user?.id
     });
 
-    const rawUserPlan = profile?.plan?.toLowerCase() || 'free';
+    const rawUserPlan = profile?.plan?.toLowerCase?.() || 'Loading';
     const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
     const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
 
@@ -68,12 +69,11 @@ const AnnouncementsPage = () => {
     const { data: announcements, isLoading, isError, error } = useQuery({
         queryKey: ['announcements'],
         queryFn: async () => {
-            // Fetch only published announcements, ordered by creation date
             const { data, error } = await supabase
                 .from('announcements')
                 .select('*')
-                .eq('is_published', true) // Only fetch published announcements
-                .order('created_at', { ascending: false }); // Latest announcements first
+                .eq('is_published', true)
+                .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error fetching announcements:', error);
@@ -81,17 +81,77 @@ const AnnouncementsPage = () => {
             }
             return data;
         },
-        // Only enable query if supabase is configured and user is potentially authenticated (or if public access is allowed)
-        // For public announcements, you might not need `user?.id` in `enabled`.
-        // Assuming announcements are public for now.
         enabled: true,
-        staleTime: 1000 * 60 * 5, // Data considered fresh for 5 minutes
-        cacheTime: 1000 * 60 * 10, // Data kept in cache for 10 minutes
+        staleTime: 1000 * 60 * 5,
+        cacheTime: 1000 * 60 * 10,
     });
+
+    // Fetch user's read announcements
+    const { data: readAnnouncements, isLoading: isLoadingReadAnnouncements } = useQuery({
+        queryKey: ['readAnnouncements', user?.id],
+        queryFn: async () => {
+            if (!user?.id) return [];
+            const { data, error } = await supabase
+                .from('user_announcements')
+                .select('announcement_id')
+                .eq('user_id', user.id);
+
+            if (error) {
+                console.error('Error fetching read announcements:', error);
+                return [];
+            }
+            return data.map(item => item.announcement_id);
+        },
+        enabled: !!user?.id,
+        staleTime: 0, // Always refetch when this page is accessed to get accurate unread count
+    });
+
+    // Mutation to mark announcements as read
+    const markAsReadMutation = useMutation({
+        mutationFn: async (announcementIds) => {
+            if (!user?.id || !announcementIds || announcementIds.length === 0) return;
+
+            const recordsToInsert = announcementIds.map(id => ({
+                user_id: user.id,
+                announcement_id: id,
+            }));
+
+            // Use upsert to avoid duplicate key errors if an announcement was already marked read
+            const { error } = await supabase
+                .from('user_announcements')
+                .upsert(recordsToInsert, { onConflict: 'user_id, announcement_id' });
+
+            if (error) {
+                console.error('Error marking announcements as read:', error);
+                throw error;
+            }
+        },
+        onSuccess: () => {
+            // Invalidate readAnnouncements query to refetch updated data
+            queryClient.invalidateQueries(['readAnnouncements', user?.id]);
+            // Invalidate profileDropdownProfile to trigger re-calculation of badge
+            queryClient.invalidateQueries(['profileDropdownProfile', user?.id]);
+        },
+        onError: (err) => {
+            console.error('Failed to mark announcements as read:', err.message);
+        }
+    });
+
+    // Calculate unread announcements count
+    const unreadAnnouncementsCount = (announcements && readAnnouncements)
+        ? announcements.filter(announcement => !readAnnouncements.includes(announcement.id)).length
+        : 0;
+
+    // Mark all current announcements as read when component mounts (or announcements/user change)
+    useEffect(() => {
+        if (user && announcements && announcements.length > 0 && !isLoadingReadAnnouncements) {
+            const announcementIds = announcements.map(announcement => announcement.id);
+            markAsReadMutation.mutate(announcementIds);
+        }
+    }, [user, announcements, isLoadingReadAnnouncements]); // Depend on user, announcements, and read status loading
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
-            {/* Header - Consistent with InternshipApplication */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-blue-200 dark:border-blue-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
                     <Link to="/" className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
@@ -99,7 +159,7 @@ const AnnouncementsPage = () => {
                     </Link>
 
                     <div className="flex items-center space-x-3">
-                        <BellRing className="w-8 h-8 text-blue-600 dark:text-blue-400" /> {/* Icon for announcements */}
+                        <BellRing className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         <span className="text-xl font-bold text-gray-900 dark:text-white">Announcements</span>
                     </div>
 
@@ -113,14 +173,12 @@ const AnnouncementsPage = () => {
                         >
                             {userPlanDisplayName}
                         </Badge>
-                            {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
-                            <ProfileDropdown />
+                        <ProfileDropdown unreadAnnouncementsCount={unreadAnnouncementsCount} /> {/* Pass the count here */}
                     </div>
                 </div>
             </header>
 
             <div className="container mx-auto px-4 lg:px-8 py-8 max-w-7xl">
-                {/* Hero Section for Announcements */}
                 <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                         📢 Latest Medistics Announcements
@@ -130,7 +188,6 @@ const AnnouncementsPage = () => {
                     </p>
                 </div>
 
-                {/* Announcements Display Area */}
                 <div className="max-w-4xl mx-auto space-y-6">
                     {isLoading && (
                         <div className="text-center text-blue-500 dark:text-blue-400 mt-8 flex flex-col items-center justify-center">
@@ -175,7 +232,6 @@ const AnnouncementsPage = () => {
                                 <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-wrap">{announcement.content}</p>
                                 {announcement.media_url && (
                                     <div className="mt-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                                        {/* Basic check for image vs. video, could be more robust */}
                                         {announcement.media_url.match(/\.(jpeg|jpg|png|gif|webp)$/i) ? (
                                             <img
                                                 src={announcement.media_url}
