@@ -25,7 +25,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom'; // Changed from 'next/router' to 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 
 interface MCQDisplayProps {
   subject: string;
@@ -66,7 +66,7 @@ export const MCQDisplay = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate(); // Initialize useNavigate instead of useRouter
+  const navigate = useNavigate();
 
   const [mcqs, setMcqs] = useState<ShuffledMCQ[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,9 +160,6 @@ export const MCQDisplay = ({
       const data = await fetchMCQsByChapter(chapter);
 
       const shuffledMCQs = data.map(mcq => {
-        // The original logic `mcq.options.indexOf(mcq.correct_answer)` is not strictly needed
-        // if `originalCorrectIndex` is only for tracking the original position,
-        // but it's harmless to keep if you might use it.
         const correctAnswerIndex = mcq.options.indexOf(mcq.correct_answer);
         const shuffledOptions = shuffleArray(mcq.options);
         const newCorrectIndex = shuffledOptions.indexOf(mcq.correct_answer);
@@ -170,7 +167,7 @@ export const MCQDisplay = ({
         return {
           ...mcq,
           shuffledOptions,
-          originalCorrectIndex: newCorrectIndex // This stores the index of the correct answer within the `shuffledOptions` array
+          originalCorrectIndex: newCorrectIndex
         };
       });
 
@@ -216,7 +213,7 @@ export const MCQDisplay = ({
         clearInterval(intervalRef.current);
       }
     };
-  }, [timerEnabled, showExplanation, isPaused, currentQuestionIndex, timePerQuestion]); // Re-run when these change
+  }, [timerEnabled, showExplanation, isPaused, currentQuestionIndex, timePerQuestion]);
 
   // Effect to check if the current MCQ is saved
   useEffect(() => {
@@ -341,7 +338,7 @@ export const MCQDisplay = ({
         title: "Quiz Completed!",
         description: `You scored ${score}/${totalQuestions} (${Math.round((score / totalQuestions) * 100)}%)`,
       });
-      clearLocalStorageProgress(); // Clear on completion
+      clearLocalStorageProgress();
       onBack();
     }
   };
@@ -414,8 +411,6 @@ export const MCQDisplay = ({
   // --- New Menu Functions ---
 
   const handleStartOver = () => {
-    // Only allow starting over if not on the first question and no answer selected (meaning it's not the very beginning of a new chapter load)
-    // Or if an answer is selected, it means the user has progressed.
     if (currentQuestionIndex === 0 && !selectedAnswer) {
       toast({
         title: "Already at the start",
@@ -424,7 +419,7 @@ export const MCQDisplay = ({
       return;
     }
     if (confirm("Are you sure you want to start this chapter over? Your current progress will be lost.")) {
-      clearLocalStorageProgress(); // Clear existing progress
+      clearLocalStorageProgress();
       setCurrentQuestionIndex(0);
       setSelectedAnswer(null);
       setShowExplanation(false);
@@ -440,19 +435,17 @@ export const MCQDisplay = ({
 
   const handlePauseTest = () => {
     setIsPaused(true);
-    // Timer useEffect will automatically clear interval due to `isPaused` state change
   };
 
   const handleResumeTest = () => {
     setIsPaused(false);
-    // Timer useEffect will automatically restart interval due to `isPaused` state change
-    setStartTime(Date.now()); // Reset start time to accurately measure time for the current question
+    setStartTime(Date.now());
   };
 
   const handleLeaveTest = () => {
     if (confirm("Are you sure you want to leave the test? Your current progress for this chapter will be lost.")) {
       clearLocalStorageProgress();
-      navigate('/dashboard'); // Use navigate from react-router-dom
+      navigate('/dashboard');
     }
   };
 
@@ -481,7 +474,7 @@ export const MCQDisplay = ({
         mcq_id: currentMCQ.id,
         user_id: user.id,
         reason: reportReason.trim(),
-        status: 'pending' // Default status
+        status: 'pending'
       });
 
       if (error) throw error;
@@ -500,18 +493,16 @@ export const MCQDisplay = ({
     }
   };
 
-
   if (loading) {
     return (
       <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm mx-2 sm:mx-0">
         <CardContent className="text-center py-6 sm:py-8 flex flex-col items-center justify-center h-full">
-          <div className="flex justify-center items-end h-24 space-x-2">
-            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0s' }}></div>
-            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.3s' }}></div>
-            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.4s' }}></div>
-          </div>
+          {/* Replaced the loading circles with the image */}
+          <img
+            src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
+            alt="Loading"
+            className="w-24 h-24 object-contain animate-pulse" // Added animate-pulse for a subtle effect
+          />
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-4">Loading questions...</p>
         </CardContent>
       </Card>
@@ -590,7 +581,7 @@ export const MCQDisplay = ({
               <CardTitle className="text-base sm:text-lg leading-relaxed text-gray-900 dark:text-white flex-grow">
                 {currentMCQ?.question}
               </CardTitle>
-              <div className="flex items-center space-x-2"> {/* Container for Save and MoreVertical buttons */}
+              <div className="flex items-center space-x-2">
                 {user && (
                   <Button
                     variant="ghost"
@@ -616,7 +607,6 @@ export const MCQDisplay = ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onClick={handleStartOver}
-                      // Disable if at Q1 and no answer selected, implying the very start of a new session or fresh load
                       disabled={currentQuestionIndex === 0 && !selectedAnswer}
                     >
                       Start over chapter
@@ -665,7 +655,7 @@ export const MCQDisplay = ({
                       key={index}
                       className={buttonClass}
                       onClick={() => handleAnswerSelect(option)}
-                      disabled={showExplanation || isPaused} // Disable options when paused
+                      disabled={showExplanation || isPaused}
                       whileHover={!showExplanation && !isPaused ? { scale: 1.01 } : {}}
                       whileTap={!showExplanation && !isPaused ? { scale: 0.99 } : {}}
                     >
@@ -697,7 +687,7 @@ export const MCQDisplay = ({
                   <Button
                     onClick={() => handleSubmitAnswer()}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm sm:text-base px-4 sm:px-6"
-                    disabled={isPaused} // Disable submit when paused
+                    disabled={isPaused}
                   >
                     Submit Answer
                   </Button>
@@ -707,7 +697,7 @@ export const MCQDisplay = ({
                   <Button
                     onClick={handleNextQuestion}
                     className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-sm sm:text-base px-4 sm:px-6"
-                    disabled={isPaused} // Disable next when paused
+                    disabled={isPaused}
                   >
                     {currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Finish Quiz'}
                   </Button>
@@ -786,8 +776,8 @@ export const MCQDisplay = ({
             <Button
               variant="outline"
               onClick={() => {
-                setIsPaused(false); // Close dialog
-                handleLeaveTest(); // Go to dashboard and clear progress
+                setIsPaused(false);
+                handleLeaveTest();
               }}
               className="w-full border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30"
             >

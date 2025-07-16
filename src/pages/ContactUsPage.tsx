@@ -18,7 +18,6 @@ import {
     MessageSquare,
     Loader2,
     CheckCircle,
-    XCircle,
     Send,
     ArrowLeft,
     Moon,
@@ -28,7 +27,8 @@ import {
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
-import { ProfileDropdown } from '@/components/ProfileDropdown';
+// ProfileDropdown is not used in the provided code, so it's commented out.
+// import { ProfileDropdown } from '@/components/ProfileDropdown';
 
 const ContactUsPage = () => {
     const { user } = useAuth();
@@ -213,29 +213,44 @@ const ContactUsPage = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
-                            <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                            <span className="font-medium">Email:</span>
+                        {/* Email */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center mb-1 sm:mb-0 sm:flex-shrink-0">
+                                <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
+                                <span className="font-medium">Email:</span>
+                            </div>
                             <a href="mailto:medistics@dr.com" className="text-blue-600 dark:text-blue-400 hover:underline">medistics@dr.com</a>
                         </div>
-                        <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
-                            <Phone className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                            <span className="font-medium">Contact & WhatsApp:</span>
+                        {/* Phone */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center mb-1 sm:mb-0 sm:flex-shrink-0">
+                                <Phone className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                                <span className="font-medium">Contact & WhatsApp:</span>
+                            </div>
                             <a href="tel:+923166891212" className="text-green-600 dark:text-green-400 hover:underline">03166891212</a>
                         </div>
-                        <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
-                            <Instagram className="h-5 w-5 text-pink-600 dark:text-pink-400 flex-shrink-0" />
-                            <span className="font-medium">Instagram:</span>
+                        {/* Instagram */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center mb-1 sm:mb-0 sm:flex-shrink-0">
+                                <Instagram className="h-5 w-5 text-pink-600 dark:text-pink-400 mr-2" />
+                                <span className="font-medium">Instagram:</span>
+                            </div>
                             <a href="https://instagram.com/medistics.app" target="_blank" rel="noopener noreferrer" className="text-pink-600 dark:text-pink-400 hover:underline">instagram.com/medistics.app</a>
                         </div>
-                        <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
-                            <Facebook className="h-5 w-5 text-blue-800 dark:text-blue-600 flex-shrink-0" />
-                            <span className="font-medium">Facebook:</span>
+                        {/* Facebook */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center mb-1 sm:mb-0 sm:flex-shrink-0">
+                                <Facebook className="h-5 w-5 text-blue-800 dark:text-blue-600 mr-2" />
+                                <span className="font-medium">Facebook:</span>
+                            </div>
                             <a href="https://facebook.com/medisticsApp" target="_blank" rel="noopener noreferrer" className="text-blue-800 dark:text-blue-600 hover:underline">facebook.com/medisticsApp</a>
                         </div>
-                        <div className="flex items-center space-x-3 text-gray-700 dark:text-gray-300">
-                            <Linkedin className="h-5 w-5 text-blue-700 dark:text-blue-500 flex-shrink-0" />
-                            <span className="font-medium">LinkedIn:</span>
+                        {/* LinkedIn */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center mb-1 sm:mb-0 sm:flex-shrink-0">
+                                <Linkedin className="h-5 w-5 text-blue-700 dark:text-blue-500 mr-2" />
+                                <span className="font-medium">LinkedIn:</span>
+                            </div>
                             <a href="https://www.linkedin.com/in/medisticsapp/" target="_blank" rel="noopener noreferrer" className="text-blue-700 dark:text-blue-500 hover:underline">linkedin.com/in/medisticsapp/</a>
                         </div>
                     </CardContent>

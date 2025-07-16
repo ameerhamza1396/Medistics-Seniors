@@ -150,14 +150,19 @@ const MCQs = () => {
   };
 
   // Show a loading state while authentication is in progress
-  if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-600"></div>
-        <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">Loading user data...</p>
-      </div>
-    );
-  }
+if (authLoading || profileLoading) {
+  return (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+      {/* Replaced the loading spinner with the image */}
+      <img
+        src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
+        alt="Loading"
+        className="w-24 h-24 object-contain animate-pulse" // Added animate-pulse for a subtle effect
+      />
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300 mt-4">Loading user data...</p>
+    </div>
+  );
+}
 
   // If user is not logged in, show login prompt
   if (!user) {
