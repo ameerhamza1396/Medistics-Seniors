@@ -55,7 +55,6 @@ export const ChapterSelectionScreen = ({
   userProfile
 }: ChapterSelectionScreenProps) => {
   const [allChapters, setAllChapters] = useState<Chapter[]>([]);
-  // const [accessibleChapters, setAccessibleChapters] = useState<Chapter[]>([]); // Removed this state
   const [loading, setLoading] = useState(true);
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
   const { user } = useAuth();
@@ -66,13 +65,7 @@ export const ChapterSelectionScreen = ({
       setLoading(true);
       const fetched = await fetchChaptersBySubject(subject.id);
       
-      // Removed access control logic, all chapters are now considered accessible
-      // const userPlan: 'free' | 'premium' | 'iconic' =
-      //   userProfile?.plan === 'premium' || userProfile?.plan === 'iconic' ? userProfile.plan : 'free';
-      // const accessible = getAccessibleChapters(fetched, userPlan);
-      
       setAllChapters(fetched);
-      // setAccessibleChapters(accessible); // Removed this
       
       const counts: Record<string, number> = {};
       for (const ch of fetched) {
@@ -86,12 +79,7 @@ export const ChapterSelectionScreen = ({
   }, [subject, userProfile]);
 
   const handleChapterClick = (chapter: Chapter) => {
-    // const isAccessible = accessibleChapters.some((c) => c.id === chapter.id); // Removed this check
-    // if (isAccessible) { // Removed conditional logic
-      onChapterSelect(chapter);
-    // } else {
-    //   navigate('/pricing'); // Removed navigation to pricing page
-    // }
+    onChapterSelect(chapter);
   };
 
   // Define a number of skeleton cards to display while loading
@@ -107,7 +95,9 @@ export const ChapterSelectionScreen = ({
       <div className="text-center mb-6">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Chapter – {subject.name}</h1>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          All chapters are now unlocked for all users. Free users have a daily submission limit.
+          {userProfile?.plan === 'free'
+            ? 'All chapters are unlocked. Free users have a daily limit of MCQ submissions.'
+            : 'You have unlimited access to all chapters and MCQs.'}
         </p>
       </div>
 
@@ -120,7 +110,6 @@ export const ChapterSelectionScreen = ({
         ) : (
           // Render actual chapters once loaded
           allChapters.map((ch, idx) => {
-            // const isAccessible = accessibleChapters.some((c) => c.id === ch.id); // No longer needed
             const isSelected = false; // Not used for this component's visual selection state
 
             return (
@@ -131,22 +120,22 @@ export const ChapterSelectionScreen = ({
                 transition={{ delay: idx * 0.05 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full cursor-pointer`} // Removed opacity-50 and conditional class
+                className={`w-full cursor-pointer`}
                 onClick={() => handleChapterClick(ch)}
               >
                 <Card
                   className={`border-2 h-full transition duration-300 ease-in-out
                     ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700'}
-                    bg-gradient-to-br from-green-50/70 via-blue-50/50 to-indigo-50/30 dark:from-green-900/30 dark:via-blue-900/20 dark:to-indigo-900/10 backdrop-blur-sm` // Simplified background to always be "unlocked" style
+                    bg-gradient-to-br from-green-50/70 via-blue-50/50 to-indigo-50/30 dark:from-green-900/30 dark:via-blue-900/20 dark:to-indigo-900/10 backdrop-blur-sm`
                   }
                 >
                   <CardHeader className="px-4 py-4">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center
-                            bg-gradient-to-r from-green-200 to-blue-200 dark:from-green-800 dark:to-blue-800` // Always show "unlocked" icon style
+                            bg-gradient-to-r from-green-200 to-blue-200 dark:from-green-800 dark:to-blue-800`
                             }>
-                            <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" /> {/* Always show BookOpen */}
+                            <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
                           <CardTitle className="text-lg text-gray-900 dark:text-white">Chapter {ch.chapter_number}</CardTitle>

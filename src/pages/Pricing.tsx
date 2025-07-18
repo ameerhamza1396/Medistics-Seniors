@@ -45,12 +45,12 @@ const Pricing = () => {
             display: 'Free',
             id: 'free',
             monthly: {
-                PKR: { price: '0', features: ['Static MCQs', 'Basic Dashboard Access', 'Limited Practice Sessions'] },
-                USD: { price: '0', features: ['Static MCQs', 'Basic Dashboard Access', 'Limited Practice Sessions'] }
+                PKR: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] },
+                USD: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] }
             },
             yearly: {
-                PKR: { price: '0', features: ['Static MCQs', 'Basic Dashboard Access', 'Limited Practice Sessions'] },
-                USD: { price: '0', features: ['Static MCQs', 'Basic Dashboard Access', 'Limited Practice Sessions'] }
+                PKR: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] },
+                USD: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] }
             },
             gradient: 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50',
             border: 'border-gray-200 dark:border-gray-700',
@@ -61,12 +61,12 @@ const Pricing = () => {
             display: 'Iconic',
             id: 'iconic',
             monthly: {
-                PKR: { price: '250', originalPrice: '500', features: ['AI Test Generator', 'Unlimited Practice MCQs', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access'] },
-                USD: { price: '0.99', originalPrice: '1.98', features: ['AI Test Generator', 'Unlimited Practice MCQs', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access'] }
+                PKR: { price: '250', originalPrice: '500', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access'] },
+                USD: { price: '0.99', originalPrice: '1.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access'] }
             },
             yearly: {
-                PKR: { price: '2400', originalPrice: '4800', features: ['AI Test Generator', 'Unlimited Practice MCQs', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access', 'Save PKR 600!'] },
-                USD: { price: '10.99', originalPrice: '21.98', features: ['AI Test Generator', 'Unlimited Practice MCQs', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access', 'Save $0.89!'] }
+                PKR: { price: '2400', originalPrice: '4800', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access', 'Save PKR 600!'] },
+                USD: { price: '10.99', originalPrice: '21.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access', 'Save $0.89!'] }
             },
             gradient: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20',
             border: 'border-purple-200 dark:border-purple-800',
@@ -77,12 +77,12 @@ const Pricing = () => {
             display: 'Premium',
             id: 'premium',
             monthly: {
-                PKR: { price: '500', originalPrice: '1000', features: ['AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans'] },
-                USD: { price: '1.99', originalPrice: '3.98', features: ['AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans'] }
+                PKR: { price: '500', originalPrice: '1000', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges'] },
+                USD: { price: '1.99', originalPrice: '3.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges'] }
             },
             yearly: {
-                PKR: { price: '5200', originalPrice: '10400', features: ['AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Save PKR 800!'] },
-                USD: { price: '19.99', originalPrice: '39.98', features: ['AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Save $3.89!'] }
+                PKR: { price: '5200', originalPrice: '10400', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges', 'Save PKR 800!'] },
+                USD: { price: '19.99', originalPrice: '39.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges', 'Save $3.89!'] }
             },
             gradient: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
             border: 'border-blue-200 dark:border-blue-800',
@@ -126,13 +126,14 @@ const Pricing = () => {
                     </div>
 
                     <div className="flex items-center space-x-3">
-                        <div className="inline-flex rounded-full bg-gray-200 dark:bg-gray-700 p-1">
+                        {/* Currency switch for desktop/tablet */}
+                        <div className="inline-flex rounded-full bg-gray-200 dark:bg-gray-700 p-1 hidden sm:inline-flex">
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 className={`px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300 ${
                                     currency === 'PKR'
-                                        ? 'bg-purple-600 text-white shadow-md'
+                                        ? 'bg-red-600 text-white shadow-md' // Changed to red
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                 }`}
                                 onClick={() => setCurrency('PKR')}
@@ -144,7 +145,7 @@ const Pricing = () => {
                                 size="sm"
                                 className={`px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300 ${
                                     currency === 'USD'
-                                        ? 'bg-purple-600 text-white shadow-md'
+                                        ? 'bg-red-600 text-white shadow-md' // Changed to red
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                 }`}
                                 onClick={() => setCurrency('USD')}
@@ -175,6 +176,36 @@ const Pricing = () => {
                     </div>
                 </div>
             </header>
+
+            {/* Currency switch for mobile, placed below the header */}
+            <div className="flex justify-center px-4 py-4 sm:hidden">
+                <div className="inline-flex rounded-full bg-gray-200 dark:bg-gray-700 p-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300 ${
+                            currency === 'PKR'
+                                ? 'bg-red-600 text-white shadow-md' // Changed to red
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                        onClick={() => setCurrency('PKR')}
+                    >
+                        PKR
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300 ${
+                            currency === 'USD'
+                                ? 'bg-red-600 text-white shadow-md' // Changed to red
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                        onClick={() => setCurrency('USD')}
+                    >
+                        USD
+                    </Button>
+                </div>
+            </div>
 
             <section className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl">
                 <div className="text-center mb-16 animate-fade-in">
