@@ -3,32 +3,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Clock, CheckCircle, XCircle, Timer, Bot, MessageSquare, X, Bookmark, BookmarkCheck, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, Timer, Bot, MessageSquare, X, Bookmark, BookmarkCheck, Crown } from 'lucide-react'; // Added Crown icon for premium
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { fetchMCQsByChapter, MCQ } from '@/utils/mcqData';
 import { supabase } from '@/integrations/supabase/client';
 import { AIChatbot } from './AIChatbot';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'; // Import Dialog components
 
 interface MCQDisplayProps {
-  subject: string;
+  subject: string;a
   chapter: string;
   onBack: () => void;
   timerEnabled?: boolean;
@@ -54,7 +39,45 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 const LAST_ATTEMPTED_MCQ_KEY = 'lastAttemptedMCQIndex';
 const LAST_ATTEMPTED_SUBJECT_KEY = 'lastAttemptedMCQSubject';
 const LAST_ATTEMPTED_CHAPTER_KEY = 'lastAttemptedMCQChapter';
-const IS_PAUSED_KEY = 'isMCQTestPaused'; // New key for pause state
+
+// --- Upgrade Account Modal Component ---
+interface UpgradeAccountModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUpgradeClick: () => void;
+}
+
+const UpgradeAccountModal: React.FC<UpgradeAccountModalProps> = ({ isOpen, onClose, onUpgradeClick }) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px] p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-purple-200 dark:border-purple-800">
+        <DialogHeader className="text-center">
+          <Crown className="w-12 h-12 mx-auto text-yellow-500 dark:text-yellow-400 mb-3" />
+          <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Upgrade Your Account</DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+            You've reached the daily limit of free MCQs. Upgrade to a premium plan for unlimited practice and more features!
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="w-full sm:w-auto border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+          >
+            Maybe Later
+          </Button>
+          <Button
+            onClick={onUpgradeClick}
+            className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+          >
+            Upgrade Now
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 
 export const MCQDisplay = ({
   subject,
@@ -65,9 +88,6 @@ export const MCQDisplay = ({
 }: MCQDisplayProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-
   const [mcqs, setMcqs] = useState<ShuffledMCQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -88,9 +108,11 @@ export const MCQDisplay = ({
   // State for saved MCQ status
   const [isCurrentMCQSaved, setIsCurrentMCQSaved] = useState(false);
 
-  // New state for pause overlay
-  const [isPaused, setIsPaused] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Ref for timer interval
+  // States for daily submission limit
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [dailySubmissionsCount, setDailySubmissionsCount] = useState(0);
+  const [lastSubmissionResetDate, setLastSubmissionResetDate] = useState<string | null>(null);
+
 
   const helpMessages = [
     "Hey, you look stuck. May I help you?",
@@ -106,14 +128,14 @@ export const MCQDisplay = ({
   // Derive username for the good luck message
   const username = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
-  // Fetch user profile data to get the plan
-  const { data: profile } = useQuery({
-    queryKey: ['profileForChatbot', user?.id],
+  // Fetch user profile data to get the plan and new submission fields
+  const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
+    queryKey: ['profileForChatbot', user?.id], // Unique query key
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('plan')
+        .select('plan, daily_mcq_submissions, last_submission_reset_date') // Fetch new fields
         .eq('id', user.id)
         .maybeSingle();
 
@@ -123,35 +145,65 @@ export const MCQDisplay = ({
       }
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id // Only run query if user ID exists
   });
 
   // Determine the user's plan for the chatbot
   const userPlanForChatbot = profile?.plan?.toLowerCase() || 'free';
 
-  // --- NEW: Effect to load last attempted question from local storage and pause state ---
+  // Effect to set initial daily submission states from profile
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (profile && !profileLoading) {
+      setDailySubmissionsCount(profile.daily_mcq_submissions || 0);
+      setLastSubmissionResetDate(profile.last_submission_reset_date);
+    }
+  }, [profile, profileLoading]);
+
+  // Function to check if it's a new day (12 AM PST)
+  const isNewDayPST = (lastResetDateStr: string | null): boolean => {
+    if (!lastResetDateStr) {
+      return true; // If no reset date, assume it's a new day
+    }
+
+    const now = new Date();
+    // Convert current time to PST
+    const nowPST = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+
+    // Get today's 12 AM PST
+    const today12AMPST = new Date(nowPST);
+    today12AMPST.setHours(0, 0, 0, 0);
+
+    const lastResetDateTime = new Date(lastResetDateStr);
+    // Convert last reset date to PST for comparison
+    const lastResetDateTimePST = new Date(lastResetDateTime.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+
+    return lastResetDateTimePST < today12AMPST;
+  };
+
+  // --- Effect to load last attempted question from local storage ---
+  useEffect(() => {
+    if (typeof window !== 'undefined') { // Ensure localStorage is available
       const lastSubject = localStorage.getItem(LAST_ATTEMPTED_SUBJECT_KEY);
       const lastChapter = localStorage.getItem(LAST_ATTEMPTED_CHAPTER_KEY);
       const lastIndex = localStorage.getItem(LAST_ATTEMPTED_MCQ_KEY);
-      const pausedState = localStorage.getItem(IS_PAUSED_KEY) === 'true';
 
       if (lastSubject === subject && lastChapter === chapter && lastIndex !== null) {
         const parsedIndex = parseInt(lastIndex, 10);
+        // Only set if the parsed index is a valid number
         if (!isNaN(parsedIndex) && parsedIndex >= 0) {
           setCurrentQuestionIndex(parsedIndex);
+          // console.log(`Resuming from question index: ${parsedIndex}`); // For debugging
         }
       } else {
+        // If subject/chapter doesn't match or no saved index, clear previous if any and start fresh
         localStorage.removeItem(LAST_ATTEMPTED_MCQ_KEY);
         localStorage.removeItem(LAST_ATTEMPTED_SUBJECT_KEY);
         localStorage.removeItem(LAST_ATTEMPTED_CHAPTER_KEY);
-        localStorage.removeItem(IS_PAUSED_KEY); // Clear pause state if chapter changes
-        setCurrentQuestionIndex(0);
+        setCurrentQuestionIndex(0); // Start from the beginning for a new subject/chapter
+        // console.log("Starting a new quiz or saved state not found/matched."); // For debugging
       }
-      setIsPaused(pausedState); // Restore pause state
     }
-  }, [subject, chapter]);
+  }, [subject, chapter]); // Rerun if subject or chapter changes
 
   // Effect to load MCQs and shuffle options
   useEffect(() => {
@@ -159,6 +211,7 @@ export const MCQDisplay = ({
       setLoading(true);
       const data = await fetchMCQsByChapter(chapter);
 
+      // Shuffle options for each MCQ
       const shuffledMCQs = data.map(mcq => {
         const correctAnswerIndex = mcq.options.indexOf(mcq.correct_answer);
         const shuffledOptions = shuffleArray(mcq.options);
@@ -176,49 +229,22 @@ export const MCQDisplay = ({
     };
 
     loadMCQs();
-  }, [chapter]);
+  }, [chapter]); // This useEffect loads MCQs based on chapter.
 
-  // --- NEW: Effect to save current question index and pause state to local storage ---
+  // --- Effect to save current question index to local storage ---
   useEffect(() => {
     if (!loading && mcqs.length > 0 && typeof window !== 'undefined') {
       localStorage.setItem(LAST_ATTEMPTED_MCQ_KEY, currentQuestionIndex.toString());
       localStorage.setItem(LAST_ATTEMPTED_SUBJECT_KEY, subject);
       localStorage.setItem(LAST_ATTEMPTED_CHAPTER_KEY, chapter);
-      localStorage.setItem(IS_PAUSED_KEY, String(isPaused)); // Save pause state
     }
-  }, [currentQuestionIndex, subject, chapter, loading, mcqs.length, isPaused]);
+  }, [currentQuestionIndex, subject, chapter, loading, mcqs.length]);
 
-  // Effect for the question timer
-  useEffect(() => {
-    if (timerEnabled && !showExplanation && !isPaused) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(intervalRef.current!);
-            handleTimeUp();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [timerEnabled, showExplanation, isPaused, currentQuestionIndex, timePerQuestion]);
 
   // Effect to check if the current MCQ is saved
   useEffect(() => {
     const checkSavedStatus = async () => {
-      if (!user || !mcqs[currentQuestionIndex]?.id) {
+      if (!user || !mcqs[currentQuestionIndex]?.id) { // Use mcqs[currentQuestionIndex]?.id for safety
         setIsCurrentMCQSaved(false);
         return;
       }
@@ -227,11 +253,11 @@ export const MCQDisplay = ({
           .from('saved_mcqs')
           .select('id')
           .eq('user_id', user.id)
-          .eq('mcq_id', mcqs[currentQuestionIndex].id)
+          .eq('mcq_id', mcqs[currentQuestionIndex].id) // Use mcqs[currentQuestionIndex].id
           .single();
 
-        setIsCurrentMCQSaved(!!data);
-        if (error && error.code !== 'PGRST116') {
+        setIsCurrentMCQSaved(!!data); // Set to true if data exists, false otherwise
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found (expected for unsaved)
           console.error('Error checking saved status:', error);
         }
       } catch (error) {
@@ -240,34 +266,41 @@ export const MCQDisplay = ({
       }
     };
 
+    // Only run if mcqs has loaded and current question is available
     if (!loading && mcqs.length > 0) {
       checkSavedStatus();
     }
-  }, [mcqs, currentQuestionIndex, user, loading]);
+  }, [mcqs, currentQuestionIndex, user, loading]); // Depend on mcqs, currentQuestionIndex, user, and loading
 
   // Timer for Dr. Sultan's help toast
   useEffect(() => {
+    // Clear any existing timer when question changes or component unmounts
     if (helpToastTimerRef.current) {
       clearTimeout(helpToastTimerRef.current);
     }
-    setShowHelpToast(false);
+    setShowHelpToast(false); // Hide toast for new question
 
-    if (user && userPlanForChatbot === 'premium' && !selectedAnswer && !isChatbotOpen && !isPaused) {
+    // Set a new timer if no answer selected yet and chatbot is not open
+    // and user is authenticated (chatbot is a premium feature)
+    if (user && userPlanForChatbot === 'premium' && !selectedAnswer && !isChatbotOpen) {
       helpToastTimerRef.current = setTimeout(() => {
-        if (!selectedAnswer && !isChatbotOpen && !isPaused) {
+        if (!selectedAnswer && !isChatbotOpen) { // Double check if still no answer and chatbot is closed
           setHelpToastMessage(helpMessages[Math.floor(Math.random() * helpMessages.length)]);
           setShowHelpToast(true);
         }
-      }, 10000);
+      }, 10000); // 10 seconds
     }
 
+    // Cleanup function for the effect
     return () => {
       if (helpToastTimerRef.current) {
         clearTimeout(helpToastTimerRef.current);
       }
     };
-  }, [currentQuestionIndex, selectedAnswer, isChatbotOpen, user, userPlanForChatbot, isPaused]);
+  }, [currentQuestionIndex, selectedAnswer, isChatbotOpen, user, userPlanForChatbot]); // Depend on selectedAnswer and isChatbotOpen
 
+  // Define currentMCQ after loading and empty checks
+  // This ensures currentMCQ is only accessed when mcqs has data
   const currentMCQ = mcqs[currentQuestionIndex];
   const totalQuestions = mcqs.length;
   const progressPercentage = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
@@ -281,14 +314,55 @@ export const MCQDisplay = ({
   const handleAnswerSelect = (answer: string) => {
     if (showExplanation) return;
     setSelectedAnswer(answer);
-    setShowHelpToast(false);
+    setShowHelpToast(false); // Hide help toast if user selects an answer
     if (helpToastTimerRef.current) {
-      clearTimeout(helpToastTimerRef.current);
+      clearTimeout(helpToastTimerRef.current); // Clear timer if user acts
     }
   };
 
   const handleSubmitAnswer = async (timeUp = false) => {
     if (!currentMCQ || !user) return;
+
+    // --- NEW: Daily submission limit check for free users ---
+    if (userPlanForChatbot === 'free') {
+      const isNewDay = isNewDayPST(lastSubmissionResetDate);
+
+      let currentSubmissions = dailySubmissionsCount;
+      let currentResetDate = lastSubmissionResetDate;
+
+      if (isNewDay) {
+        currentSubmissions = 0; // Reset for new day
+        currentResetDate = new Date().toISOString(); // Set new reset date (UTC)
+      }
+
+      if (currentSubmissions >= 50) {
+        setShowUpgradeModal(true);
+        return; // Prevent submission
+      }
+
+      // Increment submission count and update reset date in Supabase
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          daily_mcq_submissions: currentSubmissions + 1,
+          last_submission_reset_date: currentResetDate
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Error updating daily submissions:', updateError);
+        toast({
+          title: "Error",
+          description: "Failed to update daily submission count. Please try again.",
+          variant: "destructive",
+        });
+        return; // Prevent submission if update fails
+      }
+      setDailySubmissionsCount(currentSubmissions + 1); // Update local state
+      setLastSubmissionResetDate(currentResetDate); // Update local state
+    }
+    // --- END NEW: Daily submission limit check ---
+
 
     const answer = timeUp ? '' : selectedAnswer;
     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
@@ -298,6 +372,7 @@ export const MCQDisplay = ({
       setScore(prev => prev + 1);
     }
 
+    // Save answer to database
     try {
       await supabase.from('user_answers').insert({
         user_id: user.id,
@@ -311,18 +386,9 @@ export const MCQDisplay = ({
     }
 
     setShowExplanation(true);
-    setShowHelpToast(false);
+    setShowHelpToast(false); // Hide help toast after submitting answer
     if (helpToastTimerRef.current) {
-      clearTimeout(helpToastTimerRef.current);
-    }
-  };
-
-  const clearLocalStorageProgress = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(LAST_ATTEMPTED_MCQ_KEY);
-      localStorage.removeItem(LAST_ATTEMPTED_SUBJECT_KEY);
-      localStorage.removeItem(LAST_ATTEMPTED_CHAPTER_KEY);
-      localStorage.removeItem(IS_PAUSED_KEY);
+      clearTimeout(helpToastTimerRef.current); // Clear timer
     }
   };
 
@@ -332,22 +398,35 @@ export const MCQDisplay = ({
       setSelectedAnswer(null);
       setShowExplanation(false);
       setTimeLeft(timePerQuestion);
-      setStartTime(Date.now());
+      setStartTime(Date.now()); // Reset start time for next question
+      // Timer for help toast will be reset by useEffect due to currentQuestionIndex change
     } else {
+      // Quiz completed
       toast({
         title: "Quiz Completed!",
         description: `You scored ${score}/${totalQuestions} (${Math.round((score / totalQuestions) * 100)}%)`,
       });
-      clearLocalStorageProgress();
+
+      // --- Clear local storage upon quiz completion ---
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(LAST_ATTEMPTED_MCQ_KEY);
+        localStorage.removeItem(LAST_ATTEMPTED_SUBJECT_KEY);
+        localStorage.removeItem(LAST_ATTEMPTED_CHAPTER_KEY);
+        // console.log("Quiz completed. Local storage cleared."); // For debugging
+      }
+
       onBack();
     }
   };
 
+  // Function to handle clicking the help toast
   const handleHelpToastClick = () => {
-    setShowHelpToast(false);
-    setIsChatbotOpen(true);
+    setShowHelpToast(false); // Dismiss the toast
+    setIsChatbotOpen(true); // Open the chatbot
+    // The AIChatbot component itself will handle showing the welcome/help message
   };
 
+  // Function to handle saving/unsaving an MCQ
   const handleSaveMCQ = async () => {
     if (!user || !currentMCQ?.id) {
       toast({
@@ -360,7 +439,8 @@ export const MCQDisplay = ({
 
     try {
       if (isCurrentMCQSaved) {
-        const { error } = await (supabase as any)
+        // Unsave MCQ
+        const { error } = await supabase
           .from('saved_mcqs')
           .delete()
           .eq('user_id', user.id)
@@ -378,6 +458,7 @@ export const MCQDisplay = ({
           ),
         });
       } else {
+        // Save MCQ
         const { error } = await supabase
           .from('saved_mcqs')
           .insert({
@@ -397,7 +478,6 @@ export const MCQDisplay = ({
           ),
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['savedMcqs', user?.id] });
     } catch (error: any) {
       console.error('Error saving/unsaving MCQ:', error);
       toast({
@@ -408,101 +488,27 @@ export const MCQDisplay = ({
     }
   };
 
-  // --- New Menu Functions ---
-
-  const handleStartOver = () => {
-    if (currentQuestionIndex === 0 && !selectedAnswer) {
-      toast({
-        title: "Already at the start",
-        description: "You are already at the beginning of the chapter.",
-      });
-      return;
-    }
-    if (confirm("Are you sure you want to start this chapter over? Your current progress will be lost.")) {
-      clearLocalStorageProgress();
-      setCurrentQuestionIndex(0);
-      setSelectedAnswer(null);
-      setShowExplanation(false);
-      setTimeLeft(timePerQuestion);
-      setStartTime(Date.now());
-      setScore(0);
-      toast({
-        title: "Chapter Restarted",
-        description: "You've started this chapter from the beginning.",
-      });
-    }
+  const handleUpgradeClick = () => {
+    setShowUpgradeModal(false);
+    // Navigate to your pricing/upgrade page
+    // Example: You might use react-router-dom's useNavigate hook here
+    // import { useNavigate } from 'react-router-dom';
+    // const navigate = useNavigate();
+    // navigate('/pricing');
+    console.log("Navigating to upgrade page..."); // Placeholder
   };
 
-  const handlePauseTest = () => {
-    setIsPaused(true);
-  };
-
-  const handleResumeTest = () => {
-    setIsPaused(false);
-    setStartTime(Date.now());
-  };
-
-  const handleLeaveTest = () => {
-    if (confirm("Are you sure you want to leave the test? Your current progress for this chapter will be lost.")) {
-      clearLocalStorageProgress();
-      navigate('/dashboard');
-    }
-  };
-
-  const handleReportQuestion = async () => {
-    if (!currentMCQ?.id || !user?.id) {
-      toast({
-        title: "Error",
-        description: "Cannot report question. Missing question ID or user ID.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const reportReason = prompt("Please provide a brief reason for reporting this question (e.g., incorrect answer, unclear wording, duplicate):");
-
-    if (reportReason === null || reportReason.trim() === "") {
-      toast({
-        title: "Report Cancelled",
-        description: "No reason provided, question not reported.",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase.from('reported_questions').insert({
-        mcq_id: currentMCQ.id,
-        user_id: user.id,
-        reason: reportReason.trim(),
-        status: 'pending'
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Question Reported",
-        description: "Thank you for reporting. We will review this question shortly.",
-      });
-    } catch (error: any) {
-      console.error('Error reporting question:', error);
-      toast({
-        title: "Report Failed",
-        description: `Failed to report question: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loading) {
+  if (loading || profileLoading) { // Added profileLoading to the loading state
     return (
       <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm mx-2 sm:mx-0">
         <CardContent className="text-center py-6 sm:py-8 flex flex-col items-center justify-center h-full">
-          {/* Replaced the loading circles with the image */}
-          <img
-            src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-            alt="Loading"
-            className="w-24 h-24 object-contain animate-pulse" // Added animate-pulse for a subtle effect
-          />
+          <div className="flex justify-center items-end h-24 space-x-2"> {/* items-end to make waves rise from bottom */}
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.3s' }}></div>
+            <div className="w-3 h-12 bg-purple-600 dark:bg-purple-400 rounded-full wave-bar" style={{ animationDelay: '0.4s' }}></div>
+          </div>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-4">Loading questions...</p>
         </CardContent>
       </Card>
@@ -552,6 +558,13 @@ export const MCQDisplay = ({
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Score: {score}/{currentQuestionIndex}</span>
               </div>
+              {/* Display daily submissions count for free users */}
+              {userPlanForChatbot === 'free' && (
+                <div className="flex items-center space-x-1">
+                  <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>{dailySubmissionsCount}/50 Daily</span>
+                </div>
+              )}
             </div>
           </div>
           <Progress value={progressPercentage} className="w-full" />
@@ -577,53 +590,25 @@ export const MCQDisplay = ({
           transition={{ duration: 0.3 }}
         >
           <Card className="bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm">
-            <CardHeader className="px-4 sm:px-6 py-4 sm:py-6 flex flex-row justify-between items-start">
+            <CardHeader className="px-4 sm:px-6 py-4 sm:py-6 flex flex-row justify-between items-start"> {/* Adjusted for button */}
               <CardTitle className="text-base sm:text-lg leading-relaxed text-gray-900 dark:text-white flex-grow">
                 {currentMCQ?.question}
               </CardTitle>
-              <div className="flex items-center space-x-2">
-                {user && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleSaveMCQ}
-                    className="text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
-                    title={isCurrentMCQSaved ? "Unsave Question" : "Save Question"}
-                  >
-                    {isCurrentMCQSaved ? (
-                      <BookmarkCheck className="w-5 h-5 fill-purple-600 text-purple-600 dark:fill-purple-400 dark:text-purple-400" />
-                    ) : (
-                      <Bookmark className="w-5 h-5" />
-                    )}
-                  </Button>
-                )}
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400">
-                      <MoreVertical className="w-5 h-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={handleStartOver}
-                      disabled={currentQuestionIndex === 0 && !selectedAnswer}
-                    >
-                      Start over chapter
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handlePauseTest}>
-                      Pause test
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleReportQuestion}>
-                      Report question
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLeaveTest} className="text-red-600 focus:text-red-700">
-                      Leave test
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {user && ( // Only show save button if user is logged in
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSaveMCQ}
+                  className="ml-4 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
+                  title={isCurrentMCQSaved ? "Unsave Question" : "Save Question"}
+                >
+                  {isCurrentMCQSaved ? (
+                    <BookmarkCheck className="w-5 h-5 fill-purple-600 text-purple-600 dark:fill-purple-400 dark:text-purple-400" />
+                  ) : (
+                    <Bookmark className="w-5 h-5" />
+                  )}
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="space-y-2 sm:space-y-3">
@@ -655,9 +640,9 @@ export const MCQDisplay = ({
                       key={index}
                       className={buttonClass}
                       onClick={() => handleAnswerSelect(option)}
-                      disabled={showExplanation || isPaused}
-                      whileHover={!showExplanation && !isPaused ? { scale: 1.01 } : {}}
-                      whileTap={!showExplanation && !isPaused ? { scale: 0.99 } : {}}
+                      disabled={showExplanation}
+                      whileHover={!showExplanation ? { scale: 1.01 } : {}}
+                      whileTap={!showExplanation ? { scale: 0.99 } : {}}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-gray-900 dark:text-white flex-1">{String.fromCharCode(65 + index)}. {option}</span>
@@ -687,7 +672,6 @@ export const MCQDisplay = ({
                   <Button
                     onClick={() => handleSubmitAnswer()}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm sm:text-base px-4 sm:px-6"
-                    disabled={isPaused}
                   >
                     Submit Answer
                   </Button>
@@ -697,7 +681,6 @@ export const MCQDisplay = ({
                   <Button
                     onClick={handleNextQuestion}
                     className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-sm sm:text-base px-4 sm:px-6"
-                    disabled={isPaused}
                   >
                     {currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Finish Quiz'}
                   </Button>
@@ -705,7 +688,7 @@ export const MCQDisplay = ({
               </div>
 
               {/* Best of luck message */}
-              {user && (
+              {user && ( // Only show if a user is logged in
                 <div className="mt-6 text-center text-gray-700 dark:text-gray-300 text-base sm:text-lg">
                   Best of luck,{' '}
                   <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text font-bold">
@@ -721,7 +704,7 @@ export const MCQDisplay = ({
 
       {/* Dr. Sultan's Help Toast */}
       <AnimatePresence>
-        {showHelpToast && !isPaused && (
+        {showHelpToast && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -748,44 +731,16 @@ export const MCQDisplay = ({
       <AIChatbot
         currentQuestion={currentMCQ?.question}
         userPlan={userPlanForChatbot}
-        isOpen={isChatbotOpen}
-        setIsOpen={setIsChatbotOpen}
+        isOpen={isChatbotOpen} // Pass isOpen state
+        setIsOpen={setIsChatbotOpen} // Pass setIsOpen setter
       />
 
-      {/* Pause Overlay Dialog */}
-      <Dialog open={isPaused} onOpenChange={setIsPaused}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Test Paused</DialogTitle>
-            <DialogDescription>
-              Your current test progress is saved. You can resume or go to the dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <p className="text-center text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Time Left: {timeLeft}s
-            </p>
-            <p className="text-center text-md text-gray-600 dark:text-gray-400">
-              Current Question: {currentQuestionIndex + 1} / {totalQuestions}
-            </p>
-          </div>
-          <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3">
-            <Button onClick={handleResumeTest} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-              Resume Test
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsPaused(false);
-                handleLeaveTest();
-              }}
-              className="w-full border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30"
-            >
-              Go to Dashboard
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Upgrade Account Modal */}
+      <UpgradeAccountModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onUpgradeClick={handleUpgradeClick}
+      />
     </div>
   );
 };
