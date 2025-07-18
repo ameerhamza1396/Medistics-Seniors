@@ -159,7 +159,6 @@ if (authLoading || profileLoading) {
         alt="Loading"
         className="w-24 h-24 object-contain animate-pulse" // Added animate-pulse for a subtle effect
       />
-      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300 mt-4">Loading user data...</p>
     </div>
   );
 }
