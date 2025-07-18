@@ -55,7 +55,7 @@ const UpgradeAccountModal: React.FC<UpgradeAccountModalProps> = ({ isOpen, onClo
           <Crown className="w-12 h-12 mx-auto text-yellow-500 dark:text-yellow-400 mb-3" />
           <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Upgrade Your Account</DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
-            You've reached the daily limit of free MCQs. Upgrade to a premium plan for unlimited practice and more features!
+            You've reached the daily limit of free MCQs. Upgrade to a iconic or premium plan for unlimited practice and more features!
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
