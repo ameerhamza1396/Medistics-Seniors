@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'; // Import Dialog components
 
 interface MCQDisplayProps {
-  subject: string;a
+  subject: string;
   chapter: string;
   onBack: () => void;
   timerEnabled?: boolean;
@@ -55,7 +55,7 @@ const UpgradeAccountModal: React.FC<UpgradeAccountModalProps> = ({ isOpen, onClo
           <Crown className="w-12 h-12 mx-auto text-yellow-500 dark:text-yellow-400 mb-3" />
           <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Upgrade Your Account</DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
-            You've reached the daily limit of free MCQs. Upgrade to a iconic or premium plan for unlimited practice and more features!
+            You've reached the daily limit of 50 free MCQ submissions. Upgrade to a premium plan for unlimited practice and more features!
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
@@ -159,25 +159,25 @@ export const MCQDisplay = ({
     }
   }, [profile, profileLoading]);
 
-  // Function to check if it's a new day (12 AM PST)
-  const isNewDayPST = (lastResetDateStr: string | null): boolean => {
+  // Function to check if it's a new day (12 AM PKT)
+  const isNewDayPKT = (lastResetDateStr: string | null): boolean => {
     if (!lastResetDateStr) {
       return true; // If no reset date, assume it's a new day
     }
 
     const now = new Date();
-    // Convert current time to PST
-    const nowPST = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+    // Convert current time to PKT
+    const nowPKT = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Karachi" })); // Changed to Asia/Karachi
 
-    // Get today's 12 AM PST
-    const today12AMPST = new Date(nowPST);
-    today12AMPST.setHours(0, 0, 0, 0);
+    // Get today's 12 AM PKT
+    const today12AMPKT = new Date(nowPKT);
+    today12AMPKT.setHours(0, 0, 0, 0);
 
     const lastResetDateTime = new Date(lastResetDateStr);
-    // Convert last reset date to PST for comparison
-    const lastResetDateTimePST = new Date(lastResetDateTime.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+    // Convert last reset date to PKT for comparison
+    const lastResetDateTimePKT = new Date(lastResetDateTime.toLocaleString("en-US", { timeZone: "Asia/Karachi" })); // Changed to Asia/Karachi
 
-    return lastResetDateTimePST < today12AMPST;
+    return lastResetDateTimePKT < today12AMPKT;
   };
 
   // --- Effect to load last attempted question from local storage ---
@@ -325,7 +325,7 @@ export const MCQDisplay = ({
 
     // --- NEW: Daily submission limit check for free users ---
     if (userPlanForChatbot === 'free') {
-      const isNewDay = isNewDayPST(lastSubmissionResetDate);
+      const isNewDay = isNewDayPKT(lastSubmissionResetDate); // Changed to PKT function
 
       let currentSubmissions = dailySubmissionsCount;
       let currentResetDate = lastSubmissionResetDate;

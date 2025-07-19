@@ -1,3 +1,5 @@
+// pricing.tsx - Modifications
+
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,18 +8,68 @@ import { Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Add useMemo
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+// Define the structure of a plan fetched from Supabase
+interface SupabasePlan {
+    id: string; // The UUID from Supabase, or you could keep it as the 'name'
+    name: string; // 'free', 'iconic', 'premium' - for internal logic
+    display_name: string;
+    type: 'monthly' | 'yearly';
+    currency: 'PKR' | 'USD';
+    price: number;
+    original_price: number | null;
+    features: string[]; // This will be text[] in Supabase, but JS sees it as string[]
+    is_popular: boolean;
+    order: number;
+}
+
+// Grouped plans for easier rendering
+interface GroupedPlan {
+    name: string;
+    display: string;
+    id: string; // Corresponds to the 'name' from Supabase
+    gradient: string;
+    border: string;
+    popular: boolean;
+    monthly: {
+        PKR: { price: string; originalPrice: string | null; features: string[] };
+        USD: { price: string; originalPrice: string | null; features: string[] };
+    };
+    yearly: {
+        PKR: { price: string; originalPrice: string | null; features: string[] };
+        USD: { price: string; originalPrice: string | null; features: string[] };
+    };
+}
+
 
 const Pricing = () => {
     const { user, isLoading: isAuthLoading } = useAuth();
     const { theme, setTheme } = useTheme();
     const [isMonthly, setIsMonthly] = useState(true);
-    const [currency, setCurrency] = useState('PKR');
+    const [currency, setCurrency] = useState<'PKR' | 'USD'>('PKR'); // Type currency
+
+    // Fetch all pricing plans from Supabase
+    const { data: fetchedPlans, isLoading: arePlansLoading } = useQuery<SupabasePlan[]>({
+        queryKey: ['pricingPlans'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('pricing_plans')
+                .select('*')
+                .order('order', { ascending: true }); // Order by the 'order' column
+
+            if (error) {
+                console.error('Error fetching pricing plans:', error);
+                throw new Error('Could not load pricing plans.');
+            }
+            return data || [];
+        },
+    });
 
     // Fetch user profile to determine current plan
-    const { data: profile, isLoading: isProfileLoading } = useQuery({
+    const { data: profile, isLoading: isProfileLoading } = useQuery<{ plan: string } | null>({
         queryKey: ['profile', user?.id],
         queryFn: async () => {
             if (!user?.id) return null;
@@ -38,61 +90,66 @@ const Pricing = () => {
 
     const currentUserPlan = profile?.plan?.toLowerCase();
 
-    // Define pricing plans data with original prices
-    const plans = [
-        {
-            name: 'Free',
-            display: 'Free',
-            id: 'free',
-            monthly: {
-                PKR: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] },
-                USD: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] }
+    // Memoize the transformation of fetched plans into the desired grouped format
+    const plans: GroupedPlan[] = useMemo(() => {
+        if (!fetchedPlans) return [];
+
+        const grouped: { [key: string]: GroupedPlan } = {};
+
+        // Define static styles/gradients as they are not coming from Supabase
+        const planStyles: { [key: string]: { gradient: string; border: string } } = {
+            free: {
+                gradient: 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50',
+                border: 'border-gray-200 dark:border-gray-700'
             },
-            yearly: {
-                PKR: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] },
-                USD: { price: '0', features: ['Access to Question Bank', 'Basic Dashboard Access', '50 MCQ Submissions/Day', 'Join & Chat in Classrooms'] }
+            iconic: {
+                gradient: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20',
+                border: 'border-purple-200 dark:border-purple-800'
             },
-            gradient: 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-900/50',
-            border: 'border-gray-200 dark:border-gray-700',
-            popular: false
-        },
-        {
-            name: 'Iconic',
-            display: 'Iconic',
-            id: 'iconic',
-            monthly: {
-                PKR: { price: '250', originalPrice: '500', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access'] },
-                USD: { price: '0.99', originalPrice: '1.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access'] }
+            premium: {
+                gradient: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
+                border: 'border-blue-200 dark:border-blue-800'
             },
-            yearly: {
-                PKR: { price: '2400', originalPrice: '4800', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access', 'Save PKR 600!'] },
-                USD: { price: '10.99', originalPrice: '21.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'Battle Arena', 'Basic Analytics', 'Standard Support', 'Exclusive Community Access', 'Save $0.89!'] }
-            },
-            gradient: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20',
-            border: 'border-purple-200 dark:border-purple-800',
-            popular: true
-        },
-        {
-            name: 'Premium',
-            display: 'Premium',
-            id: 'premium',
-            monthly: {
-                PKR: { price: '500', originalPrice: '1000', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges'] },
-                USD: { price: '1.99', originalPrice: '3.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges'] }
-            },
-            yearly: {
-                PKR: { price: '5200', originalPrice: '10400', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges', 'Save PKR 800!'] },
-                USD: { price: '19.99', originalPrice: '39.98', features: ['Access to Question Bank', 'Unlimited MCQ Submissions', 'AI Test Generator', 'AI Chatbot (Dr. Sultan)', 'Voice Input for Chat', 'Unlimited Battle Arena Challenges', 'Advanced Analytics', 'Priority Support (24/7)', 'Weekly Mock Tests (Sundays)', 'Early Access to New Features', 'Personalized Study Plans', 'Create Classrooms', 'Exclusive Classroom Badges', 'Save $3.89!'] }
-            },
-            gradient: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
-            border: 'border-blue-200 dark:border-blue-800',
-            popular: false
-        }
-    ];
+        };
+
+        fetchedPlans.forEach(p => {
+            if (!grouped[p.name]) {
+                grouped[p.name] = {
+                    name: p.name,
+                    display: p.display_name,
+                    id: p.name, // Use 'name' as the ID for consistency with old code
+                    gradient: planStyles[p.name]?.gradient || '', // Assign static gradient
+                    border: planStyles[p.name]?.border || '',     // Assign static border
+                    popular: p.is_popular,
+                    monthly: { PKR: { price: '', originalPrice: null, features: [] }, USD: { price: '', originalPrice: null, features: [] } },
+                    yearly: { PKR: { price: '', originalPrice: null, features: [] }, USD: { price: '', originalPrice: null, features: [] } },
+                };
+            }
+
+            const priceDetails = {
+                price: p.price.toString(), // Convert number to string for display
+                originalPrice: p.original_price ? p.original_price.toString() : null,
+                features: p.features,
+            };
+
+            if (p.type === 'monthly') {
+                grouped[p.name].monthly[p.currency] = priceDetails;
+            } else if (p.type === 'yearly') {
+                grouped[p.name].yearly[p.currency] = priceDetails;
+            }
+        });
+
+        // Convert the grouped object back to an array and sort by the 'order' field
+        return Object.values(grouped).sort((a, b) => {
+            const orderA = fetchedPlans.find(p => p.name === a.name)?.order || 99;
+            const orderB = fetchedPlans.find(p => p.name === b.name)?.order || 99;
+            return orderA - orderB;
+        });
+    }, [fetchedPlans]); // Re-run memoization only if fetchedPlans changes
 
     const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
 
-    if (isAuthLoading || isProfileLoading) {
+    if (isAuthLoading || isProfileLoading || arePlansLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 text-gray-900 dark:text-white">
                 <p>Loading pricing plans...</p>
@@ -100,6 +157,7 @@ const Pricing = () => {
         );
     }
 
+    // Your existing JSX rendering logic remains largely the same
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -261,7 +319,7 @@ const Pricing = () => {
                                         Most Popular
                                     </Badge>
                                 )}
-                                {currentUserPlan === plan.id && (
+                                {currentUserPlan === plan.id && ( // Use plan.id which is derived from Supabase 'name'
                                     <Badge className="absolute top-4 right-4 bg-green-500 text-white shadow-md">
                                         Your Current Plan
                                     </Badge>
@@ -270,7 +328,7 @@ const Pricing = () => {
                                 <CardHeader className="text-center relative z-10">
                                     <CardTitle className="text-xl md:text-2xl text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">{plan.display}</CardTitle>
                                     <div className="mt-4">
-                                        {originalPrice && ( // Display original price only if it exists
+                                        {originalPrice && originalPrice !== displayPrice && ( // Display original price only if it exists AND is different from current price
                                             <div className="text-gray-400 dark:text-gray-500 text-sm mb-1">
                                                 <span className="line-through">
                                                     {currency === 'PKR' ? 'PKR ' : '$'}{originalPrice}
@@ -281,9 +339,10 @@ const Pricing = () => {
                                             {currency === 'PKR' ? 'PKR ' : '$'}{displayPrice}
                                         </span>
                                         <span className="text-gray-600 dark:text-gray-400">/{isMonthly ? 'month' : 'year'}</span>
-                                        {originalPrice && ( // Display 50% off only if original price exists
+                                        {originalPrice && originalPrice !== displayPrice && ( // Display discount text only if original price exists and is different
                                             <p className="text-green-500 dark:text-green-400 text-sm font-semibold mt-1">
-                                                50% off!
+                                                {/* Calculate actual percentage off if you want to display it dynamically */}
+                                                {((parseFloat(originalPrice) - parseFloat(displayPrice)) / parseFloat(originalPrice) * 100).toFixed(0)}% off!
                                             </p>
                                         )}
                                     </div>
