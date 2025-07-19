@@ -34,6 +34,7 @@ const Checkout = () => {
     const [error, setError] = useState<string | null>(null);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false); // State for the success dialog
     const [proofOfPayment, setProofOfPayment] = useState<File | null>(null);
+    const [showQrModal, setShowQrModal] = useState(false); // State for JazzCash QR modal
 
     // Promocode states
     const [promoCode, setPromoCode] = useState('');
@@ -191,6 +192,7 @@ const Checkout = () => {
         const maxSize = 2 * 1024 * 1024; // 2 MB
         if (!acceptedTypes.includes(proofOfPayment.type) || proofOfPayment.size > maxSize) {
             setError("Please re-upload a valid image (PNG, JPG, WebP) under 2MB.");
+            setProofOfPayment(null);
             setIsLoading(false);
             return;
         }
@@ -250,11 +252,11 @@ const Checkout = () => {
             // This call assumes you have the `increment_promo_code_uses` RPC function in Supabase.
             // For higher security, this increment could ideally be done server-side after manual verification.
             if (isPromoApplied && promoCode) {
-                 const { error: incrementError } = await supabase.rpc('increment_promo_code_uses', { p_code: promoCode });
-                 if (incrementError) {
-                     console.error('Error incrementing promo code uses:', incrementError);
-                     // Decide how to handle this: log, or show a non-critical warning
-                 }
+                   const { error: incrementError } = await supabase.rpc('increment_promo_code_uses', { p_code: promoCode });
+                   if (incrementError) {
+                       console.error('Error incrementing promo code uses:', incrementError);
+                       // Decide how to handle this: log, or show a non-critical warning
+                   }
             }
 
             console.log('Payment request submitted to Supabase successfully.');
@@ -420,6 +422,18 @@ const Checkout = () => {
                                 <p className="font-semibold">Account Name: <span className="text-purple-600 dark:text-purple-400">MedisticsApp</span></p>
                             </div>
                         </div>
+
+                        {/* JazzCash QR Code Image */}
+                        <div className="flex justify-center my-6">
+                            <img
+                                src="/images/jazzcash_qr.jpg"
+                                alt="JazzCash QR Code"
+                                className="w-48 h-48 object-contain rounded-lg shadow-md border border-gray-200 dark:border-gray-700 cursor-pointer transition-transform duration-200 hover:scale-105"
+                                onClick={() => setShowQrModal(true)} // Click handler to open modal
+                            />
+                        </div>
+                        {/* End JazzCash QR Code Image */}
+
                         <p className="mb-4">
                             Once you have made the payment, please upload a screenshot or photo of your payment receipt below. Your plan will be activated upon verification of your payment.
                         </p>
@@ -502,6 +516,29 @@ const Checkout = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* JazzCash QR Code Modal */}
+            <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+                <DialogContent className="sm:max-w-[400px] p-4 flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-xl animate-fade-in-scale">
+                    <DialogHeader className="w-full text-center mb-4">
+                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">JazzCash QR Code</DialogTitle>
+                        <DialogDescription className="text-gray-600 dark:text-gray-300">Scan this QR code to make your payment.</DialogDescription>
+                    </DialogHeader>
+                    <div className="w-full max-w-[300px] aspect-square flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
+                        <img
+                            src="/images/jazzcash_qr.jpg"
+                            alt="JazzCash QR Code"
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
+                    <DialogFooter className="mt-6 w-full flex justify-center">
+                        <Button onClick={() => setShowQrModal(false)} className="bg-purple-600 hover:bg-purple-700 text-white">
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            {/* End JazzCash QR Code Modal */}
         </div>
     );
 };
