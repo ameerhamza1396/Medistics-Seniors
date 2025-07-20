@@ -1048,10 +1048,9 @@ const testimonials = [
       </section>
 
 
-<section id="testimonials" className="min-h-screen flex flex-col justify-center items-center py-16 px-0 lg:px-0
-                                 bg-gradient-to-r from-purple-50 via-white to-pink-50
-                                 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-white overflow-hidden">
-  <div className="container mx-auto max-w-7xl text-center mb-12 px-4 lg:px-8">
+<section id="testimonials" className="hidden md:flex min-h-screen flex-col justify-center items-center py-16 px-0 lg:px-0
+                                 bg-gradient-to-r from-purple-50 via-white to-pink-50
+                                 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-white overflow-hidden">  <div className="container mx-auto max-w-7xl text-center mb-12 px-4 lg:px-8">
     <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 animate-fade-in-down">
       What Our Aspirants Say
     </h2>
