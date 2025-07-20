@@ -187,8 +187,8 @@ useEffect(() => {
       gradient: 'from-teal-500 to-green-500',
       bgGradient: 'from-teal-800/50 to-green-50',
       darkBgGradient: 'from-teal-900/30 to-green-900/10',
-      // tag: 'Limited Time Free', // Added tag for Mock Test
-      // tagColor: 'bg-red-500 text-white animate-pulse'
+      tag: 'Free now', // Added tag for Mock Test
+      tagColor: 'bg-red-500 text-white animate-pulse'
     },
     
     {
@@ -291,8 +291,8 @@ useEffect(() => {
       gradient: 'from-purple-500 to-pink-500',
       bgGradient: 'from-purple-50 to-pink-50',
       darkBgGradient: 'from-purple-900/30 to-pink-900/30',
-      tag: 'For Iconic & Premium accounts', // Added tag
-      tagColor: 'bg-green-500 text-white'
+      tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
+      tagColor: 'bg-transparent' // Eye-catching tag color and animation
     },
     {
       title: 'AI Chatbot',
@@ -303,8 +303,8 @@ useEffect(() => {
       gradient: 'from-green-500 to-emerald-500',
       bgGradient: 'from-green-50 to-emerald-50',
       darkBgGradient: 'from-green-900/30 to-emerald-900/30',
-      tag: 'For Premium Account', // Added tag
-      tagColor: 'bg-indigo-500 text-white'
+      tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
+      tagColor: 'bg-transparent' // Eye-catching tag color and animation
     },
     {
       title: 'Hire a Tutor',
