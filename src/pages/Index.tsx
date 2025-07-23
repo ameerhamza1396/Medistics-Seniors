@@ -951,10 +951,10 @@ const testimonials = [
   </div>
 </section>
 
-      {/* New Section: Founding Team */}
+{/* New Section: Founding Team */}
 <section id="founding-team" className="min-h-screen flex flex-col items-center justify-center py-16 px-4 lg:px-8
-                                    bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 
-                                    dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 text-gray-900 dark:text-white">
+                                         bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 
+                                         dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 text-gray-900 dark:text-white">
   <div className="container mx-auto max-w-7xl text-center">
     <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-12 animate-fade-in-up bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
       Meet Our Founding Team
@@ -976,7 +976,8 @@ const testimonials = [
               src={member.image}
               alt={member.name}
               className="absolute inset-0 w-full h-full object-cover filter grayscale group-hover:grayscale-0 
-                         transition-all duration-700 ease-in-out transform group-hover:scale-105"
+                          transition-all duration-700 ease-in-out transform group-hover:scale-105"
+              loading="lazy"
             />
             {/* Optional: Overlay for subtle effect on hover */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
