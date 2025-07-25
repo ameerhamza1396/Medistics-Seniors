@@ -22,7 +22,8 @@ import {
   Book, // New icon for Study Materials
   Instagram, // New icon for Instagram
   Construction, // Icon for maintenance message
-  Bookmark
+  Bookmark,
+  ScrollText, 
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useTheme } from 'next-themes';
@@ -306,6 +307,18 @@ useEffect(() => {
       tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
       tagColor: 'bg-transparent' // Eye-catching tag color and animation
     },
+      {
+    title: 'Full-Length Paper',
+    description: 'Practice timed exams with mixed subjects', // A concise description for FLP
+    icon: ScrollText, // Using ScrollText icon, as it fits the idea of a long paper
+    link: '/flp',
+    type: 'internal',
+    gradient: 'from-blue-500 to-cyan-500', // A new gradient for FLP
+    bgGradient: 'from-blue-50 to-cyan-50',
+    darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
+    tag: <img src="\lovable-uploads\star.gif" alt="premium" width={30} />, // Changed alt to "premium" as FLP is premium
+    tagColor: 'bg-transparent'
+  },
     {
       title: 'Hire a Tutor',
       description: 'Coming Soon',

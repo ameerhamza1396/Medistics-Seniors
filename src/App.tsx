@@ -48,6 +48,9 @@ import InternshipApplication from '@/pages/InternshipApplication';
 import SavedMCQsPage from '@/pages/SavedMCQsPage';
 import Announcements from '@/pages/Announcements';
 import ContactUsPage from '@/pages/ContactUsPage';
+import FLP from '@/pages/FLP';
+import FLPResults from '@/pages/FLPResults';
+import FLPResultDetail from '@/components/FLPResultDetail'; // Adjust path if needed
 import './App.css';
 
 // Import the VideoCallProvider
@@ -116,6 +119,9 @@ function App() {
                 <Route path="/saved-mcqs" element={<SavedMCQsPage />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/contact-us" element={<ContactUsPage />} />
+                <Route path="/flp" element={<FLP />} />
+                <Route path="/flp-result" element={<FLPResults />} />
+                <Route path="/results/flp/:id" element={<FLPResultDetail />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
