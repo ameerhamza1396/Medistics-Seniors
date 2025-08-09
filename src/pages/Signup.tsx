@@ -128,7 +128,7 @@ const Signup = () => {
           description: "Please check your email to verify your account.",
           duration: 7000,
         });
-        navigate('/verify-email'); // Redirect to a new page asking the user to check their inbox
+        navigate('/verify-email', { state: { email: formData.email } }); // Redirect to a new page asking the user to check their inbox
       } else if (error) {
           if (error.message.includes("already registered")) {
               toast({

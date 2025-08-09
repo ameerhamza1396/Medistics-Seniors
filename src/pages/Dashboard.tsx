@@ -34,6 +34,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react'; // Import useEffect
 import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager'; // Adjust path as needed
+import AuthErrorDisplay from '@/components/AuthErrorDisplay';
 
 const Dashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -52,6 +53,16 @@ const Dashboard = () => {
     year_of_study: number;
     plan?: string; // Add plan as optional
   };
+
+  const Dashboard = () => {
+  return (
+    <div>
+      <AuthErrorDisplay />
+      <h1>Welcome to your Dashboard</h1>
+      <p>This is your content.</p>
+    </div>
+  );
+};
 
   // Get user profile data
   const { data: profile, isLoading: profileLoading } = useQuery<Profile | null>({
@@ -399,7 +410,7 @@ useEffect(() => {
   };
 
   // Determine the user's plan and its display name
-  const rawUserPlan = profile?.plan?.toLowerCase() || 'free'; // Ensure lowercase for lookup
+  const rawUserPlan = profile?.plan?.toLowerCase() || 'loading'; // Ensure lowercase for lookup
   const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
 
   // Get the color classes for the current plan

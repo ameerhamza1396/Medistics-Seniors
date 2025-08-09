@@ -48,7 +48,11 @@ export const CSVImporter = () => {
     'English': [
       'Tenses & Sentence Structure', 'Vocabulary (max 25-30 words)', 'Punctuation & Style',
       'spelling', 'Adverb', 'Adjective', 'Verb'
-    ]
+    ],
+       'Logical Reasoning': [
+     'Letter and Symbol Series', 'Logical Deductions', 'Critical Thinking', 
+     'Cause and Effect', 'Logical Problems', 'Course of Action'
+   ]
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

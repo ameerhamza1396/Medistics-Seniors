@@ -51,6 +51,8 @@ import ContactUsPage from '@/pages/ContactUsPage';
 import FLP from '@/pages/FLP';
 import FLPResults from '@/pages/FLPResults';
 import FLPResultDetail from '@/components/FLPResultDetail'; // Adjust path if needed
+import ForgotPassword from '@/pages/ForgotPassword'; // Assuming you have a custom hook for authentication
+import UpdatePassword from '@/pages/UpdatePassword'; // Add this import
 import './App.css';
 
 // Import the VideoCallProvider
@@ -122,6 +124,8 @@ function App() {
                 <Route path="/flp" element={<FLP />} />
                 <Route path="/flp-result" element={<FLPResults />} />
                 <Route path="/results/flp/:id" element={<FLPResultDetail />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/update-password" element={<UpdatePassword />} /> {/* This is the new route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
