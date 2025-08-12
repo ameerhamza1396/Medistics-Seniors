@@ -65,6 +65,7 @@ export const Admin12: React.FC = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
   const [selectedChapterId, setSelectedChapterId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [currentSearchQuery, setCurrentSearchQuery] = useState<string>(''); // New state for actual search query
 
   // State for managing the "Add New Question" dialog
   const [isAddingNewQuestion, setIsAddingNewQuestion] = useState(false);
@@ -189,8 +190,8 @@ export const Admin12: React.FC = () => {
         query = query.eq('chapter_id', selectedChapterId);
       }
       // Filter by search term (case-insensitive) in the question text
-      if (searchTerm) {
-        query = query.ilike('question', `%${searchTerm}%`);
+      if (currentSearchQuery) { // Use currentSearchQuery here
+        query = query.ilike('question', `%${currentSearchQuery}%`);
       }
 
       const { data, error } = await query.order('id', { ascending: false }); // Order by ID descending for newest first
@@ -209,14 +210,18 @@ export const Admin12: React.FC = () => {
   useEffect(() => {
     // Fetch MCQs only if (subject AND chapter are selected) OR a search term is active.
     // Also, ensure the user role is determined before fetching, to avoid unnecessary calls.
-    // The `loading` dependency was removed to prevent infinite loops.
-    if (userRole === 'admin' && ((selectedSubjectId && selectedChapterId) || searchTerm)) {
+    if (userRole === 'admin' && ((selectedSubjectId && selectedChapterId) || currentSearchQuery)) {
       fetchMcqsData();
     } else if (userRole === 'admin') {
       // If user is admin but conditions for fetching are not met, clear displayed MCQs
       setMcqs([]);
     }
-  }, [selectedSubjectId, selectedChapterId, searchTerm, subjects, userRole, toast]); 
+  }, [selectedSubjectId, selectedChapterId, currentSearchQuery, subjects, userRole, toast]); 
+
+  // Handler for search button click
+  const handleSearchButtonClick = () => {
+    setCurrentSearchQuery(searchTerm); // Set currentSearchQuery to trigger fetch
+  };
 
   // --- Handlers for Add New Question Dialog ---
 
@@ -295,7 +300,7 @@ export const Admin12: React.FC = () => {
         correctAnswer: '', explanation: '', subject: '', chapter: '', difficulty: 'medium'
       });
       // Re-fetch MCQs if current filters allow, or just clear if no filters are active
-      if ((selectedSubjectId && selectedChapterId) || searchTerm) {
+      if ((selectedSubjectId && selectedChapterId) || currentSearchQuery) {
         await fetchMcqsData();
       } else {
         setMcqs([]); // Clear the list if no filters applied and new question added
@@ -410,7 +415,7 @@ export const Admin12: React.FC = () => {
       setIsEditingQuestion(false); // Close the dialog
       setCurrentEditingQuestion(null); // Clear the editing question
       // Re-fetch MCQs if current filters allow, or just clear if no filters are active
-      if ((selectedSubjectId && selectedChapterId) || searchTerm) {
+      if ((selectedSubjectId && selectedChapterId) || currentSearchQuery) {
         await fetchMcqsData();
       } else {
         // If current filters are empty, and a question was updated, it means it's no longer shown
@@ -453,7 +458,7 @@ export const Admin12: React.FC = () => {
       setDeleteConfirmationOpen(false); // Close the dialog
       setQuestionToDeleteId(null); // Clear the ID
       // Re-fetch MCQs if current filters allow, or just clear if no filters are active
-      if ((selectedSubjectId && selectedChapterId) || searchTerm) {
+      if ((selectedSubjectId && selectedChapterId) || currentSearchQuery) {
         await fetchMcqsData();
       } else {
         // If current filters are empty, and a question was deleted, it's no longer there
@@ -555,17 +560,22 @@ export const Admin12: React.FC = () => {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="search-term" className="text-gray-700 dark:text-gray-300">Search by Question Text</Label>
-            <Input
-              id="search-term"
-              type="text"
-              placeholder="Search questions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              disabled={loading}
-              className="bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
-            />
+          <div className="space-y-2 col-span-1 md:col-span-1 flex items-end"> {/* Adjusted column span and alignment */}
+            <div className="flex-grow"> {/* Allows input to take available space */}
+              <Label htmlFor="search-term" className="text-gray-700 dark:text-gray-300">Search by Question Text</Label>
+              <Input
+                id="search-term"
+                type="text"
+                placeholder="Search questions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                disabled={loading}
+                className="bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+              />
+            </div>
+            <Button onClick={handleSearchButtonClick} disabled={loading} className="ml-2 bg-purple-600 hover:bg-purple-700 text-white">
+              <Search className="w-4 h-4 mr-2" /> Search
+            </Button>
           </div>
 
           <div className="md:col-span-3 flex justify-end mt-4">
@@ -587,7 +597,7 @@ export const Admin12: React.FC = () => {
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               <p className="ml-3 text-gray-600 dark:text-gray-400">Loading data...</p> {/* Changed message */}
             </div>
-          ) : ((selectedSubjectId && selectedChapterId) || searchTerm) ? ( // Only show if filters active
+          ) : ((selectedSubjectId && selectedChapterId) || currentSearchQuery) ? ( // Use currentSearchQuery here
             mcqs.length === 0 ? (
               <p className="text-center text-gray-500 dark:text-gray-400 py-8">No questions found matching your criteria.</p>
             ) : (
