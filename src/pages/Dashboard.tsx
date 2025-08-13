@@ -190,31 +190,29 @@ useEffect(() => {
       darkBgGradient: 'from-blue-900/30 to-cyan-900/30'
     },
     
-    {
-      title: 'Mock Test',
-      description: 'New Test Unlocks on every Sunday',
-      icon: Calendar,
-      link: '/mock-test',
-      type: 'internal',
-      gradient: 'from-teal-500 to-green-500',
-      bgGradient: 'from-teal-800/50 to-green-50',
-      darkBgGradient: 'from-teal-900/30 to-green-900/10',
-      tag: 'Free now', // Added tag for Mock Test
-      tagColor: 'bg-red-500 text-white animate-pulse'
-    },
+  //   {
+  //     title: 'Mock Test',
+  //     description: 'New Test Unlocks on every Sunday',
+  //     icon: Calendar,
+  //     link: '/mock-test',
+  //     type: 'internal',
+  //     gradient: 'from-teal-500 to-green-500',
+  //     bgGradient: 'from-teal-800/50 to-green-50',
+  //     darkBgGradient: 'from-teal-900/30 to-green-900/10',
+  //     tag: 'Free now', // Added tag for Mock Test
+  //     tagColor: 'bg-red-500 text-white animate-pulse'
+  //   },
     
-    {
-    title: 'Mock Test Results',
-    description: 'View your past test performance',
-    icon: Award, // Changed icon to Award for results
-    link: '/test-summary', // Updated link to the new results page
-    type: 'internal',
-    gradient: 'from-purple-500 to-indigo-500', // Adjusted gradient for results
-    bgGradient: 'from-purple-800/50 to-indigo-50',
-    darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
-    // tag: 'Live Now',
-    // tagColor: 'bg-red-500 text-white animate-pulse',
-  },
+  //   {
+  //   title: 'Mock Test Results',
+  //   description: 'View your past test performance',
+  //   icon: Award, // Changed icon to Award for results
+  //   link: '/test-summary', // Updated link to the new results page
+  //   type: 'internal',
+  //   gradient: 'from-purple-500 to-indigo-500', // Adjusted gradient for results
+  //   bgGradient: 'from-purple-800/50 to-indigo-50',
+  //   darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
+  // },
 // {
 //     title: 'News & Announcements',
 //     description: 'Stay updated with the latest news and important announcements.',
