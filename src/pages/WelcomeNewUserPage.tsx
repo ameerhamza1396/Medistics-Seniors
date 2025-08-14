@@ -3,6 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { User as UserIcon } from 'lucide-react';
+import Seo from '@/components/Seo'; // Import the Seo component
+
 // No useQuery or supabase import needed on this page
 
 const WelcomeNewUserPage = () => {
@@ -34,6 +36,11 @@ const WelcomeNewUserPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-950 px-4 text-center">
+      <Seo
+        title="Welcome to Medistics App"
+        description="Welcome to Medistics App! Get started with your personalized MDCAT preparation journey."
+        canonical="https://medistics.app/welcome-new-user"
+      />
       <UserIcon className="w-20 h-20 text-purple-600 dark:text-purple-400 mb-6 animate-bounce-slow" />
       <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
         Welcome, <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent animate-pulse">{displayName}</span>!

@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
+import Seo from '@/components/Seo'; // Import the Seo component
 
 // Assuming MCQ interface is available from mcqData or defined here
 interface MCQ {
@@ -172,6 +173,11 @@ const SavedMCQsPage = () => {
 
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+      <Seo
+        title="Saved MCQs"
+        description="Access and review your saved MCQs on Medistics App. Organize your favorite or challenging questions for focused revision."
+        canonical="https://medistics.app/saved-mcqs"
+      />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">

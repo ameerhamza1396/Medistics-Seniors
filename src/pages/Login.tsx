@@ -8,6 +8,7 @@ import { ArrowLeft, Mail, Lock, Eye, EyeOff, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
 import googleIcon from '@/public/googlelogo.svg';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -56,6 +57,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900 flex items-center justify-center p-4">
+      <Seo
+        title="Login"
+        description="Log in to your Medistics App account to access personalized MDCAT preparation tools, MCQs, AI study assistant, and more."
+        canonical="https://medistics.app/login"
+      />
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">

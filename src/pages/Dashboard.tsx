@@ -35,6 +35,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react'; // Import useEffect
 import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager'; // Adjust path as needed
 import AuthErrorDisplay from '@/components/AuthErrorDisplay';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const Dashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -443,6 +444,11 @@ if (authLoading || profileLoading || userStatsLoading) {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+      <Seo
+        title="Dashboard"
+        description="Your personalized Medistics App dashboard. Track your progress, review past quizzes, and plan your study schedule effectively."
+        canonical="https://medistics.app/dashboard"
+      />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">

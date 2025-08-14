@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const CareerAmbassador = () => {
     const { theme, setTheme } = useTheme();
@@ -180,6 +181,11 @@ const CareerAmbassador = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+            <Seo
+            title="Career Opportunities"
+            description="Explore exciting career opportunities at Medistics App. Join our team and contribute to revolutionizing medical education."
+            canonical="https://medistics.app/career"
+            />
             {/* Header */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">

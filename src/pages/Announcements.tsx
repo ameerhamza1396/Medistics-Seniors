@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const AnnouncementsPage = () => {
     const { theme, setTheme } = useTheme();
@@ -152,6 +153,11 @@ const AnnouncementsPage = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+            <Seo
+            title="Announcements"
+            description="Stay updated with the latest news, updates, and important announcements from Medistics App."
+            canonical="https://medistics.app/announcements"
+            />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-blue-200 dark:border-blue-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
                     <Link to="/" className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">

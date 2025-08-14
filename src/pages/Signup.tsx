@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const Signup = () => {
   const { signUp, user, signInWithGoogle } = useAuth();
@@ -178,6 +179,11 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+      <Seo
+        title="Sign Up"
+        description="Create a free account on Medistics App to start your MDCAT preparation journey with AI-powered quizzes, mock tests, and study materials."
+        canonical="https://medistics.app/signup"
+      />
       <div className="w-full max-w-md space-y-6 animate-fade-in">
         <div className="text-center">
           <Link to="/" className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-6">

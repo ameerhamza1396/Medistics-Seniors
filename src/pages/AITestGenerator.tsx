@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { Checkbox } from '@/components/ui/checkbox'; // Assuming you have a Checkbox component
+import Seo from '@/components/Seo'; // Import the Seo component
+
 
 interface Question {
   question: string;
@@ -238,6 +240,11 @@ const AITestGenerator: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 text-gray-900 dark:text-gray-100">
+      <Seo
+        title="AI Test Generator"
+        description="Create custom practice tests with AI-generated questions tailored to your needs on Medistics App for effective MDCAT preparation."
+        canonical="https://medistics.app/ai/test-generator"
+      />
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
           <Link to="/dashboard" className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">

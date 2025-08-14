@@ -15,6 +15,7 @@ import React, { useState, useEffect } from 'react'; // Added useEffect
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client'; // Assuming your Supabase client is here
+import Seo from '@/components/Seo'; // Import the Seo component
 
 // Shadcn UI components for the Dialog
 import {
@@ -278,6 +279,11 @@ const Checkout = () => {
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+            <Seo
+            title="Checkout"
+            description="Complete your secure payment and subscribe to Medistics App's premium plans to unlock full features for MDCAT preparation."
+            canonical="https://medistics.app/checkout"
+            />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
                     <div className="flex items-center space-x-3">

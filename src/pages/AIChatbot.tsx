@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
+import Seo from '@/components/Seo'; // Import the Seo component
 
 interface ChatMessage {
   sender: 'user' | 'ai';
@@ -344,6 +345,11 @@ const DrSultanChat: React.FC = () => {
 
   return (
     <div className="h-screen w-full flex bg-white dark:bg-gray-900 font-sans">
+      <Seo
+        title="Dr Sultan"
+        description="Get instant answers and study help for medical questions through interactive chat with Dr Sultan, Medistics App's AI Chatbot."
+        canonical="https://medistics.app/ai/chatbot"
+      />
       {/* Global CSS for typing indicator */}
       <style>{`
         @keyframes pulse-dot {

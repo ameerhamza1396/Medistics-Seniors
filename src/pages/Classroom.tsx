@@ -11,6 +11,7 @@ import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import P
 // Import the new components
 import { GroupsDisplay } from '@/components/classroom/GroupsDisplay';
 import { MessageScreen } from '@/components/classroom/MessageScreen';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 // Type definitions (re-defined here for component self-containment)
 interface Classroom {
@@ -619,6 +620,11 @@ export const Classroom = () => {
   if (!user) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4 text-center">
+        <Seo
+          title="Classroom"
+          description="Join interactive virtual classrooms on Medistics App for live lectures, doubt clearing, and collaborative study sessions."
+          canonical="https://medistics.app/classroom"
+        />
         <Card className="w-full max-w-md bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-purple-200 dark:border-purple-800 shadow-lg p-6">
           <CardHeader className="mb-4">
             <Lock className="w-16 h-16 mx-auto text-purple-600 dark:text-purple-400 mb-4" />

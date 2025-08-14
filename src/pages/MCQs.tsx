@@ -15,6 +15,7 @@ import { getUserStats, Subject, Chapter } from '@/utils/mcqData';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
+import Seo from '@/components/Seo'; // Import the Seo component
 
 type Screen = 'subjects' | 'chapters' | 'settings' | 'quiz';
 
@@ -187,6 +188,11 @@ if (authLoading || profileLoading) {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+    <Seo
+      title="MCQs Practice"
+      description="Practice thousands of MCQs for MDCAT and other medical entrance exams with Medistics App. Track your progress and improve your scores."
+      canonical="https://medistics.app/mcqs"
+    />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex justify-between items-center max-w-full">

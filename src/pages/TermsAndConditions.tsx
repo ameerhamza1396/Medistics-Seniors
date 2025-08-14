@@ -5,6 +5,8 @@ import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 // If you are using react-markdown
 // import ReactMarkdown from 'react-markdown';
+import Seo from '@/components/Seo'; // Import the Seo component
+
 
 const TermsAndConditions = () => {
   const { theme, setTheme } = useTheme();
@@ -151,6 +153,11 @@ If you have any questions about these Terms and Conditions, you can contact us:
 
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+      <Seo
+        title="Terms and Conditions"
+        description="Read the terms and conditions for using Medistics App services. Your agreement to these terms is required for usage."
+        canonical="https://medistics.app/terms"
+      />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const NotFound = () => {
   const { theme, setTheme } = useTheme();
@@ -11,6 +12,11 @@ const NotFound = () => {
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="text-center max-w-md w-full">
+        <Seo
+          title="Page Not Found"
+          description="The page you are looking for on Medistics App does not exist."
+          canonical="https://medistics.app/404" // Standard practice for 404 pages
+        />
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <Link to="/" className="inline-flex items-center text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">

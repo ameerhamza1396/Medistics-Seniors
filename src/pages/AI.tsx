@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Bot, Zap, Brain, FileText, Moon, Sun, MessageSquare } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query'; // Import useQuery
-import { supabase } from '@/integrations/supabase/client'; // Import supabase client
-import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import ProfileDropdown
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ProfileDropdown } from '@/components/ProfileDropdown';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const AI = () => {
   const { theme, setTheme } = useTheme();
@@ -64,6 +65,13 @@ const AI = () => {
 
   return (
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+      {/* Add the Seo component here */}
+      <Seo
+        title="AI Study Assistant"
+        description="Leverage Medistics App's AI Study Assistant for personalized learning, including an AI Chatbot and AI Test Generator for medical exam preparation."
+        canonical="https://www.medistics.app/ai" // Replace with your actual domain if applicable
+      />
+
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
@@ -87,8 +95,8 @@ const AI = () => {
             >
               {userPlanDisplayName}
             </Badge>
-              {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
-              <ProfileDropdown />
+            {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
+            <ProfileDropdown />
           </div>
         </div>
       </header>

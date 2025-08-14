@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { FLPQuiz } from '@/components/FLPQuiz';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 // Define a type for subjects with a specific structure
 interface SubjectData {
@@ -310,6 +311,12 @@ const FLP = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center relative"> {/* Added relative for positioning */}
+            <Seo
+            title="Full-Length Papers (FLP)"
+            description="Attempt full-length papers (FLPs) on Medistics App to simulate real MDCAT exams and thoroughly assess your preparation."
+            canonical="https://medistics.app/flp"
+            />
+            
             {/* Top Right Button for Previous Attempts */}
 
             <Card className="w-full max-w-2xl bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 border-purple-200 dark:border-purple-800 backdrop-blur-sm shadow-xl">

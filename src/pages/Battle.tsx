@@ -12,6 +12,8 @@ import { Sun, Moon, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import Seo from '@/components/Seo'; // Import the Seo component
+
 
 // Define the possible states for the battle flow
 type BattleState = 'lobby' | 'room' | 'game' | 'results';
@@ -218,6 +220,11 @@ const Battle: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20">
+    <Seo
+      title="Battle & Challenges"
+      description="Engage in competitive MCQ battles with other students on Medistics App. Test your knowledge and climb the leaderboard."
+      canonical="https://medistics.app/battle"
+    />
       {/* Header section with responsive padding and flexible layout */}
       <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-red-200 dark:border-red-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

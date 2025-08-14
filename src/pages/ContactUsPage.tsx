@@ -29,6 +29,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 // ProfileDropdown is not used in the provided code, so it's commented out.
 // import { ProfileDropdown } from '@/components/ProfileDropdown';
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const ContactUsPage = () => {
     const { user } = useAuth();
@@ -158,6 +159,11 @@ const ContactUsPage = () => {
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+            <Seo
+            title="Contact Us"
+            description="Get in touch with Medistics App customer support for any queries, feedback, or assistance."
+            canonical="https://medistics.app/contact-us"
+            />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
                     <Link to="/dashboard" className="flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">

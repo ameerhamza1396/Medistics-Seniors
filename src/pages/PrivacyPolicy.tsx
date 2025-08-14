@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import Seo from '@/components/Seo'; // Import the Seo component
+
 
 const PrivacyPolicy = () => { // Note: For semantic clarity, in a real app, this component might be renamed 'PrivacyPolicy'
     const { theme, setTheme } = useTheme();
@@ -419,6 +421,11 @@ If you have any questions about this Privacy Policy, You can contact us:
 
     return (
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
+            <Seo
+            title="Privacy Policy"
+            description="Understand how Medistics App collects, uses, and protects your personal data in our comprehensive Privacy Policy."
+            canonical="https://medistics.app/privacypolicy"
+            />
             {/* Header */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">

@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Seo from '@/components/Seo'; // Import the Seo component
 
 const MockTest = () => {
   const { user } = useAuth();
@@ -490,6 +491,11 @@ const MockTest = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 flex flex-col">
+      <Seo
+      title="Mock Test"
+      description="Take full-length mock tests on Medistics App to simulate real MDCAT exam conditions and evaluate your readiness."
+      canonical="https://medistics.app/mock-test"
+    />
       {/* Header - Reused from Dashboard */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
