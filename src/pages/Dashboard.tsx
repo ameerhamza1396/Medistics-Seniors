@@ -19,30 +19,29 @@ import {
   Award,
   Briefcase,
   BellRing,
-  Book, // New icon for Study Materials
-  Instagram, // New icon for Instagram
-  Construction, // Icon for maintenance message
+  Book,
+  Construction,
   Bookmark,
-  ScrollText, 
+  ScrollText,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { LeaderboardPreview } from '@/components/dashboard/LeaderboardPreview';
 import { StudyAnalytics } from '@/components/dashboard/StudyAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect } from 'react'; // Import useEffect
-import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager'; // Adjust path as needed
+import { useEffect } from 'react';
+import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager';
 import AuthErrorDisplay from '@/components/AuthErrorDisplay';
-import Seo from '@/components/Seo'; // Import the Seo component
+import Seo from '@/components/Seo';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import SignInPrompt from '@/components/SignInPrompt'; // Import SignInPrompt
 
 const Dashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
-  // Define the profile type to include the optional plan property
   type Profile = {
     avatar_url: string;
     created_at: string;
@@ -52,20 +51,9 @@ const Dashboard = () => {
     updated_at: string;
     username: string;
     year_of_study: number;
-    plan?: string; // Add plan as optional
+    plan?: string;
   };
 
-  const Dashboard = () => {
-  return (
-    <div>
-      <AuthErrorDisplay />
-      <h1>Welcome to your Dashboard</h1>
-      <p>This is your content.</p>
-    </div>
-  );
-};
-
-  // Get user profile data
   const { data: profile, isLoading: profileLoading } = useQuery<Profile | null>({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -76,7 +64,6 @@ const Dashboard = () => {
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
-
       if (error) {
         console.error('Error fetching profile:', error);
         return null;
@@ -87,20 +74,15 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Get user statistics
   const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['user-stats', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-
       console.log('Fetching user stats for:', user.id);
-
-      // Get user answers
       const { data: answers, error: answersError } = await supabase
         .from('user_answers')
         .select('*')
         .eq('user_id', user.id);
-
       if (answersError) {
         console.error('Error fetching answers:', answersError);
         return {
@@ -113,25 +95,19 @@ const Dashboard = () => {
           totalBattles: 0
         };
       }
-
       const totalQuestions = answers?.length || 0;
       const correctAnswers = answers?.filter(a => a.is_correct)?.length || 0;
       const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-
-      // Calculate streak
       const answerDates = answers?.map(a => new Date(a.created_at).toDateString()) || [];
       const uniqueDates = [...new Set(answerDates)].sort().reverse();
-
       let currentStreak = 0;
       const today = new Date().toDateString();
       const yesterday = new Date(Date.now() - 86400000).toDateString();
-
       if (uniqueDates.includes(today) || uniqueDates.includes(yesterday)) {
         for (let i = 0; i < uniqueDates.length; i++) {
           const date = new Date(uniqueDates[i]);
           const expectedDate = new Date();
           expectedDate.setDate(expectedDate.getDate() - i);
-
           if (date.toDateString() === expectedDate.toDateString()) {
             currentStreak++;
           } else {
@@ -139,16 +115,12 @@ const Dashboard = () => {
           }
         }
       }
-
-      // Get battle results for rank points
       const { data: battles } = await supabase
         .from('battle_results')
         .select('*')
         .eq('user_id', user.id);
-
       const battlesWon = battles?.filter(b => b.rank === 1)?.length || 0;
       const rankPoints = correctAnswers * 10 + currentStreak * 5 + accuracy;
-
       return {
         totalQuestions,
         correctAnswers,
@@ -162,23 +134,14 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Effect for redirection based on user profile
-useEffect(() => {
-  // Only proceed if:
-  // 1. Authentication is complete and a user is logged in (!authLoading && user).
-  // 2. Profile data has finished loading (!profileLoading).
-  if (!authLoading && user && !profileLoading) {
-    // Redirect only if the 'username' field in the fetched profile is null.
-    // This implicitly covers the case where 'profile' itself might be null,
-    // as 'profile?.username' would then resolve to undefined, which is not null.
-    // If you need to redirect if 'profile' is entirely null, you'll need to add '!profile' back.
-    if (profile?.username === null) {
-      navigate('/welcome-new-user');
+  useEffect(() => {
+    if (!authLoading && user && !profileLoading) {
+      if (profile?.username === null) {
+        navigate('/welcome-new-user');
+      }
     }
-  }
-}, [user, profile, profileLoading, authLoading, navigate]);
+  }, [user, profile, profileLoading, authLoading, navigate]);
 
-  // Quick Actions - now with Mock Test and new additions
   const quickActions = [
     {
       title: 'Practice MCQs',
@@ -190,62 +153,16 @@ useEffect(() => {
       bgGradient: 'from-blue-50 to-cyan-50',
       darkBgGradient: 'from-blue-900/30 to-cyan-900/30'
     },
-    
-  //   {
-  //     title: 'Mock Test',
-  //     description: 'New Test Unlocks on every Sunday',
-  //     icon: Calendar,
-  //     link: '/mock-test',
-  //     type: 'internal',
-  //     gradient: 'from-teal-500 to-green-500',
-  //     bgGradient: 'from-teal-800/50 to-green-50',
-  //     darkBgGradient: 'from-teal-900/30 to-green-900/10',
-  //     tag: 'Free now', // Added tag for Mock Test
-  //     tagColor: 'bg-red-500 text-white animate-pulse'
-  //   },
-    
-  //   {
-  //   title: 'Mock Test Results',
-  //   description: 'View your past test performance',
-  //   icon: Award, // Changed icon to Award for results
-  //   link: '/test-summary', // Updated link to the new results page
-  //   type: 'internal',
-  //   gradient: 'from-purple-500 to-indigo-500', // Adjusted gradient for results
-  //   bgGradient: 'from-purple-800/50 to-indigo-50',
-  //   darkBgGradient: 'from-purple-900/30 to-indigo-900/10',
-  // },
-// {
-//     title: 'News & Announcements',
-//     description: 'Stay updated with the latest news and important announcements.',
-//     icon: BellRing,
-//     link: '/announcements',
-//     type: 'internal',
-//     gradient: 'from-amber-500 to-orange-600', 
-//     bgGradient: 'from-amber-50 to-orange-50', 
-// darkBgGradient: 'from-red-900/20 to-orange-900/20', 
-//     tagColor: 'bg-orange-700 text-white' 
-// },
-
-{
-  title: 'Saved MCQs',
-  description: 'Review your bookmarked questions',
-  icon: Bookmark, // Make sure to import Bookmark from 'lucide-react'
-  link: '/saved-mcqs',
-  type: 'internal',
-  gradient: 'from-purple-500 to-pink-500', // Example gradient, adjust as desired
-  bgGradient: 'from-purple-50 to-pink-50',
-  darkBgGradient: 'from-purple-900/30 to-pink-900/30'
-},
-    // {
-    //   title: 'Study Materials',
-    //   description: 'Access notes, videos, and resources',
-    //   icon: Book,
-    //   link: '/study-materials',
-    //   type: 'internal',
-    //   gradient: 'from-orange-500 to-rose-500',
-    //   bgGradient: 'from-orange-50 to-rose-50',
-    //   darkBgGradient: 'from-orange-900/20 to-amber-900/10'
-    // },
+    {
+      title: 'Saved MCQs',
+      description: 'Review your bookmarked questions',
+      icon: Bookmark,
+      link: '/saved-mcqs',
+      type: 'internal',
+      gradient: 'from-purple-500 to-pink-500',
+      bgGradient: 'from-purple-50 to-pink-50',
+      darkBgGradient: 'from-purple-900/30 to-pink-900/30'
+    },
     {
       title: 'Leaderboard',
       description: 'See your rank among peers',
@@ -256,21 +173,21 @@ useEffect(() => {
       bgGradient: 'from-yellow-50 to-amber-50',
       darkBgGradient: 'from-yellow-900/30 to-amber-900/30'
     },
-        {
-      title: 'Summer Internship 2025', // New Card Title
-      description: 'Apply for the Medistics Summer Internship Program!', // Description
-      icon: Briefcase, // A relevant icon, assuming you have it imported from 'lucide-react'
-      link: '/summerinternship2025', // Link to your internship application page
+    {
+      title: 'Summer Internship 2025',
+      description: 'Apply for the Medistics Summer Internship Program!',
+      icon: Briefcase,
+      link: '/summerinternship2025',
       type: 'internal',
-      gradient: 'from-blue-500 to-cyan-500', // Unique gradient
+      gradient: 'from-blue-500 to-cyan-500',
       bgGradient: 'from-blue-50 to-cyan-50',
       darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
-      tag: 'Open now!', // The requested tag
-      tagColor: 'bg-red-500 text-white animate-pulse' // Eye-catching tag color and animation
+      tag: 'Open now!',
+      tagColor: 'bg-red-500 text-white animate-pulse'
     },
-        {
+    {
       title: 'Classrooms',
-      description: 'Join or create study groups (Under Maintenance)', // Updated description
+      description: 'Join or create study groups (Under Maintenance)',
       icon: Users,
       link: '/classroom',
       type: 'internal',
@@ -278,7 +195,6 @@ useEffect(() => {
       bgGradient: 'from-indigo-50 to-purple-50',
       darkBgGradient: 'from-purple-900/20 to-orange-900/20',
     },
-    
     {
       title: 'Battle Arena',
       description: 'Compete with friends in medical quizzes',
@@ -291,7 +207,6 @@ useEffect(() => {
     },
   ];
 
-  // New Premium Perks section - filtered for disabled features
   const premiumPerks = [
     {
       title: 'AI Test Generator',
@@ -303,11 +218,11 @@ useEffect(() => {
       bgGradient: 'from-purple-50 to-pink-50',
       darkBgGradient: 'from-purple-900/30 to-pink-900/30',
       tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
-      tagColor: 'bg-transparent' // Eye-catching tag color and animation
+      tagColor: 'bg-transparent'
     },
     {
       title: 'AI Chatbot',
-      description: 'Get instant help from AI tutor', // Updated description
+      description: 'Get instant help from AI tutor',
       icon: Zap,
       link: '/ai/chatbot',
       type: 'internal',
@@ -315,20 +230,20 @@ useEffect(() => {
       bgGradient: 'from-green-50 to-emerald-50',
       darkBgGradient: 'from-green-900/30 to-emerald-900/30',
       tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
-      tagColor: 'bg-transparent' // Eye-catching tag color and animation
+      tagColor: 'bg-transparent'
     },
-      {
-    title: 'Full-Length Paper',
-    description: 'Practice timed exams with mixed subjects', // A concise description for FLP
-    icon: ScrollText, // Using ScrollText icon, as it fits the idea of a long paper
-    link: '/flp',
-    type: 'internal',
-    gradient: 'from-blue-500 to-cyan-500', // A new gradient for FLP
-    bgGradient: 'from-blue-50 to-cyan-50',
-    darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
-    tag: <img src="\lovable-uploads\star.gif" alt="premium" width={30} />, // Changed alt to "premium" as FLP is premium
-    tagColor: 'bg-transparent'
-  },
+    {
+      title: 'Full-Length Paper',
+      description: 'Practice timed exams with mixed subjects',
+      icon: ScrollText,
+      link: '/flp',
+      type: 'internal',
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-50 to-cyan-50',
+      darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
+      tag: <img src="\lovable-uploads\star.gif" alt="premium" width={30} />,
+      tagColor: 'bg-transparent'
+    },
     {
       title: 'Hire a Tutor',
       description: 'Coming Soon',
@@ -342,105 +257,71 @@ useEffect(() => {
     }
   ];
 
-  // New Socials section
   const socials = [
     {
       title: 'Follow us on Instagram',
       description: 'Stay updated with our latest posts!',
-      icon: Instagram,
+      icon: ({ className }) => <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" className={className} />,
       link: 'https://www.instagram.com/medistics.app',
       type: 'external',
-      gradient: 'from-pink-500 to-purple-600', // Instagram-like gradient
+      gradient: 'from-pink-500 to-purple-600',
       bgGradient: 'from-pink-50 to-purple-50',
       darkBgGradient: 'from-purple-900/20 to-pink-700'
     },
     {
       title: 'Join our Whatsapp Community',
       description: 'Connect with other students and tutors',
-      // Inline WhatsApp SVG as a functional component
-      icon: (props) => (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none" // Changed fill to none for outline effect
-          stroke="currentColor" // Changed stroke to currentColor to inherit text-white
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={props.className} // Pass down className for sizing (w-6 h-6)
-        >
-          {/* Path for WhatsApp outline logo */}
-          <path d="M17.476 15.688c-.294.494-.858.913-1.685 1.171-.789.248-1.602.372-2.434.372-4.043 0-7.325-3.282-7.325-7.325 0-.832.124-1.645.372-2.434.258-.827.677-1.391 1.171-1.685.494-.294 1.058-.445 1.685-.445h.001c.627 0 1.25.151 1.835.452.585.301 1.07.728 1.455 1.27l.794 1.155c.083.12.125.26.125.421 0 .16-.042.3-.125.42l-.478.694c-.218.324-.469.575-.753.753-.284.179-.588.269-.912.269-.16 0-.301-.042-.421-.125l-.542-.294c-.12-.06-.24-.09-.361-.09-.12 0-.24.03-.361.09-.24.12-.42.27-.541.45-.12.18-.181.36-.181.541 0 .24.06.42.181.541.12.12.27.24.45.361l.541.294c.12.06.24.09.361.09.324 0 .628-.09.912-.269.284-.179.535-.43.753-.753l.478-.694c.083-.12.125-.26.125-.421 0-.16-.042-.3-.125-.42z" />
-          <path d="M12 2C6.477 2 2 6.477 2 12c0 1.5.4 2.9 1.1 4.1L2 22l5.9-1.1C10.4 21.7 12 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zM12 20c-1.3 0-2.6-.3-3.8-.9L5.5 20.5l.8-2.6c-.8-1.2-1.3-2.6-1.3-4.1C5 8.1 8.1 5 12 5s7 3.1 7 7-3.1 7-7 7z" />
-        </svg>
-      ),
+      icon: ({ className }) => <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className={className} />,
       link: 'https://whatsapp.com/channel/0029VaAGl767z4koufSZgA0W',
       type: 'external',
-      gradient: 'from-green-500 to-lime-500', // WhatsApp-like gradient
+      gradient: 'from-green-500 to-lime-500',
       bgGradient: 'from-green-50 to-lime-50',
       darkBgGradient: 'from-green-900/30 to-lime-900/30'
+    },
+    {
+      title: 'Join our Reddit Community',
+      description: 'Connect with students and discuss topics!',
+      icon: ({ className }) => <img src="https://www.redditstatic.com/desktop2x/img/favicon/apple-icon-57x57.png" alt="Reddit" className={className} />, // Updated Reddit logo URL
+      link: 'https://www.reddit.com/r/medistics/',
+      type: 'external',
+      gradient: 'from-orange-500 to-red-500',
+      bgGradient: 'from-orange-50 to-red-50',
+      darkBgGradient: 'from-orange-900/30 to-red-900/30'
+    },
+    {
+      title: 'Like us on Facebook',
+      description: 'Follow our page for updates and news!',
+      icon: ({ className }) => <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook" className={className} />,
+      link: 'https://www.facebook.com/medisticsapp',
+      type: 'external',
+      gradient: 'from-blue-600 to-indigo-600',
+      bgGradient: 'from-blue-50 to-indigo-50',
+      darkBgGradient: 'from-blue-900/30 to-indigo-900/30'
     }
   ];
 
-  // Safe display name with proper fallback
   const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medistics User';
 
-  // Define plan color schemes
-  const planColors = {
-    'free': {
-      light: 'bg-purple-100 text-purple-800 border-purple-300',
-      dark: 'dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700'
-    },
-    'premium': {
-      light: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      dark: 'dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700'
-    },
-    'iconic': {
-      light: 'bg-green-100 text-green-800 border-green-300',
-      dark: 'dark:bg-green-900/30 dark:text-green-200 dark:border-green-700'
-    },
-    // Add more plans as needed
-    'default': { // Fallback for unknown plans
-      light: 'bg-gray-100 text-gray-800 border-gray-300',
-      dark: 'dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
-    }
-  };
+  if (authLoading || profileLoading || userStatsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <img
+          src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
+          alt="Loading Medistics"
+          className="w-32 h-32 object-contain"
+        />
+      </div>
+    );
+  }
 
-  // Determine the user's plan and its display name
-  const rawUserPlan = profile?.plan?.toLowerCase() || 'loading'; // Ensure lowercase for lookup
-  const userPlanDisplayName = rawUserPlan.charAt(0).toUpperCase() + rawUserPlan.slice(1) + ' Plan';
-
-  // Get the color classes for the current plan
-  const currentPlanColorClasses = planColors[rawUserPlan] || planColors['default'];
-
-  // Show a loading state or redirect immediately if not authenticated
-useEffect(() => {
-  
-        if (authLoading === false && profileLoading === false && user === null) { // user is null if not logged in
-            navigate('/');
-        }
-
-    }, [user, navigate]); // Depend on 'user' and 'navigate'
-
-
-  // Optionally, show a loading spinner while profile data is being fetched
-if (authLoading || profileLoading || userStatsLoading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <img
-        src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-        alt="Loading Medistics"
-        className="w-32 h-32 object-contain"
-      />
-    </div>
-  );
-}
-
-  // If we reach here, user is authenticated and profile has been fetched.
-  // The useEffect hook will handle the redirection for invalid profiles.
-  // So, if the user is still on this page, their profile is considered valid.
+  // Render SignInPrompt if user is not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+        <SignInPrompt />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
@@ -449,42 +330,8 @@ if (authLoading || profileLoading || userStatsLoading) {
         description="Your personalized Medistics App dashboard. Track your progress, review past quizzes, and plan your study schedule effectively."
         canonical="https://medistics.app/dashboard"
       />
-      {/* Header */}
-      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
-        <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <img
-              src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-              alt="Medistics Logo"
-              className="w-8 h-8 object-contain"
-            />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</span>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-9 h-9 p-0 hover:scale-110 transition-transform duration-200"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-            {/* Dynamic Plan Badge with dynamic colors */}
-            <Badge
-              variant="secondary"
-              className={`${currentPlanColorClasses.light} ${currentPlanColorClasses.dark}`}
-            >
-              {userPlanDisplayName}
-            </Badge>
-            <ProfileDropdown />
-          </div>
-        </div>
-      </header>
+      
+      <DashboardHeader profile={profile} user={user} displayName={displayName} />
 
       <div className="container mx-auto px-4 lg:px-8 py-8">
         {/* Welcome Section */}
@@ -499,8 +346,6 @@ if (authLoading || profileLoading || userStatsLoading) {
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
             Ready to continue your medical education journey?
           </p>
-
-          {/* Progress Overview */}
           <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
@@ -592,29 +437,23 @@ if (authLoading || profileLoading || userStatsLoading) {
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Quick Actions</h2>
-          {/* <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 p-4 mb-6 flex items-center space-x-3">
-            <Construction className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-            <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-              Classroom is currently undergoing maintenance. We appreciate your patience and will re-enable them soon!
-            </p>
-          </Card> */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {quickActions.map((action, index) => (
               action.type === 'internal' ? (
                 <Link
                   key={index}
-                  to={action.disabled ? '#' : action.link} // Change link to # if disabled
-                  className={action.disabled ? 'opacity-50 pointer-events-none' : ''} // Apply disabled styling
+                  to={action.disabled ? '#' : action.link}
+                  className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
                 >
                   <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
                     <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                    <CardHeader className="relative pb-2"> {/* Added pb-2 to give some padding to the tag if it's there */}
+                    <CardHeader className="relative pb-2">
                       {action.tag && (
                         <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
                           {action.tag}
                         </Badge>
                       )}
-                      <div className="flex items-center space-x-3 mt-4"> {/* Adjusted margin-top to avoid overlap with tag */}
+                      <div className="flex items-center space-x-3 mt-4">
                         <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                           <action.icon className="w-6 h-6 text-white" />
                         </div>
@@ -636,15 +475,14 @@ if (authLoading || profileLoading || userStatsLoading) {
                 <a key={index} href={action.link} target="_blank" rel="noopener noreferrer">
                   <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
                     <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                    <CardHeader className="relative pb-2"> {/* Added pb-2 */}
+                    <CardHeader className="relative pb-2">
                       {action.tag && (
                         <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
                           {action.tag}
                         </Badge>
                       )}
-                      <div className="flex items-center space-x-3 mt-4"> {/* Adjusted margin-top */}
+                      <div className="flex items-center space-x-3 mt-4">
                         <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                          {/* Render the custom icon component */}
                           <action.icon className="w-6 h-6 text-white" />
                         </div>
                         <div>
@@ -669,28 +507,22 @@ if (authLoading || profileLoading || userStatsLoading) {
         {/* Premium Perks Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Premium Perks</h2>
-          {/* <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 p-4 mb-6 flex items-center space-x-3">
-            <Construction className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-            <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-              The AI Chatbot is currently undergoing maintenance. We appreciate your patience and will re-enable it soon!
-            </p>
-          </Card> */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {premiumPerks.map((action, index) => (
               <Link
                 key={index}
-                to={action.disabled ? '#' : action.link} // Change link to # if disabled
-                className={action.disabled ? 'opacity-50 pointer-events-none' : ''} // Apply disabled styling
+                to={action.disabled ? '#' : action.link}
+                className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
               >
                 <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
                   <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                  <CardHeader className="relative pb-2"> {/* Added pb-2 */}
+                  <CardHeader className="relative pb-2">
                     {action.tag && (
                       <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
                         {action.tag}
                       </Badge>
                     )}
-                    <div className="flex items-center space-x-3 mt-4"> {/* Adjusted margin-top */}
+                    <div className="flex items-center space-x-3 mt-4">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                         <action.icon className="w-6 h-6 text-white" />
                       </div>
@@ -723,15 +555,15 @@ if (authLoading || profileLoading || userStatsLoading) {
                   <CardHeader className="relative">
                     <div className="flex items-center space-x-3 mb-2">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        {/* Render the custom icon component */}
-                        <action.icon className="w-6 h-6 text-white" />
+                        {/* Render the image directly */}
+                        {action.icon({ className: "w-6 h-6 object-contain" })} {/* Pass className as prop */}
                       </div>
                       <div>
                         <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                           {action.title}
                         </CardTitle>
-                      </div >
-                    </div >
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="relative">
                     <p className="text-gray-600 dark:text-gray-400 text-sm">

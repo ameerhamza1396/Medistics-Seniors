@@ -21,7 +21,7 @@ const SignInPrompt = ({
   title = "Authentication Required", // Updated default title for a more professional tone
   description = "Please sign in or create an account to unlock all features and continue your journey.", // Updated description
   buttonText = "Sign In / Register", // Updated button text
-  redirectPath = "/auth", // Default redirect path for the button
+  redirectPath = "/login", // Default redirect path for the button, changed from /auth
   showNewUserPrompt = true // Control visibility of "New user?" text
 }) => {
   return (
@@ -58,7 +58,7 @@ const SignInPrompt = ({
         </a>
         {showNewUserPrompt && (
           <p className="mt-8 text-md text-gray-600 dark:text-gray-400"> {/* Adjusted font size */}
-            New to our platform? <a href={redirectPath} className="text-purple-700 dark:text-purple-400 hover:underline font-semibold">Create an account</a> to get started!
+            New to our platform? <a href="/signup" className="text-purple-700 dark:text-purple-400 hover:underline font-semibold">Create an account</a> to get started! {/* Changed redirect path to /signup */}
           </p>
         )}
       </div>
