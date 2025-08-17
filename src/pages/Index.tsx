@@ -9,7 +9,6 @@ import { ArrowRight, Users, Trophy, Brain, Target, Moon, Sun, Bot, Sword, Chevro
 import { useTheme } from 'next-themes';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaWhatsapp } from 'react-icons/fa';
 import MobileNav from '@/components/MobileNav';
-import Seo from '@/components/Seo'; // Import the Seo component
 
 import {
   DropdownMenu,
@@ -677,11 +676,6 @@ const testimonials = [
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-      <Seo
-        title="Home"
-        description="Medistics App is your premier platform for MDCAT preparation, offering AI-powered MCQs, study materials, and mock tests."
-        canonical="https://medistics.app/"
-      />
       <header className="bg-transparent backdrop-blur-md border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50 animate-fade-in">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
           <Link to="/" className="flex items-center space-x-3 group">

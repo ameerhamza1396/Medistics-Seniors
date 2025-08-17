@@ -26,6 +26,7 @@ import Admin9 from '@/pages/Admin9';
 import Admin10 from '@/pages/Admin10';
 import Admin11 from '@/pages/Admin11';
 import {Admin12} from '@/pages/Admin12';
+import Admin13 from '@/pages/Admin13';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
@@ -99,6 +100,7 @@ function App() {
                 <Route path="/admin10" element={<Admin10 />} />
                 <Route path="/admin11" element={<Admin11 />} />
                 <Route path="/admin12" element={<Admin12 />} />
+                <Route path="/admin13" element={<Admin13 />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/password" element={<ChangePassword />} />
                 <Route path="/profile/upgrade" element={<Profile />} />
