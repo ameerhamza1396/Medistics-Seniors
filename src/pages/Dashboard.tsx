@@ -36,7 +36,7 @@ import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager';
 import AuthErrorDisplay from '@/components/AuthErrorDisplay';
 import Seo from '@/components/Seo';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import SignInPrompt from '@/components/SignInPrompt'; // Import SignInPrompt
+import SignInPrompt from '@/components/SigninPrompt'; // Import SignInPrompt
 
 const Dashboard = () => {
   const { user, isLoading: authLoading } = useAuth();
