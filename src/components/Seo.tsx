@@ -33,13 +33,13 @@ const Seo: React.FC<SeoProps> = ({
   twitterCard = 'summary_large_image', // Default to 'summary_large_image'
   twitterCreator,
 }) => {
-  const defaultTitle = 'Medistics App - Your Ultimate Medical Education Platform'; // Default title for your application
-  const defaultDescription = 'Medistics App is Pakistan\'s most advanced AI-powered MDCAT preparation platform, designed to help you master medical concepts, practice MCQs, and achieve your dreams.'; // Default description
+  const defaultTitle = 'Medmacs - Your Ultimate Medical Education Platform'; // Default title for your application
+  const defaultDescription = 'Medmacs is created by Dr Ameer Hamza.'; // Default description
 
   return (
     <Helmet>
       {/* Basic Meta Tags */}
-      <title>{title ? `${title} | Medistics App` : defaultTitle}</title>
+      <title>{title ? `${title} | Medmacs` : defaultTitle}</title>
       <meta name="description" content={description || defaultDescription} />
       {canonical && <link rel="canonical" href={canonical} />}
 

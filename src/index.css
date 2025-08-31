@@ -432,3 +432,24 @@
     transform: none;
   }
 }
+
+/* Spiral conic gradient background */
+.bg-gradient-spiral {
+  background: conic-gradient(at center, #0d9488, #7e22ce, #0d9488);
+  background-size: 200% 200%;
+}
+
+/* Slow spiral rotation */
+@keyframes gradient-spiral {
+  0% {
+    transform: rotate(0deg) scale(1.2);
+  }
+
+  100% {
+    transform: rotate(360deg) scale(1.2);
+  }
+}
+
+.animate-gradient-spiral {
+  animation: gradient-spiral 25s linear infinite;
+}

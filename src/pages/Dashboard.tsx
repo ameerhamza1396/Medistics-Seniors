@@ -135,12 +135,25 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (!authLoading && user && !profileLoading) {
-      if (profile?.username === null) {
+    // Only run after auth and profile are loaded
+    if (!authLoading && !profileLoading) {
+      if (!user) return; // not authenticated, SignInPrompt will handle
+
+      // Check username first
+      if (!profile?.username) {
         navigate('/welcome-new-user');
+        return;
+      }
+
+      // Check year of study after username is valid
+      const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
+      if (!validYears.includes(profile?.year || 0)) {
+        navigate('/select-year');
+        return;
       }
     }
-  }, [user, profile, profileLoading, authLoading, navigate]);
+  }, [authLoading, profileLoading, user, profile, navigate]);
+
 
   const quickActions = [
     {
@@ -257,46 +270,16 @@ const Dashboard = () => {
     }
   ];
 
-  const socials = [
+  const otherApps = [
     {
-      title: 'Follow us on Instagram',
-      description: 'Stay updated with our latest posts!',
-      icon: ({ className }) => <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" className={className} />,
-      link: 'https://www.instagram.com/medistics.app',
+      title: 'Medistics App',
+      description: 'The Best AI for MDCAT in Pakistan',
+      icon: ({ className }) => <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className={className} />,
+      link: 'https://medistics.app',
       type: 'external',
-      gradient: 'from-pink-500 to-purple-600',
-      bgGradient: 'from-pink-50 to-purple-50',
-      darkBgGradient: 'from-purple-900/20 to-pink-700'
-    },
-    {
-      title: 'Join our Whatsapp Community',
-      description: 'Connect with other students and tutors',
-      icon: ({ className }) => <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className={className} />,
-      link: 'https://whatsapp.com/channel/0029VaAGl767z4koufSZgA0W',
-      type: 'external',
-      gradient: 'from-green-500 to-lime-500',
-      bgGradient: 'from-green-50 to-lime-50',
-      darkBgGradient: 'from-green-900/30 to-lime-900/30'
-    },
-    {
-      title: 'Join our Reddit Community',
-      description: 'Connect with students and discuss topics!',
-      icon: ({ className }) => <img src="https://www.redditstatic.com/desktop2x/img/favicon/apple-icon-57x57.png" alt="Reddit" className={className} />, // Updated Reddit logo URL
-      link: 'https://www.reddit.com/r/medistics/',
-      type: 'external',
-      gradient: 'from-orange-500 to-red-500',
-      bgGradient: 'from-orange-50 to-red-50',
-      darkBgGradient: 'from-orange-900/30 to-red-900/30'
-    },
-    {
-      title: 'Like us on Facebook',
-      description: 'Follow our page for updates and news!',
-      icon: ({ className }) => <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook" className={className} />,
-      link: 'https://www.facebook.com/medisticsapp',
-      type: 'external',
-      gradient: 'from-blue-600 to-indigo-600',
-      bgGradient: 'from-blue-50 to-indigo-50',
-      darkBgGradient: 'from-blue-900/30 to-indigo-900/30'
+      gradient: 'from-purple-500 to-indigo-600',
+      bgGradient: 'from-purple-50 to-indigo-50',
+      darkBgGradient: 'from-purple-900/30 to-indigo-900/30'
     }
   ];
 
@@ -327,7 +310,7 @@ const Dashboard = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-teal-900/10 dark:to-cyan-900/10">
       <Seo
         title="Dashboard"
-        description="Your personalized Medistics App dashboard. Track your progress, review past quizzes, and plan your study schedule effectively."
+        description="Your personalized Medmacs App dashboard. Track your progress, review past quizzes, and plan your study schedule effectively."
         canonical="https://medistics.app/dashboard"
       />
 
@@ -497,93 +480,92 @@ const Dashboard = () => {
                         {action.description}
                       </p>
                     </CardContent>
-          </Card>
-        </a>
-      ))
-    )}
-  </div>
-</div>
-
-          {/* Premium Perks Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Premium Perks</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {premiumPerks.map((action, index) => (
-                <Link
-                  key={index}
-                  to={action.disabled ? '#' : action.link}
-                  className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
-                >
-                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
-                    <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                    <CardHeader className="relative pb-2">
-                      {action.tag && (
-                        <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
-                          {action.tag}
-                        </Badge>
-                      )}
-                      <div className="flex items-center space-x-3 mt-4">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                          <action.icon className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                            {action.title}
-                          </CardTitle>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="relative">
-                      <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        {action.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Our Socials Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Our Socials</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {socials.map((action, index) => (
-                <a key={index} href={action.link} target="_blank" rel="noopener noreferrer">
-                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
-                    <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                    <CardHeader className="relative">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                          {/* Render the image directly */}
-                          {action.icon({ className: "w-6 h-6 object-contain" })} {/* Pass className as prop */}
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                            {action.title}
-                          </CardTitle>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="relative">
-                      <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        {action.description}
-                      </p>
-                    </CardContent>
                   </Card>
                 </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer Text */}
-          <div className="text-center mt-12 mb-4 text-gray-500 dark:text-gray-400 text-sm">
-            <p>A Project by Educational Spot.</p>
-            <p>&copy; 2025 Medistics. All rights reserved.</p>
+              )
+            ))}
           </div>
         </div>
+
+        {/* Premium Perks Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Premium Perks</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {premiumPerks.map((action, index) => (
+              <Link
+                key={index}
+                to={action.disabled ? '#' : action.link}
+                className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
+              >
+                <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                  <CardHeader className="relative pb-2">
+                    {action.tag && (
+                      <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
+                        {action.tag}
+                      </Badge>
+                    )}
+                    <div className="flex items-center space-x-3 mt-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <action.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                          {action.title}
+                        </CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      {action.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Try Our Other Apps Section (Replaces Socials) */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Try Our Other Apps</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {otherApps.map((action, index) => (
+              <a key={index} href={action.link} target="_blank" rel="noopener noreferrer">
+                <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                  <CardHeader className="relative">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        {action.icon({ className: "w-6 h-6 object-contain" })}
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                          {action.title}
+                        </CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      {action.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer Text */}
+        <div className="text-center mt-12 mb-4 text-gray-500 dark:text-gray-400 text-sm">
+          <p>A Project by Hmacs Studios.</p>
+          <p>&copy; 2025 Hmacs Studios. All rights reserved.</p>
+        </div>
       </div>
-      );
+    </div>
+  );
 };
 
-      export default Dashboard;
+export default Dashboard;
