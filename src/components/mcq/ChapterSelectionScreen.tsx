@@ -93,7 +93,7 @@ export const ChapterSelectionScreen = ({
       </Button>
 
       <div className="text-center mb-6">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Chapter – {subject.name}</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Test – {subject.name}</h1>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           {userProfile?.plan === 'free'
             ? 'All chapters are unlocked. Free users have a daily limit of MCQ submissions.'
