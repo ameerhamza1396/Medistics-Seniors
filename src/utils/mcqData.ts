@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Subject {
@@ -7,6 +6,7 @@ export interface Subject {
   description: string;
   icon: string;
   color: string;
+  year: string; // Corrected interface property
 }
 
 export interface Chapter {
@@ -29,16 +29,40 @@ export interface MCQ {
 
 export const fetchSubjects = async (): Promise<Subject[]> => {
   try {
+    // 1. Get the current user's session
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error('Error fetching user:', userError);
+      return [];
+    }
+
+    // 2. Fetch the user's profile to get their 'year'
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('year')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('Error fetching user profile:', profileError);
+      return [];
+    }
+
+    const userYear = profile.year;
+
+    // 3. Fetch subjects filtered by the user's 'year'
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
+      .eq('year', userYear) // Corrected from 'ye' to 'year'
       .order('name');
-    
+
     if (error) {
       console.error('Error fetching subjects:', error);
       return [];
     }
-    
+
     return data || [];
   } catch (error) {
     console.error('Error fetching subjects:', error);
@@ -53,12 +77,12 @@ export const fetchChaptersBySubject = async (subjectId: string): Promise<Chapter
       .select('*')
       .eq('subject_id', subjectId)
       .order('chapter_number');
-    
+
     if (error) {
       console.error('Error fetching chapters:', error);
       return [];
     }
-    
+
     return data || [];
   } catch (error) {
     console.error('Error fetching chapters:', error);
@@ -73,19 +97,19 @@ export const fetchMCQsByChapter = async (chapterId: string): Promise<MCQ[]> => {
       .select('*')
       .eq('chapter_id', chapterId)
       .order('created_at');
-    
+
     if (error) {
       console.error('Error fetching MCQs:', error);
       return [];
     }
-    
+
     // Transform the data to match our MCQ interface
     const transformedData = data?.map(mcq => ({
       ...mcq,
-      options: Array.isArray(mcq.options) ? mcq.options : 
-               typeof mcq.options === 'string' ? JSON.parse(mcq.options) : []
+      options: Array.isArray(mcq.options) ? mcq.options :
+        typeof mcq.options === 'string' ? JSON.parse(mcq.options) : []
     })) || [];
-    
+
     return transformedData;
   } catch (error) {
     console.error('Error fetching MCQs:', error);
@@ -115,7 +139,7 @@ export const getUserStats = async (userId: string) => {
     const totalQuestions = answers?.length || 0;
     const correctAnswers = answers?.filter(a => a.is_correct).length || 0;
     const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-    const averageTime = answers?.length > 0 ? 
+    const averageTime = answers?.length > 0 ?
       Math.round(answers.reduce((sum, a) => sum + (a.time_taken || 0), 0) / answers.length) : 0;
 
     // Calculate best streak

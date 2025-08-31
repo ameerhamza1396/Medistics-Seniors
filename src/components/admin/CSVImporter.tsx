@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,50 +17,63 @@ interface ImportResult {
   sheetResults: { [sheetName: string]: { success: number; total: number; errors: string[] } };
 }
 
+interface SubjectTopicMap {
+  [subject: string]: { id: number; name: string }[];
+}
+
 export const CSVImporter = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [previewData, setPreviewData] = useState<any[]>([]);
+  const [subjectTopics, setSubjectTopics] = useState<SubjectTopicMap>({});
   const { toast } = useToast();
 
-  // Subject-topic mapping based on your structure
-  const subjectTopics = {
-    'Biology': [
-      'Acellular Life', 'Bioenergetics', 'Biological Molecules', 'Evolution',
-      'Reproduction', 'Enzymes', 'Coordination and Control', 'Variation and genetics',
-      'Life processes in animals and plantS', 'Cell structure and Function',
-      'Support and movement', 'Inheritance'
-    ],
-    'Physics': [
-      'Force and Motion', 'Electronics', 'Rotational and circular motion',
-      'Electrostatistics', 'Electromagnetism', 'Electromagnetic Induction',
-      'Waves', 'Nuclear Physics', 'Work and energy'
-    ],
-    'Chemistry': [
-      'Fundamental Concepts', 'Carboxylic Acids', 'Solids', 'Chemical Bonding',
-      'Chemical Equilibrium', 'Principles of organic chemistry', 'Alcohols and Phenols',
-      'S and p block elements', 'Aldehydes and Ketones', 'Thermochemistry',
-      'Liquids', 'Gases', 'Reaction Kinetics'
-    ],
-    'English': [
-      'Tenses & Sentence Structure', 'Vocabulary (max 25-30 words)', 'Punctuation & Style',
-      'spelling', 'Adverb', 'Adjective', 'Verb'
-    ],
-       'Logical Reasoning': [
-     'Letter and Symbol Series', 'Logical Deductions', 'Critical Thinking', 
-     'Cause and Effect', 'Logical Problems', 'Course of Action'
-   ]
-  };
+  useEffect(() => {
+    const fetchSubjectTopics = async () => {
+      console.log("Fetching subjects and topics from Supabase...");
+      const { data, error } = await supabase
+        .from('chapters')
+        .select('id, name, subjects(name)');
+
+      if (error) {
+        console.error('Error fetching subjects and topics:', error);
+        toast({
+          title: 'Database Error',
+          description: 'Failed to load subjects and topics.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const newSubjectTopics: SubjectTopicMap = {};
+      data.forEach((chapter) => {
+        const subjectName = chapter.subjects.name;
+        const topic = { id: chapter.id, name: chapter.name };
+
+        if (!newSubjectTopics[subjectName]) {
+          newSubjectTopics[subjectName] = [];
+        }
+        newSubjectTopics[subjectName].push(topic);
+      });
+
+      setSubjectTopics(newSubjectTopics);
+      console.log("Subjects and topics loaded:", newSubjectTopics);
+    };
+
+    fetchSubjectTopics();
+  }, [toast]);
+
+  // New state to hold user's topic selection for each sheet
+  const [sheetTopicMapping, setSheetTopicMapping] = useState<{ [sheetName: string]: string }>({});
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    console.log('Selected file:', file?.name, file?.type);
-    
     if (file && (file.type === 'text/csv' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) {
       setSelectedFile(file);
       setImportResult(null);
+      setSheetTopicMapping({}); // Reset mapping
       parseFileForPreview(file);
     } else {
       toast({
@@ -74,105 +86,83 @@ export const CSVImporter = () => {
 
   const parseFileForPreview = async (file: File) => {
     try {
-      console.log('Starting file preview parsing...');
-      
       let sheets: { [key: string]: any[][] } = {};
-      
+
       if (file.name.endsWith('.xlsx') || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        // Parse Excel file
         const arrayBuffer = await file.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        
-        console.log('Excel sheets found:', workbook.SheetNames);
-        
         workbook.SheetNames.forEach(sheetName => {
           const worksheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-          sheets[sheetName] = jsonData as any[][];
+          sheets[sheetName] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' }) as any[][];
         });
       } else {
-        // Parse CSV file (single sheet)
         const csvText = await file.text();
         const lines = csvText.split('\n').filter(line => line.trim());
-        
-        // For CSV, detect sheet boundaries by looking for topic headers
-        let currentSheet = '';
+        let currentSheet = 'Sheet 1'; // Default sheet name for CSV
         let currentSheetLines: string[] = [];
-        
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
           if (!line) continue;
-          
           const cells = parseCSVLine(line);
           const firstCell = cells[0] || '';
-          
-          // Check if this is a sheet header (topic name)
-          if (firstCell && 
-              !firstCell.match(/^\d+$/) && 
-              firstCell !== 'Question' && 
-              firstCell !== '' &&
-              firstCell !== 'Sr.' &&
-              !firstCell.toLowerCase().includes('option')) {
-            
-            // Save previous sheet
-            if (currentSheet && currentSheetLines.length > 0) {
-              const sheetData = currentSheetLines.map(line => parseCSVLine(line));
-              sheets[currentSheet] = sheetData;
+          if (firstCell && !firstCell.match(/^\d+$/) && firstCell !== 'Question' && firstCell !== '' && firstCell !== 'Sr.' && !firstCell.toLowerCase().includes('option')) {
+            if (currentSheetLines.length > 0) {
+              sheets[currentSheet] = currentSheetLines.map(line => parseCSVLine(line));
             }
-            
-            // Start new sheet
             currentSheet = firstCell;
             currentSheetLines = [];
-            
-            // Skip header row if present
             if (i + 1 < lines.length) {
               const nextLine = lines[i + 1];
               const nextCells = parseCSVLine(nextLine);
               if (nextCells[1] && nextCells[1].toLowerCase().includes('question')) {
-                i++; // Skip header row
+                i++;
               }
             }
-          } else if (currentSheet) {
+          } else {
             currentSheetLines.push(line);
           }
         }
-        
-        // Add the last sheet
-        if (currentSheet && currentSheetLines.length > 0) {
-          const sheetData = currentSheetLines.map(line => parseCSVLine(line));
-          sheets[currentSheet] = sheetData;
+        if (currentSheetLines.length > 0) {
+          sheets[currentSheet] = currentSheetLines.map(line => parseCSVLine(line));
         }
       }
-      
-      console.log('All sheets found:', Object.keys(sheets));
-      
-      // Create preview data
-      const preview = Object.keys(sheets).slice(0, 5).map(sheetName => {
+
+      const preview = Object.keys(sheets).map(sheetName => {
         const sheetData = sheets[sheetName];
-        
-        // Count questions starting from row 3 (index 2)
         let questionCount = 0;
+        let errors: string[] = [];
         for (let i = 2; i < sheetData.length; i++) {
           const row = sheetData[i];
           const serialNum = row[0] ? String(row[0]).trim() : '';
           const question = row[1] ? String(row[1]).trim() : '';
-          
-          if (serialNum && serialNum.match(/^\d+$/) && question) {
+          const optionA = row[2] ? String(row[2]).trim() : '';
+          const optionB = row[3] ? String(row[3]).trim() : '';
+          if (serialNum && serialNum.match(/^\d+$/) && question && optionA && optionB) {
             questionCount++;
+          } else {
+            const rowNumber = i + 1;
+            const errorReason = `Row ${rowNumber}: Missing data in required columns (Serial, Question, Option A, or Option B).`;
+            errors.push(errorReason);
           }
         }
-        
-        console.log(`Sheet "${sheetName}": ${questionCount} questions found`);
-        
         return {
           sheet: sheetName,
-          questionCount: questionCount
+          questionCount: questionCount,
+          errors: errors
         };
       });
-      
-      console.log('Preview data:', preview);
       setPreviewData(preview);
-      
+
+      // Notify the user if any errors were found
+      const totalErrors = preview.reduce((sum, sheet) => sum + sheet.errors.length, 0);
+      if (totalErrors > 0) {
+        toast({
+          title: "File Validation Alert",
+          description: `Found ${totalErrors} potential issues in your file. Please check the preview table for details.`,
+          variant: "warning",
+        });
+      }
+
     } catch (error) {
       console.error('Preview error:', error);
       toast({
@@ -187,10 +177,8 @@ export const CSVImporter = () => {
     const result = [];
     let current = '';
     let inQuotes = false;
-    
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      
       if (char === '"') {
         inQuotes = !inQuotes;
       } else if (char === ',' && !inQuotes) {
@@ -200,112 +188,7 @@ export const CSVImporter = () => {
         current += char;
       }
     }
-    
     result.push(current.trim());
-    return result;
-  };
-
-  const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
-    console.log('Starting full file parsing...');
-    
-    let sheets: { [key: string]: any[][] } = {};
-    
-    if (file.name.endsWith('.xlsx') || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      // Parse Excel file
-      const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      
-      workbook.SheetNames.forEach(sheetName => {
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-        sheets[sheetName] = jsonData as any[][];
-      });
-    } else {
-      // Parse CSV file (same logic as preview)
-      const csvText = await file.text();
-      const lines = csvText.split('\n').filter(line => line.trim());
-      
-      let currentSheet = '';
-      let currentSheetLines: string[] = [];
-      
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        const cells = parseCSVLine(line);
-        const firstCell = cells[0] || '';
-        
-        if (firstCell && 
-            !firstCell.match(/^\d+$/) && 
-            firstCell !== 'Question' && 
-            firstCell !== '' &&
-            firstCell !== 'Sr.' &&
-            !firstCell.toLowerCase().includes('option')) {
-          
-          if (currentSheet && currentSheetLines.length > 0) {
-            const sheetData = currentSheetLines.map(line => parseCSVLine(line));
-            sheets[currentSheet] = sheetData;
-          }
-          
-          currentSheet = firstCell;
-          currentSheetLines = [];
-          
-          if (i + 1 < lines.length) {
-            const nextLine = lines[i + 1];
-            const nextCells = parseCSVLine(nextLine);
-            if (nextCells[1] && nextCells[1].toLowerCase().includes('question')) {
-              i++;
-            }
-          }
-        } else if (currentSheet) {
-          currentSheetLines.push(line);
-        }
-      }
-      
-      if (currentSheet && currentSheetLines.length > 0) {
-        const sheetData = currentSheetLines.map(line => parseCSVLine(line));
-        sheets[currentSheet] = sheetData;
-      }
-    }
-    
-    // Convert sheets to questions format
-    const result: { [key: string]: any[] } = {};
-    
-    Object.entries(sheets).forEach(([sheetName, sheetData]) => {
-      const questions = [];
-      
-      // Start from row 3 (index 2)
-      for (let i = 2; i < sheetData.length; i++) {
-        const row = sheetData[i];
-        
-        const serialNum = row[0] ? String(row[0]).trim() : '';
-        const question = row[1] ? String(row[1]).trim() : '';
-        const optionA = row[2] ? String(row[2]).trim() : '';
-        const optionB = row[3] ? String(row[3]).trim() : '';
-        const optionC = row[4] ? String(row[4]).trim() : '';
-        const optionD = row[5] ? String(row[5]).trim() : '';
-        const answer = row[6] ? String(row[6]).trim() : '';
-        const explanation = row[7] ? String(row[7]).trim() : '';
-        
-        // Only add if we have a proper question
-        if (serialNum && serialNum.match(/^\d+$/) && question && optionA && optionB) {
-          questions.push({
-            serial: serialNum,
-            question: question,
-            optionA: optionA,
-            optionB: optionB,
-            optionC: optionC,
-            optionD: optionD,
-            answer: answer,
-            explanation: explanation
-          });
-        }
-      }
-      
-      console.log(`Parsed sheet "${sheetName}": ${questions.length} questions`);
-      result[sheetName] = questions;
-    });
-    
     return result;
   };
 
@@ -319,50 +202,39 @@ export const CSVImporter = () => {
       return;
     }
 
-    console.log(`Starting import for subject: ${selectedSubject}`);
     setIsImporting(true);
-    const result: ImportResult = { 
-      success: 0, 
-      errors: [], 
-      total: 0, 
-      sheetResults: {} 
-    };
+    const result: ImportResult = { success: 0, errors: [], total: 0, sheetResults: {} };
 
     try {
-      // Parse file
       const sheets = await parseFile(selectedFile);
-      
-      console.log('Parsed sheets:', Object.keys(sheets));
-      
+
       for (const [sheetName, questions] of Object.entries(sheets)) {
-        console.log(`Processing sheet: ${sheetName} with ${questions.length} questions`);
-        
-        const sheetResult = { success: 0, total: questions.length, errors: [] };
-        result.sheetResults[sheetName] = sheetResult;
-        result.total += questions.length;
-        
-        // Find matching chapter
-        const { data: chapter, error: chapterError } = await supabase
-          .from('chapters')
-          .select('id')
-          .eq('name', sheetName)
-          .single();
+        const selectedTopicName = sheetTopicMapping[sheetName];
 
-        console.log(`Chapter lookup for "${sheetName}":`, chapter, chapterError);
-
-        if (chapterError || !chapter) {
-          const error = `Topic "${sheetName}" not found in database`;
+        if (!selectedTopicName) {
+          const error = `No topic selected for sheet "${sheetName}". Skipping.`;
           console.error(error);
           result.errors.push(error);
-          sheetResult.errors.push(error);
+          result.sheetResults[sheetName] = { success: 0, total: questions.length, errors: [error] };
           continue;
         }
 
-        // Import questions for this sheet
+        const chapter = subjectTopics[selectedSubject]?.find(t => t.name === selectedTopicName);
+
+        if (!chapter) {
+          const error = `Selected topic "${selectedTopicName}" not found for subject "${selectedSubject}". Skipping.`;
+          console.error(error);
+          result.errors.push(error);
+          result.sheetResults[sheetName] = { success: 0, total: questions.length, errors: [error] };
+          continue;
+        }
+
+        const sheetResult = { success: 0, total: questions.length, errors: [] };
+        result.sheetResults[sheetName] = sheetResult;
+        result.total += questions.length;
+
         for (const q of questions) {
           try {
-            console.log(`Importing question: ${q.question.substring(0, 50)}...`);
-            
             const { error } = await supabase
               .from('mcqs')
               .insert({
@@ -376,23 +248,20 @@ export const CSVImporter = () => {
               });
 
             if (error) {
-              console.error('Insert error:', error);
-              throw error;
+              // Capture detailed error and question info
+              const errorMessage = `Failed to import question with serial ${q.serial} on sheet "${sheetName}". Reason: ${error.message}`;
+              throw new Error(errorMessage);
             }
-            
             result.success++;
             sheetResult.success++;
-            console.log(`Successfully imported question ${q.serial}`);
           } catch (error: any) {
-            const errorMsg = `Question "${q.question.substring(0, 50)}...": ${error.message}`;
-            console.error('Question import error:', errorMsg);
+            const errorMsg = `Question with serial ${q.serial} on sheet "${sheetName}": ${error.message}`;
             result.errors.push(errorMsg);
             sheetResult.errors.push(errorMsg);
           }
         }
       }
 
-      console.log('Import completed:', result);
       setImportResult(result);
       toast({
         title: "Import Complete",
@@ -400,7 +269,6 @@ export const CSVImporter = () => {
       });
 
     } catch (error: any) {
-      console.error('Import error:', error);
       toast({
         title: "Import Failed",
         description: error.message,
@@ -409,6 +277,13 @@ export const CSVImporter = () => {
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const handleTopicSelect = (sheetName: string, topicName: string) => {
+    setSheetTopicMapping(prev => ({
+      ...prev,
+      [sheetName]: topicName
+    }));
   };
 
   return (
@@ -440,7 +315,7 @@ export const CSVImporter = () => {
 
           {/* Subject Selection */}
           <div className="space-y-2">
-            <Label>Subject</Label>
+            <Label>Select Subject</Label>
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Subject" />
@@ -455,11 +330,11 @@ export const CSVImporter = () => {
             </Select>
           </div>
 
-          {/* Preview */}
-          {previewData.length > 0 && (
+          {/* New: Dynamic Topic Selection per Sheet */}
+          {previewData.length > 0 && selectedSubject && (
             <Card className="bg-gray-50">
               <CardHeader>
-                <CardTitle className="text-lg">File Preview</CardTitle>
+                <CardTitle className="text-lg">Map Sheets to Topics</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -467,6 +342,8 @@ export const CSVImporter = () => {
                     <TableRow>
                       <TableHead>Sheet/Topic Name</TableHead>
                       <TableHead>Questions Found</TableHead>
+                      <TableHead>Questions with Issues</TableHead>
+                      <TableHead>Select Destination Topic</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -474,14 +351,42 @@ export const CSVImporter = () => {
                       <TableRow key={index}>
                         <TableCell className="font-medium">{sheet.sheet}</TableCell>
                         <TableCell>{sheet.questionCount}</TableCell>
+                        <TableCell className={sheet.errors.length > 0 ? "text-red-600" : ""}>{sheet.errors.length}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={sheetTopicMapping[sheet.sheet] || ''}
+                            onValueChange={(value) => handleTopicSelect(sheet.sheet, value)}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select Topic" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {subjectTopics[selectedSubject]?.map(topic => (
+                                <SelectItem key={topic.id} value={topic.name}>
+                                  {topic.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-                {previewData.length > 3 && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    ... and more sheets in the file
-                  </p>
+                {previewData.some(sheet => sheet.errors.length > 0) && (
+                  <div className="mt-4 space-y-2 text-sm">
+                    <h4 className="font-semibold text-red-600">Detailed Preview Errors:</h4>
+                    {previewData.filter(sheet => sheet.errors.length > 0).map((sheet, index) => (
+                      <div key={index} className="p-2 border rounded-md">
+                        <p className="font-medium">{sheet.sheet}:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          {sheet.errors.map((error: string, errorIndex: number) => (
+                            <li key={errorIndex} className="text-red-500">{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -490,7 +395,7 @@ export const CSVImporter = () => {
           {/* Import Button */}
           <Button
             onClick={importQuestions}
-            disabled={!selectedFile || !selectedSubject || isImporting}
+            disabled={!selectedFile || !selectedSubject || isImporting || Object.keys(sheetTopicMapping).length === 0}
             className="w-full"
           >
             {isImporting ? (
@@ -517,7 +422,7 @@ export const CSVImporter = () => {
                       Overall: {importResult.success}/{importResult.total} questions imported
                     </span>
                   </div>
-                  
+
                   {/* Sheet-by-sheet results */}
                   {Object.keys(importResult.sheetResults).length > 0 && (
                     <div className="space-y-2">
@@ -550,7 +455,7 @@ export const CSVImporter = () => {
                       </Table>
                     </div>
                   )}
-                  
+
                   {importResult.errors.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
@@ -558,12 +463,9 @@ export const CSVImporter = () => {
                         <span className="text-red-600 font-medium">Errors:</span>
                       </div>
                       <div className="max-h-32 overflow-y-auto text-sm text-red-600">
-                        {importResult.errors.slice(0, 10).map((error, index) => (
+                        {importResult.errors.map((error, index) => (
                           <div key={index}>• {error}</div>
                         ))}
-                        {importResult.errors.length > 10 && (
-                          <div>... and {importResult.errors.length - 10} more errors</div>
-                        )}
                       </div>
                     </div>
                   )}
@@ -592,4 +494,96 @@ export const CSVImporter = () => {
       </Card>
     </div>
   );
+};
+
+const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
+  let sheets: { [key: string]: any[][] } = {};
+
+  if (file.name.endsWith('.xlsx') || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+    const arrayBuffer = await file.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    workbook.SheetNames.forEach(sheetName => {
+      const worksheet = workbook.Sheets[sheetName];
+      sheets[sheetName] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' }) as any[][];
+    });
+  } else {
+    const csvText = await file.text();
+    const lines = csvText.split('\n').filter(line => line.trim());
+    let currentSheet = 'Sheet 1'; // Default sheet name for CSV
+    let currentSheetLines: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const cells = parseCSVLine(line);
+      const firstCell = cells[0] || '';
+      if (firstCell && !firstCell.match(/^\d+$/) && firstCell !== 'Question' && firstCell !== '' && firstCell !== 'Sr.' && !firstCell.toLowerCase().includes('option')) {
+        if (currentSheetLines.length > 0) {
+          sheets[currentSheet] = currentSheetLines.map(line => parseCSVLine(line));
+        }
+        currentSheet = firstCell;
+        currentSheetLines = [];
+        if (i + 1 < lines.length) {
+          const nextLine = lines[i + 1];
+          const nextCells = parseCSVLine(nextLine);
+          if (nextCells[1] && nextCells[1].toLowerCase().includes('question')) {
+            i++;
+          }
+        }
+      } else {
+        currentSheetLines.push(line);
+      }
+    }
+    if (currentSheetLines.length > 0) {
+      sheets[currentSheet] = currentSheetLines.map(line => parseCSVLine(line));
+    }
+  }
+
+  const result: { [key: string]: any[] } = {};
+  Object.entries(sheets).forEach(([sheetName, sheetData]) => {
+    const questions = [];
+    for (let i = 2; i < sheetData.length; i++) {
+      const row = sheetData[i];
+      const serialNum = row[0] ? String(row[0]).trim() : '';
+      const question = row[1] ? String(row[1]).trim() : '';
+      const optionA = row[2] ? String(row[2]).trim() : '';
+      const optionB = row[3] ? String(row[3]).trim() : '';
+      const optionC = row[4] ? String(row[4]).trim() : '';
+      const optionD = row[5] ? String(row[5]).trim() : '';
+      const answer = row[6] ? String(row[6]).trim() : '';
+      const explanation = row[7] ? String(row[7]).trim() : '';
+      if (serialNum && serialNum.match(/^\d+$/) && question && optionA && optionB) {
+        questions.push({
+          serial: serialNum,
+          question: question,
+          optionA: optionA,
+          optionB: optionB,
+          optionC: optionC,
+          optionD: optionD,
+          answer: answer,
+          explanation: explanation
+        });
+      }
+    }
+    result[sheetName] = questions;
+  });
+  return result;
+};
+
+const parseCSVLine = (line: string): string[] => {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
 };

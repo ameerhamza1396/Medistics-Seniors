@@ -150,8 +150,8 @@ const Dashboard = () => {
       link: '/mcqs',
       type: 'internal',
       gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-50 to-cyan-50',
-      darkBgGradient: 'from-blue-900/30 to-cyan-900/30'
+      bgGradient: 'from-teal-50 to-cyan-50',
+      darkBgGradient: 'from-teal-900/30 to-cyan-900/30'
     },
     {
       title: 'Saved MCQs',
@@ -159,9 +159,9 @@ const Dashboard = () => {
       icon: Bookmark,
       link: '/saved-mcqs',
       type: 'internal',
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-50 to-pink-50',
-      darkBgGradient: 'from-purple-900/30 to-pink-900/30'
+      gradient: 'from-teal-500 to-emerald-500',
+      bgGradient: 'from-teal-50 to-emerald-50',
+      darkBgGradient: 'from-teal-900/30 to-emerald-900/30'
     },
     {
       title: 'Leaderboard',
@@ -214,9 +214,9 @@ const Dashboard = () => {
       icon: Brain,
       link: '/ai/test-generator',
       type: 'internal',
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-50 to-pink-50',
-      darkBgGradient: 'from-purple-900/30 to-pink-900/30',
+      gradient: 'from-teal-500 to-cyan-500',
+      bgGradient: 'from-teal-50 to-cyan-50',
+      darkBgGradient: 'from-teal-900/30 to-cyan-900/30',
       tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
       tagColor: 'bg-transparent'
     },
@@ -238,9 +238,9 @@ const Dashboard = () => {
       icon: ScrollText,
       link: '/flp',
       type: 'internal',
-      gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-50 to-cyan-50',
-      darkBgGradient: 'from-blue-900/30 to-cyan-900/30',
+      gradient: 'from-teal-500 to-blue-500',
+      bgGradient: 'from-teal-50 to-blue-50',
+      darkBgGradient: 'from-teal-900/30 to-blue-900/30',
       tag: <img src="\lovable-uploads\star.gif" alt="premium" width={30} />,
       tagColor: 'bg-transparent'
     },
@@ -317,20 +317,20 @@ const Dashboard = () => {
   // Render SignInPrompt if user is not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-teal-900/10 dark:to-cyan-900/10">
         <SignInPrompt />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+    <div className="min-h-screen w-full bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-teal-900/10 dark:to-cyan-900/10">
       <Seo
         title="Dashboard"
         description="Your personalized Medistics App dashboard. Track your progress, review past quizzes, and plan your study schedule effectively."
         canonical="https://medistics.app/dashboard"
       />
-      
+
       <DashboardHeader profile={profile} user={user} displayName={displayName} />
 
       <div className="container mx-auto px-4 lg:px-8 py-8">
@@ -338,7 +338,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-2">
             <span className="text-gray-900 dark:text-white">Welcome back, </span>
-            <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent animate-pulse drop-shadow-lg filter blur-[0.5px]">
+            <span className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent animate-pulse drop-shadow-lg filter blur-[0.5px]">
               {displayName}
             </span>
             <span className="text-gray-900 dark:text-white">! ✨</span>
@@ -346,7 +346,7 @@ const Dashboard = () => {
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
             Ready to continue your medical education journey?
           </p>
-          <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+          <div className="bg-gradient-to-r from-teal-100 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-xl p-6 border border-teal-200 dark:border-teal-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                 <Flame className="w-5 h-5 text-orange-500 mr-2" />
@@ -373,15 +373,15 @@ const Dashboard = () => {
 
         {/* Quick Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-200 dark:border-blue-800 hover:scale-105 transition-transform duration-300">
+          <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 border-teal-200 dark:border-teal-800 hover:scale-105 transition-transform duration-300">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Target className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 <TrendingUp className="w-4 h-4 text-green-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                 {userStats?.accuracy || 0}%
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Accuracy</p>
@@ -418,15 +418,15 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 border-purple-200 dark:border-purple-800 hover:scale-105 transition-transform duration-300">
+          <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 border-teal-200 dark:border-teal-800 hover:scale-105 transition-transform duration-300">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <Users className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 <span className="text-sm font-bold text-green-600">#12</span>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                 {userStats?.rankPoints || 0}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Rank Points</p>
@@ -445,7 +445,7 @@ const Dashboard = () => {
                   to={action.disabled ? '#' : action.link}
                   className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
                 >
-                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
+                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
                     <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
                     <CardHeader className="relative pb-2">
                       {action.tag && (
@@ -458,7 +458,7 @@ const Dashboard = () => {
                           <action.icon className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                             {action.title}
                           </CardTitle>
                         </div>
@@ -473,7 +473,7 @@ const Dashboard = () => {
                 </Link>
               ) : (
                 <a key={index} href={action.link} target="_blank" rel="noopener noreferrer">
-                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
+                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
                     <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
                     <CardHeader className="relative pb-2">
                       {action.tag && (
@@ -486,7 +486,80 @@ const Dashboard = () => {
                           <action.icon className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                            {action.title}
+                          </CardTitle>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="relative">
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        {action.description}
+                      </p>
+                    </CardContent>
+          </Card>
+        </a>
+      ))
+    )}
+  </div>
+</div>
+
+          {/* Premium Perks Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Premium Perks</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {premiumPerks.map((action, index) => (
+                <Link
+                  key={index}
+                  to={action.disabled ? '#' : action.link}
+                  className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
+                >
+                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
+                    <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                    <CardHeader className="relative pb-2">
+                      {action.tag && (
+                        <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
+                          {action.tag}
+                        </Badge>
+                      )}
+                      <div className="flex items-center space-x-3 mt-4">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                          <action.icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                            {action.title}
+                          </CardTitle>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="relative">
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        {action.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Our Socials Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Our Socials</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {socials.map((action, index) => (
+                <a key={index} href={action.link} target="_blank" rel="noopener noreferrer">
+                  <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-teal-200 dark:border-teal-800 overflow-hidden relative`}>
+                    <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                    <CardHeader className="relative">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                          {/* Render the image directly */}
+                          {action.icon({ className: "w-6 h-6 object-contain" })} {/* Pass className as prop */}
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                             {action.title}
                           </CardTitle>
                         </div>
@@ -499,91 +572,18 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                 </a>
-              )
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Premium Perks Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Premium Perks</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {premiumPerks.map((action, index) => (
-              <Link
-                key={index}
-                to={action.disabled ? '#' : action.link}
-                className={action.disabled ? 'opacity-50 pointer-events-none' : ''}
-              >
-                <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
-                  <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                  <CardHeader className="relative pb-2">
-                    {action.tag && (
-                      <Badge className={`absolute top-2 right-2 ${action.tagColor}`}>
-                        {action.tag}
-                      </Badge>
-                    )}
-                    <div className="flex items-center space-x-3 mt-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <action.icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                          {action.title}
-                        </CardTitle>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      {action.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+          {/* Footer Text */}
+          <div className="text-center mt-12 mb-4 text-gray-500 dark:text-gray-400 text-sm">
+            <p>A Project by Educational Spot.</p>
+            <p>&copy; 2025 Medistics. All rights reserved.</p>
           </div>
-        </div>
-
-        {/* Our Socials Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Our Socials</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {socials.map((action, index) => (
-              <a key={index} href={action.link} target="_blank" rel="noopener noreferrer">
-                <Card className={`group hover:scale-105 hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br ${action.bgGradient} dark:${action.darkBgGradient} border-purple-200 dark:border-purple-800 overflow-hidden relative`}>
-                  <div className={`absolute inset-0 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                  <CardHeader className="relative">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        {/* Render the image directly */}
-                        {action.icon({ className: "w-6 h-6 object-contain" })} {/* Pass className as prop */}
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                          {action.title}
-                        </CardTitle>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      {action.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer Text */}
-        <div className="text-center mt-12 mb-4 text-gray-500 dark:text-gray-400 text-sm">
-          <p>A Project by Educational Spot.</p>
-          <p>&copy; 2025 Medistics. All rights reserved.</p>
         </div>
       </div>
-    </div>
-  );
+      );
 };
 
-export default Dashboard;
+      export default Dashboard;

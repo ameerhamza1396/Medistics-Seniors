@@ -757,23 +757,38 @@ const testimonials = [
         id="hero"
         className={`min-h-screen flex items-center justify-center relative bg-cover bg-center text-white overflow-hidden`}
         style={{
-          backgroundImage: `url("/images/${theme === 'dark' ? 'landing-dark.png' : 'landing-light.png'}")`,
+          backgroundImage: `url("/images/${theme === 'dark' ? 'landing-dark.png' : 'landing-light.png'}")`, // Retaining original background image logic
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
       >
         <div className="absolute inset-0 bg-black opacity-50"></div>
-        
-        {/* Floating particles */}
+
+        {/* Floating particles (now more vibrant and dynamic) */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(30)].map((_, i) => ( // Increased number of particles
             <div
               key={i}
-              className="absolute w-2 h-2 bg-white opacity-20 rounded-full animate-bounce"
+              className="absolute w-2 h-2 bg-gradient-to-r from-teal-300 to-blue-400 opacity-50 rounded-full animate-sparkle" // Teal gradient for particles
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 2}s`,
+                animationDelay: `${Math.random() * 3}s`, // Varied animation delays
+                animationDuration: `${3 + Math.random() * 3}s`, // Varied animation durations
+                filter: `blur(${Math.random() * 1}px)`, // Subtle blur for depth
+              }}
+            />
+          ))}
+          {/* Add some larger, slower-moving "orbs" for more life */}
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={`orb-${i}`}
+              className="absolute w-8 h-8 bg-gradient-to-br from-teal-400 to-blue-500 opacity-30 rounded-full animate-float-slow" // Larger orbs
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${10 + Math.random() * 10}s`,
+                filter: `blur(2px)`,
               }}
             />
           ))}
@@ -782,21 +797,21 @@ const testimonials = [
         <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl relative z-10">
           <div className="animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight max-w-2xl">
-              Ace the MDCAT with
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 inline-block animate-pulse"> AI Intelligence</span>
+              Achieve Your MBBS Dream with
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 inline-block animate-pulse"> AI Intelligence</span> {/* Teal gradient for "AI Intelligence" */}
             </h1>
           </div>
 
           <div className="animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
             <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl">
-              Medistics.app is Pakistan's most advanced AI-powered MDCAT preparation platform, designed to help you master medical concepts, practice MCQs, and achieve your dream score with personalized learning experiences
+              Medistics.app is Pakistan's most advanced AI-powered MBBS preparation platform, designed to help you master medical concepts, practice MCQs, and achieve your dream score with personalized learning experiences.
             </p>
           </div>
 
           <div className="animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
             <div className="flex flex-col sm:flex-row gap-4 justify-start mb-12">
               <Link to="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg px-8 py-3 hover:scale-105 transition-all duration-300 hover:shadow-2xl group">
+                <Button size="lg" className="bg-gradient-to-r from-teal-500 to-blue-600 text-white text-lg px-8 py-3 hover:scale-105 transition-all duration-300 hover:shadow-2xl group"> {/* Teal gradient for button */}
                   Start Learning Free
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform duration-300" />
                 </Button>
@@ -806,6 +821,32 @@ const testimonials = [
         </div>
       </section>
 
+      {/* Add new keyframe animations to your CSS or a style block */}
+      <style jsx>{`
+        @keyframes sparkle {
+          0% { transform: scale(0.5) translateY(0); opacity: 0; }
+          20% { opacity: 0.8; }
+          40% { transform: scale(1) translateY(-10px); opacity: 1; }
+          60% { transform: scale(0.8) translateY(-5px); opacity: 0.7; }
+          100% { transform: scale(0.5) translateY(0); opacity: 0; }
+        }
+
+        @keyframes float-slow {
+          0% { transform: translateY(0) translateX(0) scale(1); }
+          25% { transform: translateY(-15px) translateX(10px) scale(1.05); }
+          50% { transform: translateY(0) translateX(0) scale(1); }
+          75% { transform: translateY(15px) translateX(-10px) scale(0.95); }
+          100% { transform: translateY(0) translateX(0) scale(1); }
+        }
+
+        .animate-sparkle {
+          animation: sparkle var(--animation-duration, 3s) ease-in-out infinite var(--animation-delay, 0s);
+        }
+
+        .animate-float-slow {
+          animation: float-slow var(--animation-duration, 15s) ease-in-out infinite var(--animation-delay, 0s);
+        }
+      `}</style>
       {/* Section 2: Stats Section */}
       <section id="stats" className="min-h-screen flex items-center justify-center container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-7xl relative overflow-hidden">
         {/* Moving gradient background elements */}
@@ -936,65 +977,94 @@ const testimonials = [
     <div className="text-center md:text-left w-full md:w-1/2 lg:w-3/5 animate-fade-in-right">
       <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight 
                      bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-        Meet Dr. Sultan
+        Meet Dr. Ahroid
       </h2>
       <h3 className="text-2xl md:text-3xl font-semibold text-gray-700 dark:text-gray-300 mb-6">
         Your Dedicated AI Companion for Medical Studies
       </h3>
       <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-6 max-w-2xl md:max-w-none mx-auto md:mx-0">
-        Dr. Sultan is not just an AI; he's your personalized study partner, always available to clarify complex medical concepts, provide detailed explanations, and help you master every topic. With Dr. Sultan by your side, learning becomes intuitive, engaging, and highly effective.
+        Dr. Ahroid is not just an AI; he's your personalized study partner, always available to clarify complex medical concepts, provide detailed explanations, and help you master every topic. With Dr. Sultan by your side, learning becomes intuitive, engaging, and highly effective.
       </p>
       <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl md:max-w-none mx-auto md:mx-0">
-        Leveraging cutting-edge artificial intelligence, Dr. Sultan delivers instant answers, personalized feedback, and adaptive learning paths, ensuring you're fully prepared for any challenge in your medical journey.
+        Leveraging cutting-edge artificial intelligence, Dr. Ahroid delivers instant answers, personalized feedback, and adaptive learning paths, ensuring you're fully prepared for any challenge in your medical journey.
       </p>
     </div>
   </div>
 </section>
 
-{/* New Section: Founding Team */}
-<section id="founding-team" className="min-h-screen flex flex-col items-center justify-center py-16 px-4 lg:px-8
-                                         bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 
-                                         dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 text-gray-900 dark:text-white">
-  <div className="container mx-auto max-w-7xl text-center">
-    <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-12 animate-fade-in-up bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
-      Meet Our Founding Team
-    </h2>
+      {/* New Section: Founding Team & Contributors */}
+      <section id="founding-team" className="min-h-screen flex flex-col items-center justify-center py-16 px-4 lg:px-8
+             bg-gradient-to-br from-white via-teal-50/30 to-blue-50/30
+             dark:from-gray-900 dark:via-teal-900/10 dark:to-blue-900/10 text-gray-900 dark:text-white">
+        <div className="container mx-auto max-w-7xl text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-12 animate-fade-in-up bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-blue-600">
+            Meet Our Founder & Contributors
+          </h2>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 lg:gap-12 w-full max-w-5xl mx-auto">
-      {teamMembers.map((member, index) => (
-        <a
-          key={index}
-          href={member.instagram}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block group bg-white dark:bg-gray-800 rounded-lg shadow-xl hover:shadow-2xl 
-                     transform hover:-translate-y-2 transition-all duration-500 overflow-hidden 
-                     border border-purple-200 dark:border-purple-800 hover:border-purple-500 dark:hover:border-pink-500"
-        >
-          <div className="relative w-full h-64 md:h-72 overflow-hidden">
-            <img
-              src={member.image}
-              alt={member.name}
-              className="absolute inset-0 w-full h-full object-cover filter grayscale group-hover:grayscale-0 
+          {/* Founding Member */}
+          <div className="relative w-full max-w-sm mx-auto mb-16">
+            <a
+              href="https://www.instagram.com/ameerhamza.exe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block group bg-white dark:bg-gray-800 rounded-lg shadow-xl hover:shadow-2xl
+                     transform hover:-translate-y-2 transition-all duration-500 overflow-hidden
+                     border border-teal-200 dark:border-teal-800 hover:border-teal-500 dark:hover:border-blue-500"
+            >
+              <div className="relative w-full h-72 overflow-hidden">
+                <img
+                  src="team/founders/hamza.png"
+                  alt="Dr. Muhammad Ameer Hamza"
+                  className="absolute inset-0 w-full h-full object-cover filter grayscale group-hover:grayscale-0
                           transition-all duration-700 ease-in-out transform group-hover:scale-105"
-              loading="lazy"
-            />
-            {/* Optional: Overlay for subtle effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:text-teal-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                  Dr. Muhammad Ameer Hamza
+                </h3>
+                <p className="text-md md:text-lg text-gray-600 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-blue-300 transition-colors duration-300">
+                  Batch of 2025, SMBBMC
+                </p>
+              </div>
+            </a>
           </div>
-          <div className="p-6">
-            <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:text-purple-600 dark:group-hover:text-pink-400 transition-colors duration-300">
-              {member.name}
+
+          {/* Contributors Section */}
+          <div className="w-full text-center">
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-blue-600">
+              Our Valued Contributors
             </h3>
-            <p className="text-md md:text-lg text-gray-600 dark:text-gray-400 group-hover:text-purple-500 dark:group-hover:text-pink-300 transition-colors duration-300">
-              {member.title}
-            </p>
+            <div className="flex justify-center">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                {/* Individual Contributor Cards */}
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-teal-400 dark:hover:border-blue-400">
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">Muhammad Irfan</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Batch 11</p>
+                </div>
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-teal-400 dark:hover:border-blue-400">
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">Abdul Hadi Ansari</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Batch 12</p>
+                </div>
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-teal-400 dark:hover:border-blue-400">
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">Manhil Mushtaq</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Batch 13</p>
+                </div>
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-teal-400 dark:hover:border-blue-400">
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">Asad Ali</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Batch 14</p>
+                </div>
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-transparent hover:border-teal-400 dark:hover:border-blue-400">
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">Tanis Ratani</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Batch 15</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
 
 
 
@@ -1049,118 +1119,6 @@ const testimonials = [
       </section>
 
 
-<section id="testimonials" className="hidden md:flex min-h-screen flex-col justify-center items-center py-16 px-0 lg:px-0
-                                 bg-gradient-to-r from-purple-50 via-white to-pink-50
-                                 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-white overflow-hidden">  <div className="container mx-auto max-w-7xl text-center mb-12 px-4 lg:px-8">
-    <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 animate-fade-in-down">
-      What Our Aspirants Say
-    </h2>
-    <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mt-4 animate-fade-in">
-      Hear directly from the students who achieved success with Medistics.
-    </p>
-  </div>
-
-  {/* Testimonials Carousel Container */}
-  {/* The outer div remains overflow-hidden to clip the track */}
-  <div className="w-full relative py-8 overflow-hidden">
-    <style>{`
-      @keyframes scroll-infinite {
-        0% { transform: translateX(0%); }
-        100% { transform: translateX(-50%); } /* Animate to -50% to show the second set */
-      }
-
-      .testimonial-track {
-        display: flex;
-        /* The trick: the track itself is twice the width of the viewport (or more if needed)
-           and contains two identical sets of testimonials.
-           The animation moves it by half its total width, so the second set aligns perfectly. */
-        width: max-content; /* Allow track to be as wide as its content */
-        animation: scroll-infinite 200s linear infinite; /* Adjust duration for speed */
-        white-space: nowrap; /* Keep items on a single line for horizontal scroll */
-        will-change: transform; /* Optimize for animation */
-      }
-
-      /* Pause animation on hover for user interaction */
-      .testimonial-track-container:hover .testimonial-track {
-        animation-play-state: paused;
-      }
-
-      .testimonial-card-wrapper {
-        flex-shrink: 0; /* Prevent cards from shrinking */
-        width: 380px; /* Increased width for cards to fit text better */
-        margin-right: 2.5rem; /* Spacing between cards (40px) */
-        padding: 1rem; /* Inner padding for the wrapper */
-        white-space: normal; /* Ensure text inside the card wraps normally */
-      }
-
-      /* Adjust for smaller screens */
-      @media (max-width: 768px) {
-        .testimonial-card-wrapper {
-          width: 90%; /* Wider cards on smaller screens */
-          margin-right: 1.5rem; /* Smaller margin */
-        }
-      }
-
-      /* Container for user scrolling - this is the key addition */
-      .testimonial-track-container {
-        width: 100%;
-        overflow-x: auto; /* Enable user scrolling */
-        -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
-        /* Hide scrollbar for aesthetic purposes, but keep functionality */
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-      }
-
-      .testimonial-track-container::-webkit-scrollbar {
-        display: none; /* For Chrome, Safari, and Opera */
-      }
-    `}</style>
-
-    {/* This new container handles user scrolling */}
-    <div className="testimonial-track-container">
-      <div className="testimonial-track">
-        {/*
-          Crucially, we duplicate the *entire* `testimonials` array to ensure
-          a seamless loop when `translateX(-50%)` is applied.
-          The `testimonial-track` will contain `[T1, T2, T3, T4, T1, T2, T3, T4]`
-          When the animation moves it by half its width, it transitions from
-          showing `[T1, T2, T3, T4]` to showing `[T1, T2, T3, T4]` (the start of the second set),
-          making it appear infinite.
-        */}
-        {testimonials.concat(testimonials).map((testimonial, index) => (
-          <div key={index} className="testimonial-card-wrapper">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 h-full flex flex-col justify-between
-                                border border-purple-200 dark:border-purple-800 transform hover:-translate-y-1
-                                hover:shadow-2xl transition-all duration-300">
-              {/* Image at center top */}
-              <div className="flex flex-col items-center mb-4">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.name}
-                  className="w-16 h-16 rounded-full object-cover mb-2 border-2 border-purple-400 dark:border-pink-500"
-                />
-                <h3 className="text-lg font-semibold text-purple-700 dark:text-pink-400 text-center">
-                  {testimonial.name}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                  {testimonial.title}
-                </p>
-              </div>
-              <p className="text-base text-gray-700 dark:text-gray-300 italic mb-4 text-center">
-                "{testimonial.quote}"
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-
-  {/* Footer Line for Testimonials Section */}
-  <div className="mt-12 text-sm text-gray-500 dark:text-gray-400 px-4 lg:px-8 text-center animate-fade-in-up">
-    <p>These testimonials are from Educational Spot, the parent setup of Medistics.App.</p>
-  </div>
-</section>
 
 {/* New Section: Milestones */}
 <section id="milestones" className="min-h-screen flex flex-col items-center justify-center py-16 px-4 lg:px-8 
