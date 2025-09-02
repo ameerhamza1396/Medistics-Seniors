@@ -160,7 +160,7 @@ const AITestGenerator: React.FC = () => {
     timerRef.current = setInterval(() => setLoadTime(t => t + 1), 1000);
 
     try {
-      const res = await fetch(`https://medistics-ai-bot.vercel.app/generate-ai-test`, {
+      const res = await fetch(`https://medmacs-ai-bot.vercel.app/generate-ai-test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

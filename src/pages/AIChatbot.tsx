@@ -44,7 +44,7 @@ type Profile = {
   website: string | null;
 };
 
-const API_BASE_URL = 'https://medistics-ai-bot.vercel.app';
+const API_BASE_URL = 'https://medmacs-ai-bot.vercel.app';
 
 // Custom Notification Component
 const Notification: React.FC<{ message: string; type: 'success' | 'error'; onClose: () => void }> = ({ message, type, onClose }) => {

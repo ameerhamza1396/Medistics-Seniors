@@ -31,7 +31,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
-const CLOUDINARY_CLOUD_NAME = 'dabgjalqp';
+const CLOUDINARY_CLOUD_NAME = 'dsrzawwej';
 const CLOUDINARY_UPLOAD_PRESET = 'profiles_pictures';
 
 const ProfileAvatar = ({ user, profileData, displayName, rawUserPlan, userPlanDisplayName, planColors, isHeader }) => {
