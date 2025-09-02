@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen, Crown } from 'lucide-react'; // Added Crown icon
+import { Moon, Sun, ArrowLeft, Send, Mic, X, Save, PlusSquare, MessageSquare, Menu, PanelLeftClose, PanelLeftOpen, Crown, Copy } from 'lucide-react'; // Added Crown icon
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -302,6 +302,10 @@ const DrSultanChat: React.FC = () => {
     }
   };
 
+  // Clipboard copy state
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+
   // Determine if AI is currently typing
   const isAITyping = apiLoading && messages.length > 0 && messages[messages.length - 1].sender === 'user';
 
@@ -346,8 +350,8 @@ const DrSultanChat: React.FC = () => {
   return (
     <div className="h-screen w-full flex bg-white dark:bg-gray-900 font-sans">
       <Seo
-        title="Dr Sultan"
-        description="Get instant answers and study help for medical questions through interactive chat with Dr Sultan, Medistics App's AI Chatbot."
+        title="Dr Ahroid"
+        description="Get instant answers and study help for medical questions through interactive chat with Dr Ahroid, Medistics App's AI Chatbot."
         canonical="https://medistics.app/ai/chatbot"
       />
       {/* Global CSS for typing indicator */}
@@ -413,12 +417,13 @@ const DrSultanChat: React.FC = () => {
           <p className="text-gray-500">No chats yet.</p>
         )}
       </aside>
+      
 
       {/* Main chat panel content */}
       <main className="flex-1 min-h-0 w-full flex flex-col p-4 lg:p-8 max-w-4xl mx-auto">
         <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800">
           <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200 dark:border-purple-800">
-            <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Sultan Chat</CardTitle>
+            <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Ahroid Chat</CardTitle>
             {/* NEW: Replaced hardcoded avatar with ProfileDropdown */}
             <ProfileDropdown />
           </CardHeader>
@@ -426,28 +431,46 @@ const DrSultanChat: React.FC = () => {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 italic">
                 <MessageSquare className="w-16 h-16 mb-4 text-purple-400" />
-                <p className="text-lg text-gray-700 dark:text-gray-300">Start a new conversation with Dr. Sultan!</p>
+                <p className="text-lg text-gray-700 dark:text-gray-300">Start a new conversation with Dr. Ahroid!</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Ask about medical conditions, treatments, and more.</p>
               </div>
             )}
             {messages.map((msg, i) => {
               const isUser = msg.sender === 'user';
               return (
-                <div key={i} className={`flex items-end ${isUser ? 'justify-end' : 'justify-start'} transition-opacity duration-300 ease-out opacity-100`}>
+                <div key={i} className={`flex items-start ${isUser ? 'justify-end' : 'justify-start'} transition-opacity duration-300 ease-out opacity-100`}>
                   {!isUser && (
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 text-white font-bold text-sm">
-                      DS
-                    </div>
+                    <img
+                      src="/images/drahroidchat.jpg"
+                      alt="AI"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
                   )}
-                  <div className={`max-w-[70%] p-3 rounded-lg shadow ${isUser
+                  <div className={`max-w-[70%] p-2 rounded-lg shadow ${isUser
                       ? 'bg-purple-600 text-white rounded-br-none'
-                      : 'bg-gray-50 text-gray-900 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-600'
+                      : 'text-gray-900 dark:text-white text-lg'
                     }`}>
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                     {msg.time && (
-                      <span className="block text-xs mt-1 text-gray-300 text-right dark:text-gray-400">
-                        {msg.time}
-                      </span>
+                <div className="flex items-center">
+                  <span className="block text-s mt-1 text-gray-300 text-right dark:text-gray-400">
+                    {msg.time}
+                  </span>
+                  <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(msg.text);
+                            setCopiedIndex(i);
+                            setTimeout(() => setCopiedIndex(null), 5000); // reset after 2s
+                          }}
+                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded ml-2"
+                          title="Copy message"
+                        >
+                          <Copy className="w-3 h-3 text-gray-500 dark:text-gray-400" />                  
+                          </button>
+                        {copiedIndex === i && (
+                          <span className="text-s text-gray-500 dark:text-gray-500">Copied</span>
+                        )}
+                </div>
                     )}
                   </div>
                 </div>
@@ -455,9 +478,11 @@ const DrSultanChat: React.FC = () => {
             })}
             {isAITyping && (
               <div className="flex items-end justify-start">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 text-white font-bold text-sm">
-                  DS
-                </div>
+                <img
+                  src="/images/drahroidchat.jpg"
+                  alt="AI"
+                  className="w-8 h-8 rounded-full mr-2"
+                />
                 <div className="max-w-[70%] p-3 rounded-lg shadow bg-gray-50 rounded-bl-none border border-gray-100 dark:bg-gray-700 dark:border-gray-600">
                   <div className="flex items-center space-x-1 animate-pulse-dot">
                     <span className="w-2 h-2 bg-gray-500 rounded-full block dark:bg-gray-400"></span>
