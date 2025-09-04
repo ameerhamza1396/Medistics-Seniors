@@ -27,7 +27,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
   // Determine if the user has premium access
   const hasPremiumAccess = userPlan === 'premium';
 
-  const API_BASE_URL = 'https://medistics-ai-bot.vercel.app';
+  const API_BASE_URL = 'https://medmacs-ai-bot.vercel.app';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

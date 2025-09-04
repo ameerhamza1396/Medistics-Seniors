@@ -667,24 +667,44 @@ export const MCQDisplay = ({
               )}
 
               {/* Action Buttons */}
-              <div className="flex justify-end space-x-2 sm:space-x-3 mt-4 sm:mt-6">
-                {!showExplanation && selectedAnswer && (
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end mt-4 sm:mt-6 space-y-2 sm:space-y-0 sm:space-x-3">
+                {/* Previous Button - Hidden on first question */}
+                {currentQuestionIndex > 0 && (
                   <Button
-                    onClick={() => handleSubmitAnswer()}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm sm:text-base px-4 sm:px-6"
+                    onClick={() => {
+                      setCurrentQuestionIndex(prev => prev - 1);
+                      setSelectedAnswer(null);
+                      setShowExplanation(false);
+                      setTimeLeft(timePerQuestion);
+                      setStartTime(Date.now());
+                    }}
+                    variant="outline"
+                    className="w-full sm:w-auto border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-sm sm:text-base"
                   >
-                    Submit Answer
+                    Previous Question
                   </Button>
                 )}
 
-                {showExplanation && (
-                  <Button
-                    onClick={handleNextQuestion}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-sm sm:text-base px-4 sm:px-6"
-                  >
-                    {currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Finish Quiz'}
-                  </Button>
-                )}
+                <div className="flex w-full sm:w-auto justify-end space-x-2 sm:space-x-3">
+                  {!showExplanation && selectedAnswer && (
+                    <Button
+                      onClick={() => handleSubmitAnswer()}
+                      className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm sm:text-base px-4 sm:px-6"
+                    >
+                      Submit Answer
+                    </Button>
+                  )}
+
+                  {showExplanation && (
+                    <Button
+                      onClick={handleNextQuestion}
+                      className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-sm sm:text-base px-4 sm:px-6"
+                    >
+                      {currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Finish Quiz'}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Best of luck message */}

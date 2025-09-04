@@ -328,7 +328,7 @@ const Pricing = () => {
                                 )}
                                 {currentUserPlan === plan.id && ( // Use plan.id which is derived from Supabase 'name'
                                     <Badge className="absolute top-4 right-4 bg-green-500 text-white shadow-md">
-                                        Your Current Plan
+                                        Active
                                     </Badge>
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

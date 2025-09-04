@@ -96,8 +96,8 @@ export const ChapterSelectionScreen = ({
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Select Test – {subject.name}</h1>
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           {userProfile?.plan === 'free'
-            ? 'All chapters are unlocked. Free users have a daily limit of MCQ submissions.'
-            : 'You have unlimited access to all chapters and MCQs.'}
+            ? 'All tests are unlocked. Free users have a daily limit of MCQ submissions.'
+            : 'You have unlimited access to all tests and MCQs.'}
         </p>
       </div>
 
@@ -138,7 +138,7 @@ export const ChapterSelectionScreen = ({
                             <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg text-gray-900 dark:text-white">Chapter {ch.chapter_number}</CardTitle>
+                          <CardTitle className="text-lg text-gray-900 dark:text-white">{subject.name} Test {ch.chapter_number}</CardTitle>
                           <CardDescription className="text-sm text-gray-500 dark:text-gray-400">{ch.name}</CardDescription>
                         </div>
                       </div>

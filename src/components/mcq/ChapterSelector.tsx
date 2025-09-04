@@ -41,7 +41,7 @@ export const ChapterSelector = ({ subject, selectedChapter, onChapterSelect }: C
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-        <span className="ml-2 text-gray-600 dark:text-gray-400">Loading chapters...</span>
+        <span className="ml-2 text-gray-600 dark:text-gray-400">Loading tests...</span>
       </div>
     );
   }
@@ -49,7 +49,7 @@ export const ChapterSelector = ({ subject, selectedChapter, onChapterSelect }: C
   if (chapters.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600 dark:text-gray-400">No chapters available for this subject.</p>
+        <p className="text-gray-600 dark:text-gray-400">No tests available for this subject.</p>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export const ChapterSelector = ({ subject, selectedChapter, onChapterSelect }: C
                   </div>
                   <div>
                     <CardTitle className="text-lg text-gray-900 dark:text-white">
-                      Chapter {chapter.chapter_number}
+                      Test {chapter.chapter_number}
                     </CardTitle>
                     <CardDescription className="text-sm text-gray-500 dark:text-gray-400">
                       {chapter.name}

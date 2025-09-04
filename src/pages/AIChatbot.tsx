@@ -420,7 +420,7 @@ const DrSultanChat: React.FC = () => {
       
 
       {/* Main chat panel content */}
-      <main className="flex-1 min-h-0 w-full flex flex-col p-4 lg:p-8 max-w-4xl mx-auto">
+      <main className="flex-1 min-h-0 wfull flex flex-col p-4 lg:p-8 max-w-full mx-auto">
         <Card className="flex-1 flex flex-col min-h-0 shadow-lg bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800">
           <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-purple-200 dark:border-purple-800">
             <CardTitle className="text-gray-900 text-lg dark:text-white">Dr. Ahroid Chat</CardTitle>

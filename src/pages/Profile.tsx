@@ -82,21 +82,16 @@ const Profile = () => {
         staleTime: 1000 * 60,
     });
 
+    // ✅ FIXED useEffect: only set state when profileData is available
     useEffect(() => {
         if (profileData) {
             setEditableProfile({
-                full_name: profileData.full_name || user?.user_metadata?.full_name || '',
-                username: profileData.username || user?.user_metadata?.username || '',
-                year: profileData.year || ''
-            });
-        } else if (!user) {
-            setEditableProfile({
-                full_name: '',
-                username: '',
-                year: ''
+                full_name: profileData.full_name ?? user?.user_metadata?.full_name ?? '',
+                username: profileData.username ?? user?.user_metadata?.username ?? '',
+                year: profileData.year ?? ''
             });
         }
-    }, [profileData, user]);
+    }, [profileData]); // removed "user" from dependencies
 
     const displayName = editableProfile.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
     const userEmail = profileData?.email || user?.email || 'N/A';

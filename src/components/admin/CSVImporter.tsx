@@ -48,7 +48,7 @@ export const CSVImporter = () => {
       }
 
       const newSubjectTopics: SubjectTopicMap = {};
-      data.forEach((chapter) => {
+      data.forEach((chapter: any) => {
         const subjectName = chapter.subjects.name;
         const topic = { id: chapter.id, name: chapter.name };
 
@@ -65,7 +65,7 @@ export const CSVImporter = () => {
     fetchSubjectTopics();
   }, [toast]);
 
-  // New state to hold user's topic selection for each sheet
+  // state to hold mapping sheet -> selected topic
   const [sheetTopicMapping, setSheetTopicMapping] = useState<{ [sheetName: string]: string }>({});
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +73,7 @@ export const CSVImporter = () => {
     if (file && (file.type === 'text/csv' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) {
       setSelectedFile(file);
       setImportResult(null);
-      setSheetTopicMapping({}); // Reset mapping
+      setSheetTopicMapping({});
       parseFileForPreview(file);
     } else {
       toast({
@@ -98,7 +98,7 @@ export const CSVImporter = () => {
       } else {
         const csvText = await file.text();
         const lines = csvText.split('\n').filter(line => line.trim());
-        let currentSheet = 'Sheet 1'; // Default sheet name for CSV
+        let currentSheet = 'Sheet 1';
         let currentSheetLines: string[] = [];
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
@@ -137,6 +137,7 @@ export const CSVImporter = () => {
           const question = row[1] ? String(row[1]).trim() : '';
           const optionA = row[2] ? String(row[2]).trim() : '';
           const optionB = row[3] ? String(row[3]).trim() : '';
+          // Option C..E optional, only require A & B for minimal validation
           if (serialNum && serialNum.match(/^\d+$/) && question && optionA && optionB) {
             questionCount++;
           } else {
@@ -153,7 +154,6 @@ export const CSVImporter = () => {
       });
       setPreviewData(preview);
 
-      // Notify the user if any errors were found
       const totalErrors = preview.reduce((sum, sheet) => sum + sheet.errors.length, 0);
       if (totalErrors > 0) {
         toast({
@@ -162,7 +162,6 @@ export const CSVImporter = () => {
           variant: "warning",
         });
       }
-
     } catch (error) {
       console.error('Preview error:', error);
       toast({
@@ -171,25 +170,6 @@ export const CSVImporter = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const parseCSVLine = (line: string): string[] => {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    result.push(current.trim());
-    return result;
   };
 
   const importQuestions = async () => {
@@ -240,7 +220,7 @@ export const CSVImporter = () => {
               .insert({
                 chapter_id: chapter.id,
                 question: q.question,
-                options: [q.optionA, q.optionB, q.optionC, q.optionD],
+                options: [q.optionA, q.optionB, q.optionC, q.optionD, q.optionE],
                 correct_answer: q.answer,
                 explanation: q.explanation,
                 subject: selectedSubject,
@@ -248,7 +228,6 @@ export const CSVImporter = () => {
               });
 
             if (error) {
-              // Capture detailed error and question info
               const errorMessage = `Failed to import question with serial ${q.serial} on sheet "${sheetName}". Reason: ${error.message}`;
               throw new Error(errorMessage);
             }
@@ -271,7 +250,7 @@ export const CSVImporter = () => {
     } catch (error: any) {
       toast({
         title: "Import Failed",
-        description: error.message,
+        description: error.message || String(error),
         variant: "destructive",
       });
     } finally {
@@ -330,7 +309,7 @@ export const CSVImporter = () => {
             </Select>
           </div>
 
-          {/* New: Dynamic Topic Selection per Sheet */}
+          {/* Dynamic Topic Selection per Sheet */}
           {previewData.length > 0 && selectedSubject && (
             <Card className="bg-gray-50">
               <CardHeader>
@@ -373,6 +352,7 @@ export const CSVImporter = () => {
                     ))}
                   </TableBody>
                 </Table>
+
                 {previewData.some(sheet => sheet.errors.length > 0) && (
                   <div className="mt-4 space-y-2 text-sm">
                     <h4 className="font-semibold text-red-600">Detailed Preview Errors:</h4>
@@ -411,6 +391,7 @@ export const CSVImporter = () => {
             )}
           </Button>
 
+
           {/* Import Results */}
           {importResult && (
             <Card className="mt-4">
@@ -437,13 +418,13 @@ export const CSVImporter = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {Object.entries(importResult.sheetResults).map(([sheetName, result]) => (
+                          {Object.entries(importResult.sheetResults).map(([sheetName, res]) => (
                             <TableRow key={sheetName}>
                               <TableCell className="font-medium">{sheetName}</TableCell>
-                              <TableCell>{result.success}</TableCell>
-                              <TableCell>{result.total}</TableCell>
+                              <TableCell>{res.success}</TableCell>
+                              <TableCell>{res.total}</TableCell>
                               <TableCell>
-                                {result.success === result.total ? (
+                                {res.success === res.total ? (
                                   <span className="text-green-600">✓ Complete</span>
                                 ) : (
                                   <span className="text-yellow-600">⚠ Partial</span>
@@ -483,9 +464,9 @@ export const CSVImporter = () => {
                 <p><strong>CSV:</strong> Use topic names as section headers to separate different topics</p>
                 <p>• Questions should start from row 3 in each sheet</p>
                 <p>• Column A: Serial number, Column B: Question text</p>
-                <p>• Columns C, D, E, F: Option A, B, C, D respectively</p>
-                <p>• Column G: Correct answer (A, B, C, or D)</p>
-                <p>• Column H: Explanation (optional)</p>
+                <p>• Columns C, D, E, F, G: Option A, B, C, D, E respectively (Option E is optional)</p>
+                <p>• Column H: Correct answer (A, B, C, D, or E)</p>
+                <p>• Column I: Explanation (optional)</p>
                 <p>• Sheet/topic names must match the topics in your selected subject</p>
               </div>
             </CardContent>
@@ -496,6 +477,12 @@ export const CSVImporter = () => {
   );
 };
 
+/**
+ * parseFile
+ * - Reads .xlsx or .csv and returns a mapping sheetName => questions[]
+ * - Expected columns:
+ *   0: Serial, 1: Question, 2: OptionA, 3: OptionB, 4: OptionC, 5: OptionD, 6: OptionE, 7: Answer, 8: Explanation
+ */
 const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
   let sheets: { [key: string]: any[][] } = {};
 
@@ -509,7 +496,7 @@ const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
   } else {
     const csvText = await file.text();
     const lines = csvText.split('\n').filter(line => line.trim());
-    let currentSheet = 'Sheet 1'; // Default sheet name for CSV
+    let currentSheet = 'Sheet 1';
     let currentSheetLines: string[] = [];
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -540,7 +527,7 @@ const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
 
   const result: { [key: string]: any[] } = {};
   Object.entries(sheets).forEach(([sheetName, sheetData]) => {
-    const questions = [];
+    const questions: any[] = [];
     for (let i = 2; i < sheetData.length; i++) {
       const row = sheetData[i];
       const serialNum = row[0] ? String(row[0]).trim() : '';
@@ -549,8 +536,9 @@ const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
       const optionB = row[3] ? String(row[3]).trim() : '';
       const optionC = row[4] ? String(row[4]).trim() : '';
       const optionD = row[5] ? String(row[5]).trim() : '';
-      const answer = row[6] ? String(row[6]).trim() : '';
-      const explanation = row[7] ? String(row[7]).trim() : '';
+      const optionE = row[6] ? String(row[6]).trim() : '';
+      const answer = row[7] ? String(row[7]).trim() : '';
+      const explanation = row[8] ? String(row[8]).trim() : '';
       if (serialNum && serialNum.match(/^\d+$/) && question && optionA && optionB) {
         questions.push({
           serial: serialNum,
@@ -559,6 +547,7 @@ const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
           optionB: optionB,
           optionC: optionC,
           optionD: optionD,
+          optionE: optionE,
           answer: answer,
           explanation: explanation
         });
@@ -569,14 +558,24 @@ const parseFile = async (file: File): Promise<{ [key: string]: any[] }> => {
   return result;
 };
 
+/**
+ * parseCSVLine
+ * simple CSV line parser that respects double quotes
+ */
 const parseCSVLine = (line: string): string[] => {
-  const result = [];
+  const result: string[] = [];
   let current = '';
   let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     if (char === '"') {
-      inQuotes = !inQuotes;
+      // toggle inQuotes, but handle escaped quotes ("")
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
     } else if (char === ',' && !inQuotes) {
       result.push(current.trim());
       current = '';
