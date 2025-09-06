@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Play, Loader2 } from 'lucide-react';
-import { fetchChaptersBySubject, fetchMCQsByChapter, Chapter } from '@/utils/mcqData';
+import { fetchChaptersBySubject, Chapter } from '@/utils/mcqData';
 
 interface ChapterSelectorProps {
   subject: string;
@@ -14,27 +13,16 @@ interface ChapterSelectorProps {
 export const ChapterSelector = ({ subject, selectedChapter, onChapterSelect }: ChapterSelectorProps) => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadChapters = async () => {
       setLoading(true);
       const data = await fetchChaptersBySubject(subject);
       setChapters(data);
-      
-      // Fetch question counts for each chapter
-      const counts: Record<string, number> = {};
-      for (const chapter of data) {
-        const mcqs = await fetchMCQsByChapter(chapter.id);
-        counts[chapter.id] = mcqs.length;
-      }
-      setQuestionCounts(counts);
       setLoading(false);
     };
 
-    if (subject) {
-      loadChapters();
-    }
+    if (subject) loadChapters();
   }, [subject]);
 
   if (loading) {
@@ -65,12 +53,11 @@ export const ChapterSelector = ({ subject, selectedChapter, onChapterSelect }: C
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Card 
-            className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-2 ${
-              selectedChapter === chapter.id 
-                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' 
+          <Card
+            className={`cursor-pointer hover:shadow-lg transition-all duration-300 border-2 ${selectedChapter === chapter.id
+                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
                 : 'border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700'
-            } bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 backdrop-blur-sm`}
+              } bg-gradient-to-br from-purple-100/70 via-purple-50/50 to-pink-50/30 dark:from-purple-900/30 dark:via-purple-800/20 dark:to-pink-900/10 backdrop-blur-sm`}
             onClick={() => onChapterSelect(chapter.id)}
           >
             <CardHeader>
@@ -90,7 +77,7 @@ export const ChapterSelector = ({ subject, selectedChapter, onChapterSelect }: C
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {questionCounts[chapter.id] || 0} Questions
+                    {chapter.mcq_count || 0} Questions
                   </span>
                 </div>
               </div>
