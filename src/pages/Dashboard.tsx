@@ -187,8 +187,8 @@ const Dashboard = () => {
       darkBgGradient: 'from-yellow-900/30 to-amber-900/30'
     },
     {
-      title: 'Summer Internship 2025',
-      description: 'Apply for the Medistics Summer Internship Program!',
+      title: 'Become a colaboratoe',
+      description: 'Apply for the Medmacs xollaborator Program!',
       icon: Briefcase,
       link: '/summerinternship2025',
       type: 'internal',

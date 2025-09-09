@@ -113,7 +113,7 @@ export const ChapterSelectionScreen = ({
                       </div>
                       <div>
                         <CardTitle className="text-lg text-gray-900 dark:text-white">
-                          {subject.name} Test {ch.chapter_number}
+                          Practice test {ch.chapter_number}
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-500 dark:text-gray-400">
                           {ch.name}

@@ -18,7 +18,7 @@ import { ProfileDropdown } from '@/components/ProfileDropdown'; // NEW: Import P
 import Seo from '@/components/Seo'; // Import the Seo component
 
 // Cloudinary configuration
-const CLOUDINARY_CLOUD_NAME = 'dabgjalqp';
+const CLOUDINARY_CLOUD_NAME = 'dsrzawwej';
 const CLOUDINARY_UPLOAD_PRESET = 'internship_applications';
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 

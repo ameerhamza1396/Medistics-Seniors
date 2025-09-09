@@ -424,8 +424,8 @@ const Checkout = () => {
                                 className="w-10 h-10 object-contain mr-3"
                             />
                             <div>
-                                <p className="font-semibold">Account Number: <span className="text-purple-600 dark:text-purple-400">03166891212</span></p>
-                                <p className="font-semibold">Account Name: <span className="text-purple-600 dark:text-purple-400">MedisticsApp</span></p>
+                                <p className="font-semibold">Account Number: <span className="text-purple-600 dark:text-purple-400">03xx-xxxxxxx</span></p>
+                                <p className="font-semibold">Account Name: <span className="text-purple-600 dark:text-purple-400">Test Account</span></p>
                             </div>
                         </div>
 
@@ -441,7 +441,7 @@ const Checkout = () => {
                         {/* End JazzCash QR Code Image */}
 
                         <p className="mb-4">
-                            Once you have made the payment, please upload a screenshot or photo of your payment receipt below. Your plan will be activated upon verification of your payment.
+                            This website is in beta preview and we are not accepting payments as of now. If you are interested in testing paid plans, write me at ameerhamza@dr.com
                         </p>
 
                         <div className="grid w-full max-w-sm items-center gap-1.5 mt-6">
