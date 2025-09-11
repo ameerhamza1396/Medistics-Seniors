@@ -154,7 +154,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
               <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg flex-shrink-0">
                 <div className="flex items-center space-x-2">
                   <Bot className="w-5 h-5" />
-                  <CardTitle className="text-lg">Dr. Sultan</CardTitle>
+                  <CardTitle className="text-lg">Dr. Ahroid Chat</CardTitle>
                 </div>
                 <Button
                   variant="ghost"
@@ -174,7 +174,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-8">
                           <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
                           <p className="text-sm">Ask me anything about your studies!</p>
-                          <p className="text-xs text-gray-500 mt-2">I'm Dr. Sultan, your MCAT tutor specialized in medical sciences.</p>
+                          <p className="text-xs text-gray-500 mt-2">I'm Dr. Ahroid, your MBBS tutor specialized in medical sciences.</p>
                           {currentQuestion && (
                             <Button
                               variant="outline"
@@ -251,7 +251,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
                     <Lock className="w-16 h-16 text-purple-600 mb-4 opacity-70" />
                     <CardTitle className="text-xl mb-2">Premium Feature</CardTitle>
                     <CardDescription className="text-gray-600 dark:text-gray-400 mb-4">
-                      Unlock full access to Dr. Sultan AI Chatbot with a Premium plan.
+                      Unlock full access to Dr. Ahroid AI Chatbot with a Premium plan.
                     </CardDescription>
                     <Button
                       asChild
