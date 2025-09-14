@@ -53,11 +53,11 @@ import ContactUsPage from '@/pages/ContactUsPage';
 import FLP from '@/pages/FLP';
 import FLPResults from '@/pages/FLPResults';
 import FLPResultDetail from '@/components/FLPResultDetail'; // Adjust path if needed
-import ForgotPassword from '@/pages/ForgotPassword'; // Assuming you have a custom hook for authentication
+import ForgotPassword from '@/pages/ForgotPassword';
 import UpdatePassword from '@/pages/UpdatePassword'; // Add this import
 import SelectYear from '@/pages/SelectYear'; // Add this import
-import Teams from '@/pages/Team'; // Add this import
-import './App.css';
+import Teams from '@/pages/Team';
+import InstallApp from '@/pages/InstallApp';
 
 // Import the VideoCallProvider
 import { VideoCallProvider } from '@/video-sdk/VideoCallProvider'; // Adjust path if necessary
@@ -134,6 +134,7 @@ function App() {
                 <Route path="/update-password" element={<UpdatePassword />} /> {/* This is the new route */}
                 <Route path="/select-year" element={<SelectYear />} /> {/* This is the new route */}
                 <Route path="/teams" element={<Teams />} /> {/* This is the new route */}
+                <Route path="/install-app" element={<InstallApp />} /> {/* This is the new route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
