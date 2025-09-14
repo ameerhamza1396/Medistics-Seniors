@@ -706,10 +706,10 @@ const testimonials = [
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></div>
             </button>
             <button
-              onClick={() => scrollToSection('testimonials')}
+              onClick={() => navigate('/teams')}
               className="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 hover:scale-105 bg-transparent border-none cursor-pointer p-0 h-auto relative group"
             >
-              <span className="hidden lg:inline">Our Acheivers</span>
+              <span className="hidden lg:inline">Our Team</span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 group-hover:w-full transition-all duration-300"></div>
             </button>
             <button

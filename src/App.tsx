@@ -56,6 +56,7 @@ import FLPResultDetail from '@/components/FLPResultDetail'; // Adjust path if ne
 import ForgotPassword from '@/pages/ForgotPassword'; // Assuming you have a custom hook for authentication
 import UpdatePassword from '@/pages/UpdatePassword'; // Add this import
 import SelectYear from '@/pages/SelectYear'; // Add this import
+import Teams from '@/pages/Team'; // Add this import
 import './App.css';
 
 // Import the VideoCallProvider
@@ -132,6 +133,7 @@ function App() {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/update-password" element={<UpdatePassword />} /> {/* This is the new route */}
                 <Route path="/select-year" element={<SelectYear />} /> {/* This is the new route */}
+                <Route path="/teams" element={<Teams />} /> {/* This is the new route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
