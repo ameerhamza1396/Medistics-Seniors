@@ -46,7 +46,7 @@ const MobileNav = () => {
                 className="w-8 h-8 object-contain"
               />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Medistics
+                Medmacs
               </span>
             </div>
             <Button
