@@ -246,7 +246,7 @@ const Login = () => {
                         to="/signup"
                         className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium transition-colors"
                       >
-                        Sign up for free
+                        Create account for free
                       </Link>
                     </p>
                   </div>
