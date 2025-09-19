@@ -453,3 +453,29 @@
 .animate-gradient-spiral {
   animation: gradient-spiral 25s linear infinite;
 }
+
+@keyframes gradient-sway {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background: linear-gradient(-45deg, #d8b4fe, #fbcfe8, #c4b5fd, #f9a8d4);
+  background-size: 400% 400%;
+  animation: gradient-sway 20s ease infinite;
+}
+
+.dark .animate-gradient {
+  background: linear-gradient(-45deg, #0f0f1a, #2d1b69, #1e293b, #111827);
+  background-size: 400% 400%;
+  animation: gradient-sway 25s ease infinite;
+}
