@@ -415,7 +415,7 @@ const MockTest = () => {
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
-        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
+        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">Test Upcoming!</h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
           The Weekly Mock Test will be unlocked on {formattedUnlockTime} Pakistan Standard Time (PKT). Please check back then!
@@ -430,7 +430,7 @@ const MockTest = () => {
   if (isTestClosed && canAttemptAgain) { // Test window closed, but user can re-attempt (after lockout) if it reopens
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
-        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
+        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">Test Window Closed</h1>
         <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 text-center max-w-lg animate-fade-in-up delay-100">
           The Weekly Mock Test window has now closed.
@@ -452,7 +452,7 @@ const MockTest = () => {
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4">
-        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
+        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-24 h-24 object-contain mb-6 animate-bounce-in" />
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 text-center animate-fade-in-up">
           Test Already Completed
         </h1>
@@ -493,8 +493,8 @@ const MockTest = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 flex flex-col">
       <Seo
       title="Mock Test"
-      description="Take full-length mock tests on Medistics App to simulate real MDCAT exam conditions and evaluate your readiness."
-      canonical="https://medistics.app/mock-test"
+      description="Take full-length mock tests on Medmacs App to simulate real MDCAT exam conditions and evaluate your readiness."
+      canonical="https://medmacs.app/mock-test"
     />
       {/* Header - Reused from Dashboard */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -595,7 +595,7 @@ const MockTest = () => {
           <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white text-center flex items-center justify-center">
             <img
               src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-              alt="Medistics Logo"
+              alt="Medmacs Logo"
               className="w-12 h-12 object-contain mr-3"
             />
             Weekly Mock Test

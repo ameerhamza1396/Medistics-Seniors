@@ -498,7 +498,7 @@ export const FLPQuiz = ({ mcqs, onFinish, timePerQuestion = 60 }: FLPQuizProps) 
           >
             <img
               src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-              alt="Medistics Logo"
+              alt="Medmacs Logo"
               className="w-12 h-12 object-contain mr-3"
             />
             Full-Length Paper

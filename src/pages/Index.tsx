@@ -195,7 +195,7 @@ const Index = () => {
       <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
         <img
           src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-          alt="Loading Medistics"
+          alt="Loading Medmacs"
           className="w-32 h-32 object-contain" // Removed animate-bounce
         />
         {/* Removed the loading circle and bouncing dots */}
@@ -542,7 +542,7 @@ const Index = () => {
         <h3 className="text-xl font-semibold mb-4">Connect with us:</h3>
         <div className="flex space-x-6">
           <a
-            href="https://facebook.com/medisticsapp"
+            href="https://facebook.com/ameerhamza.exe2"
             target="_blank"
             rel="noopener noreferrer"
             className="text-purple-600 dark:text-pink-400 hover:text-purple-800 dark:hover:text-pink-600 transition-colors duration-300"
@@ -551,7 +551,7 @@ const Index = () => {
             <FaFacebookF className="w-8 h-8" /> {/* Correct Facebook Icon */}
           </a>
           <a
-            href="https://instagram.com/medistics.app"
+            href="https://instagram.com/medmacs.app"
             target="_blank"
             rel="noopener noreferrer"
             className="text-purple-600 dark:text-pink-400 hover:text-purple-800 dark:hover:text-pink-600 transition-colors duration-300"
@@ -560,7 +560,7 @@ const Index = () => {
             <FaInstagram className="w-8 h-8" /> {/* Correct Instagram Icon */}
           </a>
           <a
-            href="https://linkedin.com/in/medisticsapp"
+            href="https://linkedin.com/in/ameerhamza.exe"
             target="_blank"
             rel="noopener noreferrer"
             className="text-purple-600 dark:text-pink-400 hover:text-purple-800 dark:hover:text-pink-600 transition-colors duration-300"
@@ -649,7 +649,7 @@ const Index = () => {
                 <div className="flex items-center space-x-2 mb-4 group">
                   <img
                     src="/lovable-uploads/161d7edb-aa7b-4383-a8e2-75b6685fc44f.png"
-                    alt="Medistics Logo"
+                    alt="Medmacs Logo"
                     className="w-8 h-8 object-contain group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
                   />
                   <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Medmacs</span>

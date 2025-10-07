@@ -190,8 +190,8 @@ if (authLoading || profileLoading) {
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
     <Seo
       title="MCQs Practice"
-      description="Practice thousands of MCQs for MDCAT and other medical entrance exams with Medistics App. Track your progress and improve your scores."
-      canonical="https://medistics.app/mcqs"
+      description="Practice thousands of MCQs for MDCAT and other medical entrance exams with Medmacs App. Track your progress and improve your scores."
+      canonical="https://medmacs.app/mcqs"
     />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -202,7 +202,7 @@ if (authLoading || profileLoading) {
           </Link>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
+            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
             <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white hidden sm:inline">Practice MCQs</span>
             <span className="text-sm font-bold text-gray-900 dark:text-white sm:hidden">MCQs</span>
           </div>

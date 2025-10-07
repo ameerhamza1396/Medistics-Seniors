@@ -156,7 +156,7 @@ const AnnouncementsPage = () => {
             <Seo
             title="Announcements"
             description="Stay updated with the latest news, updates, and important announcements from Medistics App."
-            canonical="https://medistics.app/announcements"
+            canonical="https://medmacs.app/announcements"
             />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-blue-200 dark:border-blue-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
@@ -187,10 +187,10 @@ const AnnouncementsPage = () => {
             <div className="container mx-auto px-4 lg:px-8 py-8 max-w-7xl">
                 <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        📢 Latest Medistics Announcements
+                        📢 Latest Medmacs Announcements
                     </h1>
                     <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                        Stay updated with important news, updates, and notifications from Medistics.
+                        Stay updated with important news, updates, and notifications from Medmacs.
                     </p>
                 </div>
 

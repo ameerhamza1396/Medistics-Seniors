@@ -161,8 +161,8 @@ const ContactUsPage = () => {
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
             <Seo
             title="Contact Us"
-            description="Get in touch with Medistics App customer support for any queries, feedback, or assistance."
-            canonical="https://medistics.app/contact-us"
+            description="Get in touch with Medmacs App customer support for any queries, feedback, or assistance."
+            canonical="https://medmacs.app/contact-us"
             />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
@@ -171,7 +171,7 @@ const ContactUsPage = () => {
                     </Link>
 
                     <div className="flex items-center space-x-3">
-                        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
+                        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain" />
                         <span className="text-xl font-bold text-gray-900 dark:text-white">Contact Us</span>
                     </div>
 
@@ -208,7 +208,7 @@ const ContactUsPage = () => {
 
             <div className="container mx-auto px-4 lg:px-8 py-8 max-w-4xl">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-                    Get in Touch with Medistics!
+                    Get in Touch with Medmacs!
                 </h1>
 
                 <Card className="mb-8 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 shadow-lg animate-fade-in">
@@ -225,7 +225,7 @@ const ContactUsPage = () => {
                                 <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
                                 <span className="font-medium">Email:</span>
                             </div>
-                            <a href="mailto:medistics@dr.com" className="text-blue-600 dark:text-blue-400 hover:underline">medistics@dr.com</a>
+                            <a href="mailto:ameerhamza@dr.com" className="text-blue-600 dark:text-blue-400 hover:underline">medmacs@dr.com</a>
                         </div>
                         {/* Phone */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
@@ -241,7 +241,7 @@ const ContactUsPage = () => {
                                 <Instagram className="h-5 w-5 text-pink-600 dark:text-pink-400 mr-2" />
                                 <span className="font-medium">Instagram:</span>
                             </div>
-                            <a href="https://instagram.com/medistics.app" target="_blank" rel="noopener noreferrer" className="text-pink-600 dark:text-pink-400 hover:underline">instagram.com/medistics.app</a>
+                            <a href="https://instagram.com/ameerhamza.exe" target="_blank" rel="noopener noreferrer" className="text-pink-600 dark:text-pink-400 hover:underline">instagram.com/ameerhamza.exe2</a>
                         </div>
                         {/* Facebook */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
@@ -249,7 +249,7 @@ const ContactUsPage = () => {
                                 <Facebook className="h-5 w-5 text-blue-800 dark:text-blue-600 mr-2" />
                                 <span className="font-medium">Facebook:</span>
                             </div>
-                            <a href="https://facebook.com/medisticsApp" target="_blank" rel="noopener noreferrer" className="text-blue-800 dark:text-blue-600 hover:underline">facebook.com/medisticsApp</a>
+                            <a href="https://facebook.com/ameerhamza.exe2" target="_blank" rel="noopener noreferrer" className="text-blue-800 dark:text-blue-600 hover:underline">facebook.com/ameerhamza.exe2</a>
                         </div>
                         {/* LinkedIn */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
@@ -257,7 +257,7 @@ const ContactUsPage = () => {
                                 <Linkedin className="h-5 w-5 text-blue-700 dark:text-blue-500 mr-2" />
                                 <span className="font-medium">LinkedIn:</span>
                             </div>
-                            <a href="https://www.linkedin.com/in/medisticsapp/" target="_blank" rel="noopener noreferrer" className="text-blue-700 dark:text-blue-500 hover:underline">linkedin.com/in/medisticsapp/</a>
+                            <a href="https://www.linkedin.com/in/ameerhamza.exe/" target="_blank" rel="noopener noreferrer" className="text-blue-700 dark:text-blue-500 hover:underline">linkedin.com/in/ameerhamza.exe/</a>
                         </div>
                     </CardContent>
                 </Card>

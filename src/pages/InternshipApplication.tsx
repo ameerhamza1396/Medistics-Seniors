@@ -267,7 +267,7 @@ const InternshipApplication = () => {
     if (whyJoinMedistics.length < 70 || whyJoinMedistics.length > 500) {
       toast({
         title: "Validation Error",
-        description: "Why join Medistics? must be between 70 and 500 characters.",
+        description: "Why join Medmacs? must be between 70 and 500 characters.",
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -359,8 +359,8 @@ const InternshipApplication = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
       <Seo
         title="Summer Internship 2025"
-        description="Apply for the Medistics App Summer Internship Program 2025. Gain hands-on experience in a dynamic EdTech environment."
-        canonical="https://medistics.app/summerinternship2025"
+        description="Apply for the Medmacs App Summer Internship Program 2025. Gain hands-on experience in a dynamic EdTech environment."
+        canonical="https://medmacs.app/summerinternship2025"
       />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -500,7 +500,7 @@ const InternshipApplication = () => {
               {/* Why do you want to join Medistics as an Intern? */}
               <div>
                 <Label htmlFor="why_join_medistics" className="flex items-center gap-2 mb-2 text-gray-700 dark:text-gray-300">
-                  <Lightbulb className="w-4 h-4" /> Why do you want to join Medistics as an Intern?
+                  <Lightbulb className="w-4 h-4" /> Why do you want to join Medmacs as an Intern?
                 </Label>
                 <Textarea
                   id="why_join_medistics"
@@ -665,7 +665,7 @@ const InternshipApplication = () => {
       <footer className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-purple-200 dark:border-purple-800 py-4 mt-8">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 text-center text-sm text-gray-600 dark:text-gray-400">
           <p>A Project by Educational Spot.</p>
-          <p>© 2025 Medistics. All rights reserved.</p>
+          <p>© 2025 Medmacs. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -351,7 +351,7 @@ const DrSultanChat: React.FC = () => {
     <div className="h-screen w-full flex bg-white dark:bg-gray-900 font-sans">
       <Seo
         title="Dr Ahroid"
-        description="Get instant answers and study help for medical questions through interactive chat with Dr Ahroid, Medistics App's AI Chatbot."
+        description="Get instant answers and study help for medical questions through interactive chat with Dr Ahroid, Medmacs App's AI Chatbot."
         canonical="https://medistics.app/ai/chatbot"
       />
       {/* Global CSS for typing indicator */}

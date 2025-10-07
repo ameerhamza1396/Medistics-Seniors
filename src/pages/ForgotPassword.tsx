@@ -80,8 +80,8 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <Seo
         title="Forgot Password"
-        description="Reset your password for Medistics App. Enter your email to receive instructions on how to regain access to your account."
-        canonical="https://medistics.app/forgot-password"
+        description="Reset your password for Medmacs App. Enter your email to receive instructions on how to regain access to your account."
+        canonical="https://medmacs.app/forgot-password"
       />
       <div className="w-full max-w-md space-y-6 animate-fade-in">
         <div className="text-center">

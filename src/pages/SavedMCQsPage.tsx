@@ -175,7 +175,7 @@ const SavedMCQsPage = () => {
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
       <Seo
         title="Saved MCQs"
-        description="Access and review your saved MCQs on Medistics App. Organize your favorite or challenging questions for focused revision."
+        description="Access and review your saved MCQs on Medmacs App. Organize your favorite or challenging questions for focused revision."
         canonical="https://medistics.app/saved-mcqs"
       />
       {/* Header */}
@@ -188,7 +188,7 @@ const SavedMCQsPage = () => {
 
           <div className="flex items-center space-x-3">
             {/* Replace with your actual logo path */}
-            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
+            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold text-gray-900 dark:text-white">Saved MCQs</span>
           </div>
 

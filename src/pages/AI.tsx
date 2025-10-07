@@ -68,7 +68,7 @@ const AI = () => {
       {/* Add the Seo component here */}
       <Seo
         title="AI Study Assistant"
-        description="Leverage Medistics App's AI Study Assistant for personalized learning, including an AI Chatbot and AI Test Generator for medical exam preparation."
+        description="Leverage Medmacs App's AI Study Assistant for personalized learning, including an AI Chatbot and AI Test Generator for medical exam preparation."
         canonical="https://www.medistics.app/ai" // Replace with your actual domain if applicable
       />
 
@@ -80,7 +80,7 @@ const AI = () => {
           </Link>
 
           <div className="flex items-center space-x-3">
-            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
+            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold text-gray-900 dark:text-white">AI Study Assistant</span>
           </div>
 

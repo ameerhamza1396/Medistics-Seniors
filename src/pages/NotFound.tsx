@@ -14,7 +14,7 @@ const NotFound = () => {
       <div className="text-center max-w-md w-full">
         <Seo
           title="Page Not Found"
-          description="The page you are looking for on Medistics App does not exist."
+          description="The page you are looking for on Medmacs App does not exist."
           canonical="https://medistics.app/404" // Standard practice for 404 pages
         />
         {/* Header */}
@@ -42,10 +42,10 @@ const NotFound = () => {
             <div className="flex items-center justify-center space-x-3 mb-4">
               <img 
                 src="/lovable-uploads/161d7edb-aa7b-4383-a8e2-75b6685fc44f.png" 
-                alt="Medistics Logo" 
+                alt="Medmacs Logo" 
                 className="w-12 h-12 object-contain"
               />
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">Medistics</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">Medmacs</span>
             </div>
             <CardTitle className="text-6xl font-bold text-purple-600 dark:text-purple-400 mb-4 animate-fade-in">
               404

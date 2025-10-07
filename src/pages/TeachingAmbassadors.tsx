@@ -198,8 +198,8 @@ const TeachingAmbassadors = () => {
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
             <Seo
                 title="Teaching Ambassadors"
-                description="Become a Teaching Ambassador at Medistics App. Inspire and educate the next generation of medical professionals."
-                canonical="https://medistics.app/teaching-career"
+                description="Become a Teaching Ambassador at Medmacs App. Inspire and educate the next generation of medical professionals."
+                canonical="https://medmacs.app/teaching-career"
                 />
             {/* Header */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-blue-200 dark:border-blue-800 sticky top-0 z-50">
@@ -209,8 +209,8 @@ const TeachingAmbassadors = () => {
                     </Link>
 
                     <div className="flex items-center space-x-3">
-                        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">Become a Medistics Intern</span>
+                        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain" />
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">Become a Medmacs Intern</span>
                     </div>
 
                     <div className="flex items-center space-x-3">
@@ -233,10 +233,10 @@ const TeachingAmbassadors = () => {
                 {/* Hero Section */}
                 <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        🧑‍🏫 Join Our Medistics Teaching Intership Program!
+                        🧑‍🏫 Join Our Medmacs Teaching Intership Program!
                     </h1>
                     <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                        Share your expertise, mentor students, and gain incredible opportunities with Medistics.
+                        Share your expertise, mentor students, and gain incredible opportunities with Medmacs.
                     </p>
                 </div>
 
@@ -331,7 +331,7 @@ const TeachingAmbassadors = () => {
 
                             <div>
                                 <Label htmlFor="whyJoinMedistics" className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
-                                    <PenTool className="h-4 w-4 mr-2 text-indigo-500" /> Why do you want to join Medistics as a Teaching Ambassador?
+                                    <PenTool className="h-4 w-4 mr-2 text-indigo-500" /> Why do you want to join Medmacs as a Teaching Ambassador?
                                 </Label>
                                 <Textarea
                                     id="whyJoinMedistics"
@@ -406,7 +406,7 @@ const TeachingAmbassadors = () => {
                                 <Zap className="h-8 w-8 mx-auto mb-2 text-yellow-600 dark:text-yellow-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Free Premium Access</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Enjoy full access to all Medistics Premium features.
+                                    Enjoy full access to all Medmacs Premium features.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -416,7 +416,7 @@ const TeachingAmbassadors = () => {
                                 <FileText className="h-8 w-8 mx-auto mb-2 text-red-600 dark:text-red-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Official Certificates</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Receive a certificate of ambassadorship from Medistics.
+                                    Receive a certificate of ambassadorship from Medmacs.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -426,7 +426,7 @@ const TeachingAmbassadors = () => {
                                 <ImageIcon className="h-8 w-8 mx-auto mb-2 text-purple-600 dark:text-purple-400" /> {/* Changed to ImageIcon */}
                                 <CardTitle className="text-gray-900 dark:text-white">Website Feature</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Get featured on the official Medistics website as an ambassador.
+                                    Get featured on the official Medmacs website as an ambassador.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -436,7 +436,7 @@ const TeachingAmbassadors = () => {
                                 <MessageSquare className="h-8 w-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Private Teaching Opportunities</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Connect with students seeking private tutoring through Medistics.
+                                    Connect with students seeking private tutoring through Medmacs.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -446,7 +446,7 @@ const TeachingAmbassadors = () => {
                                 <Brain className="h-8 w-8 mx-auto mb-2 text-teal-600 dark:text-teal-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Exclusive Features</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Gain early access to new Medistics features for educators.
+                                    Gain early access to new Medmacs features for educators.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -468,7 +468,7 @@ const TeachingAmbassadors = () => {
                     <div className="flex items-start space-x-2">
                         <Bot className="h-5 w-5 mt-0.5 flex-shrink-0" />
                         <div>
-                            <p className="font-medium mb-2">Medistics Teaching Intership Program Details:</p>
+                            <p className="font-medium mb-2">Medmacs Teaching Intership Program Details:</p>
                             <ul className="space-y-1 text-xs">
                                 <li>• <strong>Share Knowledge:</strong> Help students excel in their studies by providing guidance and teaching.</li>
                                 <li>• <strong>Content Creation:</strong> Contribute to Medistics' educational resources.</li>

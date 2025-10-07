@@ -183,8 +183,8 @@ const CareerAmbassador = () => {
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
             <Seo
             title="Career Opportunities"
-            description="Explore exciting career opportunities at Medistics App. Join our team and contribute to revolutionizing medical education."
-            canonical="https://medistics.app/career"
+            description="Explore exciting career opportunities at Medmacs App. Join our team and contribute to revolutionizing medical education."
+            canonical="https://medmacs.app/career"
             />
             {/* Header */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -195,7 +195,7 @@ const CareerAmbassador = () => {
 
                     <div className="flex items-center space-x-3">
                         <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">Become a Medistics Ambassador</span>
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">Become a Medmacs Ambassador</span>
                     </div>
 
                     <div className="flex items-center space-x-3">
@@ -218,7 +218,7 @@ const CareerAmbassador = () => {
                 {/* Hero Section */}
                 <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        🌍 Join Our Medistics Ambassador Program!
+                        🌍 Join Our Medmacs Ambassador Program!
                     </h1>
                     <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                         Be a part of our mission to revolutionize medical education. Empower your peers and gain exclusive benefits!
@@ -230,7 +230,7 @@ const CareerAmbassador = () => {
                     <CardHeader className="text-center pb-6">
                         <CardTitle className="text-gray-900 dark:text-white text-2xl mb-2">Apply Now</CardTitle>
                         <CardDescription className="text-gray-600 dark:text-gray-400">
-                            Fill out the form below to become a Medistics Campus Ambassador.
+                            Fill out the form below to become a Medmacs Campus Ambassador.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -336,7 +336,7 @@ const CareerAmbassador = () => {
                 {/* Perks of Being an Ambassador */}
                 <div className="mt-12 text-center animate-fade-in">
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                        🌟 Perks of Being a Medistics Ambassador
+                        🌟 Perks of Being a Medmacs Ambassador
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                         <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 hover:scale-105 transition-transform duration-300">
@@ -344,7 +344,7 @@ const CareerAmbassador = () => {
                                 <Zap className="h-8 w-8 mx-auto mb-2 text-yellow-600 dark:text-yellow-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Free Premium Access</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Enjoy full access to all Medistics Premium features.
+                                    Enjoy full access to all Medmacs Premium features.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -354,7 +354,7 @@ const CareerAmbassador = () => {
                                 <FileText className="h-8 w-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Official Certificates</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Receive a certificate of ambassadorship from Medistics.
+                                    Receive a certificate of ambassadorship from Medmscs.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -364,7 +364,7 @@ const CareerAmbassador = () => {
                                 <Image className="h-8 w-8 mx-auto mb-2 text-green-600 dark:text-green-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Website Feature</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Get featured on the official Medistics website as an ambassador.
+                                    Get featured on the official Medmscs website as an ambassador.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -374,7 +374,7 @@ const CareerAmbassador = () => {
                                 <Brain className="h-8 w-8 mx-auto mb-2 text-red-600 dark:text-red-400" />
                                 <CardTitle className="text-gray-900 dark:text-white">Exclusive Features</CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Gain early access to new Medistics features and tools.
+                                    Gain early access to new Medmacs features and tools.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -406,11 +406,11 @@ const CareerAmbassador = () => {
                     <div className="flex items-start space-x-2">
                         <Bot className="h-5 w-5 mt-0.5 flex-shrink-0" />
                         <div>
-                            <p className="font-medium mb-2">Medistics Ambassador Program Details:</p>
+                            <p className="font-medium mb-2">Medmacs Ambassador Program Details:</p>
                             <ul className="space-y-1 text-xs">
-                                <li>• <strong>Promote Medistics:</strong> Help us spread the word about our platform on your campus.</li>
+                                <li>• <strong>Promote Medmacs:</strong> Help us spread the word about our platform on your campus.</li>
                                 <li>• <strong>Gather Feedback:</strong> Be our eyes and ears, collecting valuable student insights.</li>
-                                <li>• <strong>Organize Events:</strong> Host Medistics-related events and workshops at your college.</li>
+                                <li>• <strong>Organize Events:</strong> Host Medmacs-related events and workshops at your college.</li>
                                 <li>• <strong>Build Your Network:</strong> Connect with a community of like-minded students and professionals.</li>
                             </ul>
                         </div>

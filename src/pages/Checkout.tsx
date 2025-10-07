@@ -281,7 +281,7 @@ const Checkout = () => {
         <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
             <Seo
             title="Checkout"
-            description="Complete your secure payment and subscribe to Medistics App's premium plans to unlock full features for MDCAT preparation."
+            description="Complete your secure payment and subscribe to Medmacs App's premium plans to unlock full features for MDCAT preparation."
             canonical="https://medistics.app/checkout"
             />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -486,7 +486,7 @@ const Checkout = () => {
 
             <div className="text-center mt-12 mb-4 text-gray-500 dark:text-gray-400 text-sm">
                 <p>A Project by Educational Spot.</p>
-                <p>&copy; 2025 Medistics. All rights reserved.</p>
+                <p>&copy; 2025 Medmaccs. All rights reserved.</p>
             </div>
 
             {/* Success Dialog */}
@@ -511,7 +511,7 @@ const Checkout = () => {
                             For any issues or inquiries, please contact our team:
                         </p>
                         <ul className="list-disc list-inside space-y-1">
-                            <li>Email: <a href="mailto:medistics@dr.com" className="text-blue-600 hover:underline dark:text-blue-400">medistics@dr.com</a></li>
+                            <li>Email: <a href="mailto:ameerhamza@dr.com" className="text-blue-600 hover:underline dark:text-blue-400">ameerhamzas@dr.com</a></li>
                             <li>WhatsApp: <a href="https://wa.me/923392456162" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">03392456162</a></li>
                         </ul>
                     </div>

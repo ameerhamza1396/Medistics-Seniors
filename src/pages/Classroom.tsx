@@ -622,8 +622,8 @@ export const Classroom = () => {
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 p-4 text-center">
         <Seo
           title="Classroom"
-          description="Join interactive virtual classrooms on Medistics App for live lectures, doubt clearing, and collaborative study sessions."
-          canonical="https://medistics.app/classroom"
+          description="Join interactive virtual classrooms on Medmacs App for live lectures, doubt clearing, and collaborative study sessions."
+          canonical="https://medmacs.app/classroom"
         />
         <Card className="w-full max-w-md bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-purple-200 dark:border-purple-800 shadow-lg p-6">
           <CardHeader className="mb-4">

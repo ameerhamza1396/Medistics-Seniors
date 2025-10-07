@@ -187,7 +187,7 @@ const Dashboard = () => {
       darkBgGradient: 'from-yellow-900/30 to-amber-900/30'
     },
     {
-      title: 'Become a colaboratoe',
+      title: 'Become a colaborator',
       description: 'Apply for the Medmacs xollaborator Program!',
       icon: Briefcase,
       link: '/summerinternship2025',
@@ -230,7 +230,7 @@ const Dashboard = () => {
       gradient: 'from-teal-500 to-cyan-500',
       bgGradient: 'from-teal-50 to-cyan-50',
       darkBgGradient: 'from-teal-900/30 to-cyan-900/30',
-      tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
+      tag: <img src="\lovable-uploads\star.gif" alt="medmacs" width={30} />,
       tagColor: 'bg-transparent'
     },
     {
@@ -242,7 +242,7 @@ const Dashboard = () => {
       gradient: 'from-green-500 to-emerald-500',
       bgGradient: 'from-green-50 to-emerald-50',
       darkBgGradient: 'from-green-900/30 to-emerald-900/30',
-      tag: <img src="\lovable-uploads\star.gif" alt="medistics" width={30} />,
+      tag: <img src="\lovable-uploads\star.gif" alt="medmacs" width={30} />,
       tagColor: 'bg-transparent'
     },
     {
@@ -258,7 +258,7 @@ const Dashboard = () => {
       tagColor: 'bg-transparent'
     },
     {
-      title: 'Hire a Tutor',
+      title: 'Viva & OSCE Prep',
       description: 'Coming Soon',
       icon: Users,
       link: '/hire-tutor',
@@ -272,10 +272,10 @@ const Dashboard = () => {
 
   const otherApps = [
     {
-      title: 'Medistics App',
+      title: 'Medmacs App',
       description: 'The Best AI for MDCAT in Pakistan',
-      icon: ({ className }) => <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className={className} />,
-      link: 'https://medistics.app',
+      icon: ({ className }) => <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className={className} />,
+      link: 'https://medmacs.app',
       type: 'external',
       gradient: 'from-purple-500 to-indigo-600',
       bgGradient: 'from-purple-50 to-indigo-50',
@@ -283,14 +283,14 @@ const Dashboard = () => {
     }
   ];
 
-  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medistics User';
+  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medmacs User';
 
   if (authLoading || profileLoading || userStatsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <img
           src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-          alt="Loading Medistics"
+          alt="Loading Medmacs"
           className="w-32 h-32 object-contain"
         />
       </div>
@@ -311,7 +311,7 @@ const Dashboard = () => {
       <Seo
         title="Dashboard"
         description="Your personalized Medmacs App dashboard. Track your progress, review past quizzes, and plan your study schedule effectively."
-        canonical="https://medistics.app/dashboard"
+        canonical="https://medmacs.app/dashboard"
       />
 
       <DashboardHeader profile={profile} user={user} displayName={displayName} />

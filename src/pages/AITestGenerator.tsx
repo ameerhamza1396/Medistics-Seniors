@@ -242,7 +242,7 @@ const AITestGenerator: React.FC = () => {
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10 text-gray-900 dark:text-gray-100">
       <Seo
         title="AI Test Generator"
-        description="Create custom practice tests with AI-generated questions tailored to your needs on Medistics App for effective MDCAT preparation."
+        description="Create custom practice tests with AI-generated questions tailored to your needs on Medmacs App for effective MDCAT preparation."
         canonical="https://medistics.app/ai/test-generator"
       />
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">

@@ -188,8 +188,8 @@ const Profile = () => {
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
             <Seo
                 title="User Profile"
-                description="Manage your Medistics App profile, settings, and track your overall academic performance."
-                canonical="https://medistics.app/profile"
+                description="Manage your Medmacs App profile, settings, and track your overall academic performance."
+                canonical="https://medmacs.app/profile"
             />
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-blue-200 dark:border-blue-800 sticky top-0 z-50">
                 <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">

@@ -237,7 +237,7 @@ const Classroom = () => {
 
           {/* Logo and Page Title */}
           <div className="flex items-center space-x-3">
-            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain rounded-md" /> {/* Rounded corners for image */}
+            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain rounded-md" /> {/* Rounded corners for image */}
             <span className="text-xl font-bold text-gray-900 dark:text-white">Classroom</span>
           </div>
 

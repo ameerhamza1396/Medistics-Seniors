@@ -34,7 +34,7 @@ const TestCompletionPage = () => {
           <div className="flex items-center space-x-3">
             <img
               src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-              alt="Medistics Logo"
+              alt="Medmacs Logo"
               className="w-8 h-8 object-contain"
             />
             <span className="text-xl font-bold text-gray-900 dark:text-white">Test Completed</span>
@@ -85,7 +85,7 @@ const TestCompletionPage = () => {
       {/* Optional: Footer if you want it here, otherwise removed as per previous request */}
       <div className="text-center mt-12 mb-4 p-4 text-gray-500 dark:text-gray-400 text-sm">
         <p>A Project by Educational Spot.</p>
-        <p>&copy; 2025 Medistics. All rights reserved.</p>
+        <p>&copy; 2025 Medmacs. All rights reserved.</p>
       </div>
     </div>
   );

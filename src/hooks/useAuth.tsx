@@ -23,13 +23,6 @@ export const useAuth = () => {
             title: "Welcome!",
             description: "You have successfully signed in.",
           });
-          // Optional: Add navigation here if you want immediate redirect on SIGNED_IN event
-          // For OAuth, the redirect happens automatically via the browser,
-          // but for email/password sign-in, you might want to navigate.
-          // Example:
-          // if (window.location.pathname === '/login' || window.location.pathname === '/signup') {
-          //   window.location.href = '/dashboard'; // Force full page reload for session to be fully picked up
-          // }
         }
       }
     );

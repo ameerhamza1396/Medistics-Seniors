@@ -222,7 +222,7 @@ const Battle: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-red-900/20 dark:via-orange-900/20 dark:to-yellow-900/20">
     <Seo
       title="Battle & Challenges"
-      description="Engage in competitive MCQ battles with other students on Medistics App. Test your knowledge and climb the leaderboard."
+      description="Engage in competitive MCQ battles with other students on Medmacs App. Test your knowledge and climb the leaderboard."
       canonical="https://medistics.app/battle"
     />
       {/* Header section with responsive padding and flexible layout */}

@@ -37,16 +37,16 @@ const WelcomeNewUserPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-950 px-4 text-center">
       <Seo
-        title="Welcome to Medistics App"
-        description="Welcome to Medistics App! Get started with your personalized MDCAT preparation journey."
-        canonical="https://medistics.app/welcome-new-user"
+        title="Welcome to Medmacs App"
+        description="Welcome to Medmacs App! Get started with your personalized MDCAT preparation journey."
+        canonical="https://medmacs.app/welcome-new-user"
       />
       <UserIcon className="w-20 h-20 text-purple-600 dark:text-purple-400 mb-6 animate-bounce-slow" />
       <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
         Welcome, <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent animate-pulse">{displayName}</span>!
       </h1>
       <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-2xl">
-        Get ready to supercharge your medical studies with Medistics.
+        Get ready to supercharge your medical studies with Medmacs.
       </p>
       <p className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-10 max-w-xl">
         First, please choose your unique username for public visibility.

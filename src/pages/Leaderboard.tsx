@@ -211,8 +211,8 @@ const Leaderboard = () => {
         <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
             <Seo
                 title="Leaderboard"
-                description="See how you rank against other students on Medistics App's leaderboard. Compete and achieve top scores."
-                canonical="https://medistics.app/leaderboard"
+                description="See how you rank against other students on Medmacs App's leaderboard. Compete and achieve top scores."
+                canonical="https://medmacs.app/leaderboard"
                 />
             {/* Header */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -224,7 +224,7 @@ const Leaderboard = () => {
                     <div className="flex items-center space-x-3">
                         <img
                             src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
-                            alt="Medistics Logo"
+                            alt="Medmacs Logo"
                             className="w-6 h-6 md:w-8 md:h-8 object-contain"
                         />
                         <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Leaderboard</span>
