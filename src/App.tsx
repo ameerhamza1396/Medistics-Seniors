@@ -58,6 +58,7 @@ import UpdatePassword from '@/pages/UpdatePassword'; // Add this import
 import SelectYear from '@/pages/SelectYear'; // Add this import
 import Teams from '@/pages/Team';
 import InstallApp from '@/pages/InstallApp';
+import Ahroid3d from '@/pages/Ahroid3d';
 
 // Import the VideoCallProvider
 import { VideoCallProvider } from '@/video-sdk/VideoCallProvider'; // Adjust path if necessary
@@ -135,6 +136,7 @@ function App() {
                 <Route path="/select-year" element={<SelectYear />} /> {/* This is the new route */}
                 <Route path="/teams" element={<Teams />} /> {/* This is the new route */}
                 <Route path="/install-app" element={<InstallApp />} /> {/* This is the new route */}
+                <Route path="/ahroid3d" element={<Ahroid3d />} /> {/* This is the new route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
