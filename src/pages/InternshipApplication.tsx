@@ -664,7 +664,7 @@ const InternshipApplication = () => {
       {/* Footer */}
       <footer className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-t border-purple-200 dark:border-purple-800 py-4 mt-8">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>A Project by Educational Spot.</p>
+          <p>A Project by Hmacs Studios.</p>
           <p>© 2025 Medmacs. All rights reserved.</p>
         </div>
       </footer>

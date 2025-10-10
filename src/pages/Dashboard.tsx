@@ -135,24 +135,25 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    // Only run after auth and profile are loaded
-    if (!authLoading && !profileLoading) {
-      if (!user) return; // not authenticated, SignInPrompt will handle
+    if (authLoading || profileLoading) return;
 
-      // Check username first
-      if (!profile?.username) {
-        navigate('/welcome-new-user');
-        return;
-      }
+    if (!user) return; // Not authenticated — SignInPrompt will handle
 
-      // Check year of study after username is valid
-      const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
-      if (!validYears.includes(profile?.year || 0)) {
-        navigate('/select-year');
-        return;
-      }
+    if (!profile) return;
+
+    // Check username
+    if (!profile.username) {
+      navigate('/welcome-new-user');
+      return;
+    }
+
+    // Check year of study
+    const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
+    if (!validYears.includes(profile.year)) {
+      navigate('/select-year');
     }
   }, [authLoading, profileLoading, user, profile, navigate]);
+
 
 
   const quickActions = [
@@ -261,21 +262,20 @@ const Dashboard = () => {
       title: 'Viva & OSCE Prep',
       description: 'Coming Soon',
       icon: Users,
-      link: '/hire-tutor',
+      link: '/practicals',
       type: 'internal',
       gradient: 'from-blue-600 to-indigo-600',
       bgGradient: 'from-blue-50 to-indigo-50',
-      darkBgGradient: 'from-blue-900/30 to-indigo-900/30',
-      disabled: true
+      darkBgGradient: 'from-blue-900/30 to-indigo-900/30'
     }
   ];
 
   const otherApps = [
     {
-      title: 'Medmacs App',
+      title: 'Medistics App',
       description: 'The Best AI for MDCAT in Pakistan',
       icon: ({ className }) => <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className={className} />,
-      link: 'https://medmacs.app',
+      link: 'https://medistics.app',
       type: 'external',
       gradient: 'from-purple-500 to-indigo-600',
       bgGradient: 'from-purple-50 to-indigo-50',
