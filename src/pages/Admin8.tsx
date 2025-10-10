@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, CheckCircle, XCircle, MoreVertical } from 'lucide-react'; // Removed redundant icons handled by AdminHeader/AdminLockout
+import { Button } from '@/components/ui/button'; // <-- FIX 1: Added missing Button import
+import { ExternalLink, CheckCircle, XCircle, MoreVertical } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +36,7 @@ import AdminHeader from '@/components/admin/AdminHeader';
 
 
 const Admin8 = () => {
-    const { user } = useAuth(); // Get authenticated user details to pass to AdminHeader
+    const { user } = useAuth();
     const queryClient = useQueryClient();
 
     const [filterStatus, setFilterStatus] = useState('All');
@@ -43,14 +44,12 @@ const Admin8 = () => {
     const [currentApplicationIdForRemark, setCurrentApplicationIdForRemark] = useState(null);
     const [customRemark, setCustomRemark] = useState('');
 
-    const [selectedApplication, setSelectedApplication] = useState(null); // New state for detailed view
+    const [selectedApplication, setSelectedApplication] = useState(null);
 
     // Fetch internship applications
     const { data: applications, isLoading: isApplicationsLoading, isError: isApplicationsError, error: applicationsError } = useQuery({
         queryKey: ['internshipApplications'],
         queryFn: async () => {
-            // AdminLockout ensures the user is an admin before this component renders.
-            // So, we can directly fetch without explicit isAdmin check here.
             const { data, error } = await supabase
                 .from('internship_applications')
                 .select('*')
@@ -62,9 +61,8 @@ const Admin8 = () => {
             }
             return data;
         },
-        // The query is enabled by default as AdminLockout has already handled initial access control.
         enabled: true,
-        retry: false, // Do not retry on failures that might indicate permission issues
+        retry: false,
     });
 
     // Mutation for updating application status
@@ -82,8 +80,8 @@ const Admin8 = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries(['internshipApplications']);
-            setIsCustomRemarkDialogOpen(false); // Close custom remark dialog
-            setCustomRemark(''); // Clear custom remark
+            setIsCustomRemarkDialogOpen(false);
+            setCustomRemark('');
         },
         onError: (error) => {
             console.error('Failed to update application status:', error);
@@ -91,13 +89,34 @@ const Admin8 = () => {
         },
     });
 
-    const handleStatusUpdate = (id: string, status: string) => { // Added type for id and status
+    const handleStatusUpdate = (id: string, status: string) => {
         if (status === 'Custom Remarks') {
             setCurrentApplicationIdForRemark(id);
             setIsCustomRemarkDialogOpen(true);
         } else {
             updateStatusMutation.mutate({ id, status });
         }
+    };
+
+    // FIX 2: Implementation of the missing function
+    const handleCustomRemarkSubmit = () => {
+        if (!currentApplicationIdForRemark || !customRemark.trim()) return;
+
+        // Prefix the custom remark with 'Custom:' before updating the database
+        const status = `Custom: ${customRemark.trim()}`;
+
+        updateStatusMutation.mutate({
+            id: currentApplicationIdForRemark,
+            status: status
+        }, {
+            onSuccess: () => {
+                // Clear state and close dialog on successful mutation
+                setCustomRemark('');
+                setCurrentApplicationIdForRemark(null);
+                setIsCustomRemarkDialogOpen(false);
+                queryClient.invalidateQueries(['internshipApplications']); // Re-fetch applications
+            },
+        });
     };
 
     // Filter applications based on selected status
@@ -109,7 +128,7 @@ const Admin8 = () => {
         return applications.filter(app => app.application_status === filterStatus || (filterStatus === 'Custom Remarks' && app.application_status?.startsWith('Custom:')));
     }, [applications, filterStatus]);
 
-    const getStatusBadgeColors = (status: string | undefined) => { // Added type for status
+    const getStatusBadgeColors = (status: string | undefined) => {
         switch (status) {
             case 'Pending':
                 return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200';
@@ -125,7 +144,7 @@ const Admin8 = () => {
         }
     };
 
-    const renderApplicationCard = (app: any) => ( // Use 'any' for now, or define a proper interface
+    const renderApplicationCard = (app: any) => (
         <Card
             key={app.id}
             className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 shadow-md hover:shadow-lg transition-shadow duration-200 relative cursor-pointer"
