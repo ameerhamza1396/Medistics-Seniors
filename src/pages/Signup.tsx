@@ -9,6 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"; // Assuming Dialog components are available
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,13 +28,93 @@ import {
   XCircle,
   Sun,
   Moon,
+  Mail, // New icon for the modal
+  Loader2, // New icon for loading state
 } from "lucide-react";
 import Seo from "@/components/Seo";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 
+// --- New Component for Email Verification Modal ---
+const EmailVerificationModal = ({
+  email,
+  isOpen,
+  onClose,
+  onResend,
+  resendLoading,
+  resendDelay,
+}) => {
+  const navigate = useNavigate();
+  const [countdown, setCountdown] = useState(resendDelay);
+
+  useEffect(() => {
+    let timer;
+    if (isOpen) {
+      setCountdown(resendDelay); // Reset countdown when modal opens
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isOpen, resendDelay]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader className="flex flex-col items-center text-center pt-4">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full mb-4"
+          >
+            <Mail className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+          </motion.div>
+          <DialogTitle className="text-2xl">Verification Email Sent! 🚀</DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+            We've sent a verification link to **{email}**. Please check your inbox and spam folder to confirm your email address.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col space-y-3 mt-4">
+          <Button
+            onClick={() => {
+              onClose();
+              navigate("/login");
+            }}
+            className="w-full bg-purple-600 hover:bg-purple-700 transition-colors"
+          >
+            Go to Login Page
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onResend}
+            disabled={resendLoading || countdown > 0}
+            className="w-full"
+          >
+            {resendLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : countdown > 0 ? (
+              `Resend Email in ${countdown}s`
+            ) : (
+              "Resend Verification Email"
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+// --- End of New Component ---
+
+
 const Signup = () => {
-  const { signUp, user, signInWithGoogle } = useAuth();
+  const { signUp, user, signInWithGoogle, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
@@ -46,6 +133,11 @@ const Signup = () => {
     Record<string, string>
   >({});
   const [mounted, setMounted] = useState(false);
+
+  // New states for the Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const RESEND_DELAY_SECONDS = 60; // 1 minute delay for resend
 
   // Redirect if already logged in
   useEffect(() => {
@@ -90,9 +182,41 @@ const Signup = () => {
     }));
   };
 
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    try {
+      const { error } = await resendVerificationEmail(formData.email);
+
+      if (error) {
+        throw error;
+      }
+
+      // Reset the countdown by setting isModalOpen to false and true again, or
+      // more simply, rely on the modal's internal state which is reset on open.
+      toast({
+        title: "Resent!",
+        description: "Verification email has been successfully re-sent.",
+        duration: 5000,
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Resend Failed",
+        description:
+          error.message || "Could not resend the verification email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendLoading(false);
+      // The modal component handles the countdown reset.
+    }
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Check for validation errors
     if (Object.keys(validationErrors).length > 0) {
       toast({
         title: "Validation Error",
@@ -102,6 +226,7 @@ const Signup = () => {
       return;
     }
 
+    // Check for missing required fields (in case validation useEffect hasn't run fully or initial state wasn't populated)
     if (
       !formData.email ||
       !formData.fullName ||
@@ -118,17 +243,17 @@ const Signup = () => {
 
     setLoading(true);
     try {
+      // NOTE: Passing full data as the options object for signup.
+      // The implementation of `useAuth().signUp` seems to handle it this way: `signUp(email, password, { fullName })`
       const { data, error } = await signUp(formData.email, formData.password, {
         fullName: formData.fullName,
       });
 
       if (!error && data) {
-        toast({
-          title: "Account Created!",
-          description: "Please check your email to verify your account.",
-          duration: 7000,
-        });
-        navigate("/verify-email", { state: { email: formData.email } });
+        // --- MODIFICATION 2: Show Modal instead of Toast and redirect ---
+        // Setting the modal state to open
+        setIsModalOpen(true);
+        // The modal content will display the success message and options
       } else if (error) {
         if (error.message.includes("already registered")) {
           toast({
@@ -160,6 +285,8 @@ const Signup = () => {
     hasError: boolean,
     hasValue: boolean
   ) => {
+    // Only show success icon if there's a value AND no error.
+    // Error icon takes precedence.
     if (hasValue && !hasError) {
       return <CheckCircle className="w-4 h-4 text-green-500" />;
     }
@@ -175,6 +302,16 @@ const Signup = () => {
         title="Sign Up"
         description="Create a free account on Medmacs App to start your MDCAT preparation journey with AI-powered quizzes, mock tests, and study materials."
         canonical="https://medmacs.app/signup"
+      />
+
+      {/* MODIFICATION 2: Email Verification Modal */}
+      <EmailVerificationModal
+        email={formData.email}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onResend={handleResendVerification}
+        resendLoading={resendLoading}
+        resendDelay={RESEND_DELAY_SECONDS}
       />
 
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-10">
@@ -233,8 +370,6 @@ const Signup = () => {
               </CardHeader>
 
               <CardContent>
-                {/* --- START OF CHANGES --- */}
-                {/* The form now uses a grid for input fields on medium and larger screens */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Email */}
@@ -381,10 +516,13 @@ const Signup = () => {
                       loading || Object.keys(validationErrors).length > 0
                     }
                   >
-                    {loading ? "Creating Account..." : "Create Account"}
+                    {loading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      "Create Account"
+                    )}
                   </Button>
                 </form>
-                {/* --- END OF CHANGES --- */}
 
                 {/* Divider */}
                 <div className="relative my-6">
@@ -398,25 +536,29 @@ const Signup = () => {
                   </div>
                 </div>
 
-                {/* Google Signin */}
+                {/* Google Signin --- MODIFICATION 1: Disabling Google Sign-in */}
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full border-purple-300 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 transition-all duration-200"
-                  onClick={signInWithGoogle}
-                  disabled={loading}
+                  className="w-full border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                  onClick={signInWithGoogle} // Keep handler for eventual re-enabling
+                  disabled={true} // Explicitly disabled
+                  title="Third-party sign-ups are temporarily disabled in the beta version." // Title for tooltip
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <img
                       src="/googlelogo.svg"
                       alt="Google Logo"
-                      className="w-4 h-4"
+                      className="w-4 h-4 opacity-50"
                     />
-                    <span className="text-gray-900 dark:text-white">
-                      Sign up with Google
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Sign up with Google (Beta: Disabled)
                     </span>
                   </div>
                 </Button>
+                <p className="text-center text-xs text-red-500 dark:text-red-400 mt-2">
+                  Third-party sign-ups are temporarily disabled in the beta version.
+                </p>
 
                 {/* Already have account */}
                 <div className="text-center mt-4">

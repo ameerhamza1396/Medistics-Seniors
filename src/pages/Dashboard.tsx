@@ -266,7 +266,8 @@ const Dashboard = () => {
       type: 'internal',
       gradient: 'from-blue-600 to-indigo-600',
       bgGradient: 'from-blue-50 to-indigo-50',
-      darkBgGradient: 'from-blue-900/30 to-indigo-900/30'
+      darkBgGradient: 'from-blue-900/30 to-indigo-900/30',
+      disabled: true,
     }
   ];
 
