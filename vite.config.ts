@@ -5,6 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // 1. CRITICAL FIX FOR NETLIFY: Set the base path
+  // This ensures assets (JS/CSS) are loaded correctly on deployment.
+  base: '/', 
+  
   server: {
     host: "::",
     port: 8080,
