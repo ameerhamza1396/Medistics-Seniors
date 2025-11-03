@@ -27,6 +27,7 @@ import Admin10 from '@/pages/Admin10';
 import Admin11 from '@/pages/Admin11';
 import {Admin12} from '@/pages/Admin12';
 import Admin13 from '@/pages/Admin13';
+import Admin14 from '@/pages/Admin14';
 import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
@@ -60,6 +61,7 @@ import Teams from '@/pages/Team';
 import InstallApp from '@/pages/InstallApp';
 import Ahroid3d from '@/pages/Ahroid3d';
 import Practicals from '@/pages/Practicals';
+import PracticalNotesDetails from "@/components/PracticalNotes/PracticalNotesDetails";
 
 // Import the VideoCallProvider
 import { VideoCallProvider } from '@/video-sdk/VideoCallProvider'; // Adjust path if necessary
@@ -105,6 +107,7 @@ function App() {
                 <Route path="/admin11" element={<Admin11 />} />
                 <Route path="/admin12" element={<Admin12 />} />
                 <Route path="/admin13" element={<Admin13 />} />
+                <Route path="/admin14" element={<Admin14 />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/password" element={<ChangePassword />} />
                 <Route path="/profile/upgrade" element={<Profile />} />
@@ -139,6 +142,8 @@ function App() {
                 <Route path="/install-app" element={<InstallApp />} /> {/* This is the new route */}
                 <Route path="/ahroid3d" element={<Ahroid3d />} /> {/* This is the new route */}
                 <Route path="/practicals" element={<Practicals />} /> {/* This is the new route */}
+                <Route path="/practical-notes" element={<Practicals />} />
+                <Route path="/practical-notes/subject/:id" element={<PracticalNotesDetails />}/>
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>

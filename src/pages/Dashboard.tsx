@@ -260,14 +260,16 @@ const Dashboard = () => {
     },
     {
       title: 'Viva & OSCE Prep',
-      description: 'Coming Soon',
+      description: 'Get access to hundreds of Viva & OSCE Content',
       icon: Users,
       link: '/practicals',
       type: 'internal',
       gradient: 'from-blue-600 to-indigo-600',
       bgGradient: 'from-blue-50 to-indigo-50',
       darkBgGradient: 'from-blue-900/30 to-indigo-900/30',
-      disabled: true,
+      tag: 'New!',
+      tagColor: 'bg-red-500 text-white animate-pulse',
+      disabled: false,
     }
   ];
 

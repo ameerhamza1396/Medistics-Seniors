@@ -774,6 +774,7 @@ export const MCQDisplay = ({
       {/* AI Chatbot */}
       <AIChatbot
         currentQuestion={currentMCQ?.question}
+        options={currentMCQ?.options} 
         userPlan={userPlanForChatbot}
         isOpen={isChatbotOpen} // Pass isOpen state
         setIsOpen={setIsChatbotOpen} // Pass setIsOpen setter

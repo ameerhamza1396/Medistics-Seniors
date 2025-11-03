@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Added CardDescription
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, Send, X, Loader2, Bot, Lock } from 'lucide-react'; // Added Lock icon
+import { MessageSquare, Send, X, Loader2, Bot, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
@@ -14,19 +14,18 @@ interface Message {
 
 interface AIChatbotProps {
   currentQuestion?: string;
-  userPlan?: string; // Prop for user's plan (e.g., 'free', 'iconic', 'premium')
+  options?: any; // options come from jsonb so be flexible
+  userPlan?: string;
 }
 
-export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan }) => {
+export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan, options }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Determine if the user has premium access
   const hasPremiumAccess = userPlan === 'premium';
-
   const API_BASE_URL = 'https://medmacs-ai-bot.vercel.app';
 
   const scrollToBottom = () => {
@@ -37,13 +36,24 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
     scrollToBottom();
   }, [messages]);
 
-  const sendMessage = async (message: string) => {
-    // Only allow sending messages if premium access is granted
-    if (!hasPremiumAccess) {
-      console.warn("User does not have premium access. Cannot send message.");
-      return;
+  const formatOptions = () => {
+    if (!options) return 'No options provided';
+
+    if (Array.isArray(options)) {
+      return options.join(', ');
     }
 
+    if (typeof options === 'object') {
+      return Object.entries(options)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ');
+    }
+
+    return String(options);
+  };
+
+  const sendMessage = async (message: string) => {
+    if (!hasPremiumAccess) return;
     if (!message.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -57,37 +67,30 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
     setIsLoading(true);
 
     try {
-      let questionToSend = message.trim();
-      
-      // If there's a current question context, include it
-      if (currentQuestion && !message.toLowerCase().includes('question')) {
-        questionToSend = `Context: I'm working on this MCQ question: "${currentQuestion}"\n\nMy question: ${message.trim()}`;
-      }
+      let composedPrompt = message.trim();
 
-      console.log('Sending request to:', `${API_BASE_URL}/study-chat`);
-      console.log('Request payload:', { question: questionToSend });
+      if (currentQuestion) {
+        composedPrompt =
+          `MCQ Question: ${currentQuestion}\n` +
+          `Options: ${formatOptions()}\n\n` +
+          `User Query: ${message.trim()}`;
+      }
 
       const response = await fetch(`${API_BASE_URL}/study-chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question: questionToSend
+          question: composedPrompt,
+          options: options // ✅ pass raw JSONB in body
         }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
         throw new Error(`Server responded with ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
 
       const aiMessage: Message = {
         role: 'assistant',
@@ -96,8 +99,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
       };
 
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch {
       const errorMessage: Message = {
         role: 'assistant',
         content: `Sorry, there was an error connecting to the AI service. Please check if the server at ${API_BASE_URL} is running and try again.`,
@@ -115,19 +117,14 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
   };
 
   const handleQuestionHelp = () => {
-    // Only allow this action if premium access is granted
-    if (!hasPremiumAccess) {
-      console.warn("User does not have premium access. Cannot use question help.");
-      return;
-    }
+    if (!hasPremiumAccess) return;
     if (currentQuestion) {
-      sendMessage(`Can you help me understand this question: ${currentQuestion}`);
+      sendMessage(`Explain this MCQ:\n${currentQuestion}\nOptions: ${formatOptions()}`);
     }
   };
 
   return (
     <>
-      {/* Floating Action Button */}
       <motion.div
         className="fixed bottom-6 right-6 z-50"
         whileHover={{ scale: 1.1 }}
@@ -141,17 +138,24 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
         </Button>
       </motion.div>
 
-      {/* Chat Popup - Positioned in bottom-right corner */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, x: 100, y: 100 }}
             animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, x: 100, y: 100 }}
-            className="fixed bottom-24 right-6 z-50 w-96 h-[500px] bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="
+              fixed bottom-0 right-0 z-50
+              w-full max-w-sm md:max-w-md lg:w-96 
+              h-[85vh] md:h-[500px]
+              bg-white dark:bg-gray-900 
+              rounded-t-xl md:rounded-lg 
+              shadow-2xl border border-gray-200 dark:border-gray-700
+              overflow-hidden
+            "
           >
             <Card className="h-full flex flex-col border-none shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg flex-shrink-0">
+              <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                 <div className="flex items-center space-x-2">
                   <Bot className="w-5 h-5" />
                   <CardTitle className="text-lg">Dr. Ahroid Chat</CardTitle>
@@ -174,17 +178,9 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-8">
                           <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
                           <p className="text-sm">Ask me anything about your studies!</p>
-                          <p className="text-xs text-gray-500 mt-2">I'm Dr. Ahroid, your MBBS tutor specialized in medical sciences.</p>
-                          {currentQuestion && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleQuestionHelp}
-                              className="mt-3"
-                            >
-                              Help with current question
-                            </Button>
-                          )}
+                          <p className="text-xs text-gray-500 mt-2">
+                            I'm Dr. Ahroid, your MBBS tutor specialized in medical sciences.
+                          </p>
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -194,16 +190,16 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
                               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                               <div
-                                className={`max-w-[80%] p-3 rounded-lg ${
-                                  message.role === 'user'
+                                className={`max-w-[80%] p-3 rounded-lg ${message.role === 'user'
                                     ? 'bg-purple-600 text-white'
                                     : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-                                }`}
+                                  }`}
                               >
                                 <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                                <p className={`text-xs mt-1 ${
-                                  message.role === 'user' ? 'text-purple-100' : 'text-gray-500'
-                                }`}>
+                                <p
+                                  className={`text-xs mt-1 ${message.role === 'user' ? 'text-purple-100' : 'text-gray-500'
+                                    }`}
+                                >
                                   {new Date(message.timestamp).toLocaleTimeString()}
                                 </p>
                               </div>
@@ -221,7 +217,20 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
                       )}
                     </ScrollArea>
 
-                    <div className="border-t p-4 flex-shrink-0">
+                    {currentQuestion && (
+                      <div className="border-t bg-gray-50 dark:bg-gray-800 p-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleQuestionHelp}
+                          className="w-full"
+                        >
+                          Help with current question
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="border-t p-4">
                       <form onSubmit={handleSubmit} className="flex space-x-2">
                         <Input
                           value={input}
@@ -236,17 +245,12 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({ currentQuestion, userPlan 
                           size="sm"
                           className="bg-purple-600 hover:bg-purple-700"
                         >
-                          {isLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Send className="w-4 h-4" />
-                          )}
+                          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </Button>
                       </form>
                     </div>
                   </>
                 ) : (
-                  // Content for non-premium users
                   <div className="flex flex-col items-center justify-center h-full p-6 text-center">
                     <Lock className="w-16 h-16 text-purple-600 mb-4 opacity-70" />
                     <CardTitle className="text-xl mb-2">Premium Feature</CardTitle>
