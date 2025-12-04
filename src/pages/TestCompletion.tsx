@@ -84,7 +84,7 @@ const TestCompletionPage = () => {
 
       {/* Optional: Footer if you want it here, otherwise removed as per previous request */}
       <div className="text-center mt-12 mb-4 p-4 text-gray-500 dark:text-gray-400 text-sm">
-        <p>A Project by Educational Spot.</p>
+        <p>A Project by Hmacs Studios.</p>
         <p>&copy; 2025 Medmacs. All rights reserved.</p>
       </div>
     </div>

@@ -4,9 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Seo from '@/components/Seo';
 
-// NOTE: This component assumes a table like 'practical_notes_content'
-// that stores the notes text/HTML based on subject_id AND component_slug.
-
 const PracticalContent = () => {
     const { subjectId, componentSlug } = useParams();
 
