@@ -15,6 +15,7 @@ import {
     Settings,
     Lock,
     Crown,
+    Gift,
     LogOut,
     Mail,
     Megaphone // Added Megaphone icon for News and Announcements
@@ -107,11 +108,21 @@ export const ProfileDropdown = () => {
 
                 <DropdownMenuItem asChild>
                     <Link
-                        to="/pricing" 
+                        to="/pricing"
                         className="flex items-center cursor-pointer"
                     >
                         <Crown className="mr-2 h-4 w-4" />
                         <span>Upgrade Plan</span>
+                    </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                    <Link
+                        to="/redeem"
+                        className="flex items-center cursor-pointer"
+                    >
+                        <Gift className="mr-2 h-4 w-4" />
+                        <span>Redeem</span>
                     </Link>
                 </DropdownMenuItem>
 

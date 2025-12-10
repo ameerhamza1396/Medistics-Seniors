@@ -536,29 +536,27 @@ const Signup = () => {
                   </div>
                 </div>
 
-                {/* Google Signin --- MODIFICATION 1: Disabling Google Sign-in */}
+                {/* Google Signin --- RE-ENABLING Google Sign-in */}
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400"
-                  onClick={signInWithGoogle} // Keep handler for eventual re-enabling
-                  disabled={true} // Explicitly disabled
-                  title="Third-party sign-ups are temporarily disabled in the beta version." // Title for tooltip
+                  className="w-full border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  onClick={signInWithGoogle} // Keep handler
+                  disabled={false} // ENABLED
+                  title="Sign up using your Google account" // Updated title
                 >
                   <div className="flex items-center justify-center space-x-2">
                     <img
                       src="/googlelogo.svg"
                       alt="Google Logo"
-                      className="w-4 h-4 opacity-50"
+                      className="w-4 h-4" // Removed opacity-50
                     />
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Sign up with Google (Beta: Disabled)
+                    <span className="text-gray-900 dark:text-white">
+                      Sign up with Google
                     </span>
                   </div>
                 </Button>
-                <p className="text-center text-xs text-red-500 dark:text-red-400 mt-2">
-                  Third-party sign-ups are temporarily disabled in the beta version.
-                </p>
+                {/* Removed the red disclaimer text */}
 
                 {/* Already have account */}
                 <div className="text-center mt-4">

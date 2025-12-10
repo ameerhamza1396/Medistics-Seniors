@@ -61,6 +61,7 @@ import Teams from '@/pages/Team';
 import InstallApp from '@/pages/InstallApp';
 import Practicals from '@/pages/Practicals';
 import PracticalNotesDetails from "@/components/PracticalNotes/PracticalNotesDetails";
+import RedeemCode from "@/pages/RedeemCode";
 
 // Import the VideoCallProvider
 import { VideoCallProvider } from '@/video-sdk/VideoCallProvider'; // Adjust path if necessary
@@ -142,6 +143,7 @@ function App() {
                 <Route path="/practicals" element={<Practicals />} /> {/* This is the new route */}
                 <Route path="/practical-notes" element={<Practicals />} />
                 <Route path="/practical-notes/subject/:id" element={<PracticalNotesDetails />}/>
+                <Route path="/redeem" element={<RedeemCode />}/>
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </VideoCallProvider>
