@@ -319,7 +319,7 @@ const InternshipApplication = () => {
 
       toast({
         title: "Application Submitted!",
-        description: "Your internship application has been successfully submitted.",
+        description: "Your joining application has been successfully submitted.",
         variant: "default",
       });
 
@@ -358,9 +358,9 @@ const InternshipApplication = () => {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
       <Seo
-        title="Summer Internship 2025"
-        description="Apply for the Medmacs App Summer Internship Program 2025. Gain hands-on experience in a dynamic EdTech environment."
-        canonical="https://medmacs.app/summerinternship2025"
+        title="Medmacs Internship 2025"
+        description="Apply for the Medmacs contibutor Program 2025-26. Gain hands-on experience in a dynamic EdTech environment."
+        canonical="https://medmacs.app/joinus"
       />
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
@@ -396,7 +396,7 @@ const InternshipApplication = () => {
         <Card className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-purple-200 dark:border-purple-800 shadow-lg">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              Apply for Internship
+              Join Medmacs
             </CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Fill out the form below to submit your application.

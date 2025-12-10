@@ -50,7 +50,7 @@ const Dashboard = () => {
     medical_school: string;
     updated_at: string;
     username: string;
-    year_of_study: number;
+    year: string;
     plan?: string;
   };
 
@@ -139,22 +139,27 @@ const Dashboard = () => {
 
     if (!user) return; // Not authenticated — SignInPrompt will handle
 
-    if (!profile) return;
+    // Only redirect if profile has been fetched and exists
+    if (profile) {
+      // Check username - redirect only if profile exists but username is null/empty
+      if (!profile.username) {
+        navigate('/welcome-new-user');
+        return;
+      }
 
-    // Check username
-    if (!profile.username) {
-      navigate('/welcome-new-user');
-      return;
-    }
+      // Check year of study - using year_of_study from Profile type
+      // Convert to string and check if it's a valid year
+      const yearString = profile.year?.toString();
+      const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
 
-    // Check year of study
-    const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
-    if (!validYears.includes(profile.year)) {
-      navigate('/select-year');
+      // Check if year_of_study exists and is valid
+      if (!yearString || !validYears.includes(yearString)) {
+        navigate('/select-year');
+        return;
+      }
     }
+    // If profile is null (not fetched yet), do nothing
   }, [authLoading, profileLoading, user, profile, navigate]);
-
-
 
   const quickActions = [
     {

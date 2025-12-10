@@ -59,7 +59,6 @@ import UpdatePassword from '@/pages/UpdatePassword'; // Add this import
 import SelectYear from '@/pages/SelectYear'; // Add this import
 import Teams from '@/pages/Team';
 import InstallApp from '@/pages/InstallApp';
-import Ahroid3d from '@/pages/Ahroid3d';
 import Practicals from '@/pages/Practicals';
 import PracticalNotesDetails from "@/components/PracticalNotes/PracticalNotesDetails";
 
@@ -128,7 +127,7 @@ function App() {
                 <Route path="/test-summary" element={<TestCompletion />} />
                 <Route path="/career" element={<Career />} />
                 <Route path="/teaching-career" element={<TeachingAmbassadors />} />
-                <Route path="/summerinternship2025" element={<InternshipApplication />} />
+                <Route path="/collaborate" element={<InternshipApplication />} />
                 <Route path="/saved-mcqs" element={<SavedMCQsPage />} />
                 <Route path="/announcements" element={<Announcements />} />
                 <Route path="/contact-us" element={<ContactUsPage />} />
@@ -140,7 +139,6 @@ function App() {
                 <Route path="/select-year" element={<SelectYear />} /> {/* This is the new route */}
                 <Route path="/teams" element={<Teams />} /> {/* This is the new route */}
                 <Route path="/install-app" element={<InstallApp />} /> {/* This is the new route */}
-                <Route path="/ahroid3d" element={<Ahroid3d />} /> {/* This is the new route */}
                 <Route path="/practicals" element={<Practicals />} /> {/* This is the new route */}
                 <Route path="/practical-notes" element={<Practicals />} />
                 <Route path="/practical-notes/subject/:id" element={<PracticalNotesDetails />}/>
