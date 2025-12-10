@@ -3,14 +3,23 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Clock, CheckCircle, XCircle, Timer, Bot, MessageSquare, X, Bookmark, BookmarkCheck, Crown } from 'lucide-react'; // Added Crown icon for premium
+import { ArrowLeft, Clock, CheckCircle, XCircle, Timer, Bot, MessageSquare, X, Bookmark, BookmarkCheck, Crown, MoreVertical, Flag, LogOut } from 'lucide-react'; // Added MoreVertical, Flag, LogOut icons
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { fetchMCQsByChapter, MCQ } from '@/utils/mcqData';
 import { supabase } from '@/integrations/supabase/client';
 import { AIChatbot } from './AIChatbot';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'; // Import Dialog components
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'; // Import Dropdown components
+import { Textarea } from '@/components/ui/textarea'; // Import Textarea for report reason
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
 interface MCQDisplayProps {
   subject: string;
@@ -78,6 +87,110 @@ const UpgradeAccountModal: React.FC<UpgradeAccountModalProps> = ({ isOpen, onClo
   );
 };
 
+// --- Report Question Dialog Component ---
+interface ReportQuestionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onReportSubmit: (reason: string) => void;
+  isSubmitting: boolean;
+}
+
+const ReportQuestionDialog: React.FC<ReportQuestionDialogProps> = ({
+  isOpen,
+  onClose,
+  onReportSubmit,
+  isSubmitting
+}) => {
+  const [reason, setReason] = useState('');
+
+  const handleSubmit = () => {
+    if (reason.trim()) {
+      onReportSubmit(reason.trim());
+      setReason('');
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px] p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-purple-200 dark:border-purple-800">
+        <DialogHeader>
+          <div className="flex items-center space-x-2">
+            <Flag className="w-5 h-5 text-red-500" />
+            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Report Question</DialogTitle>
+          </div>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+            Please provide a reason for reporting this question. Your feedback helps us improve the quality of our content.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <Textarea
+            placeholder="Enter reason for reporting (e.g., incorrect answer, typo, unclear explanation, etc.)"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="min-h-[120px]"
+          />
+        </div>
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!reason.trim() || isSubmitting}
+            className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-bold"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Report'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// --- Leave Test Confirmation Dialog ---
+interface LeaveTestDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+const LeaveTestDialog: React.FC<LeaveTestDialogProps> = ({ isOpen, onClose, onConfirm }) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px] p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-purple-200 dark:border-purple-800">
+        <DialogHeader>
+          <div className="flex items-center space-x-2">
+            <LogOut className="w-5 h-5 text-orange-500" />
+            <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Leave Test</DialogTitle>
+          </div>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 mt-2">
+            Are you sure you want to leave the test? Your progress for this session will not be saved.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="w-full sm:w-auto border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold"
+          >
+            Leave Test
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const MCQDisplay = ({
   subject,
@@ -88,6 +201,7 @@ export const MCQDisplay = ({
 }: MCQDisplayProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate(); // Initialize navigate hook
   const [mcqs, setMcqs] = useState<ShuffledMCQ[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -113,6 +227,12 @@ export const MCQDisplay = ({
   const [dailySubmissionsCount, setDailySubmissionsCount] = useState(0);
   const [lastSubmissionResetDate, setLastSubmissionResetDate] = useState<string | null>(null);
 
+  // States for report question dialog
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+
+  // States for leave test dialog
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   const helpMessages = [
     "Hey, you look stuck. May I help you?",
@@ -488,6 +608,61 @@ export const MCQDisplay = ({
     }
   };
 
+  // Function to handle reporting a question
+  const handleReportQuestion = async (reason: string) => {
+    if (!user || !currentMCQ?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to report questions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsReporting(true);
+    try {
+      const { error } = await supabase
+        .from('reported_questions')
+        .insert({
+          mcq_id: currentMCQ.id,
+          user_id: user.id,
+          reason: reason,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Question Reported",
+        description: "Thank you for your feedback. Our team will review this question.",
+        variant: "default",
+      });
+      setShowReportDialog(false);
+    } catch (error: any) {
+      console.error('Error reporting question:', error);
+      toast({
+        title: "Error",
+        description: `Failed to report question: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
+  // Function to handle leaving the test
+  const handleLeaveTest = () => {
+    // Clear local storage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(LAST_ATTEMPTED_MCQ_KEY);
+      localStorage.removeItem(LAST_ATTEMPTED_SUBJECT_KEY);
+      localStorage.removeItem(LAST_ATTEMPTED_CHAPTER_KEY);
+    }
+
+    // Navigate to dashboard
+    navigate('/dashboard');
+  };
+
   const handleUpgradeClick = () => {
     setShowUpgradeModal(false);
     // Navigate to your pricing/upgrade page
@@ -617,23 +792,54 @@ export const MCQDisplay = ({
                 </CardTitle>
 
                 {user && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleSaveMCQ}
-                    className="ml-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
-                    title={isCurrentMCQSaved ? "Unsave Question" : "Save Question"}
-                  >
-                    {isCurrentMCQSaved ? (
-                      <BookmarkCheck className="w-5 h-5 fill-purple-600 text-purple-600 dark:fill-purple-400 dark:text-purple-400" />
-                    ) : (
-                      <Bookmark className="w-5 h-5" />
-                    )}
-                  </Button>
+                  <div className="flex items-center space-x-1 ml-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSaveMCQ}
+                      className="text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400"
+                      title={isCurrentMCQSaved ? "Unsave Question" : "Save Question"}
+                    >
+                      {isCurrentMCQSaved ? (
+                        <BookmarkCheck className="w-5 h-5 fill-purple-600 text-purple-600 dark:fill-purple-400 dark:text-purple-400" />
+                      ) : (
+                        <Bookmark className="w-5 h-5" />
+                      )}
+                    </Button>
+
+                    {/* Three-dot menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                          <MoreVertical className="w-5 h-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() => setShowReportDialog(true)}
+                          className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300"
+                        >
+                          <Flag className="w-4 h-4 mr-2" />
+                          Report Question
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setShowLeaveDialog(true)}
+                          className="cursor-pointer text-orange-600 dark:text-orange-400 focus:text-orange-700 dark:focus:text-orange-300"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Leave Test
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 )}
               </div>
             </CardHeader>
-
 
             <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="space-y-2 sm:space-y-3">
@@ -774,10 +980,25 @@ export const MCQDisplay = ({
       {/* AI Chatbot */}
       <AIChatbot
         currentQuestion={currentMCQ?.question}
-        options={currentMCQ?.options} 
+        options={currentMCQ?.options}
         userPlan={userPlanForChatbot}
         isOpen={isChatbotOpen} // Pass isOpen state
         setIsOpen={setIsChatbotOpen} // Pass setIsOpen setter
+      />
+
+      {/* Report Question Dialog */}
+      <ReportQuestionDialog
+        isOpen={showReportDialog}
+        onClose={() => setShowReportDialog(false)}
+        onReportSubmit={handleReportQuestion}
+        isSubmitting={isReporting}
+      />
+
+      {/* Leave Test Dialog */}
+      <LeaveTestDialog
+        isOpen={showLeaveDialog}
+        onClose={() => setShowLeaveDialog(false)}
+        onConfirm={handleLeaveTest}
       />
 
       {/* Upgrade Account Modal */}
