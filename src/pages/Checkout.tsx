@@ -381,7 +381,7 @@ const Checkout = () => {
             </section>
 
             <div className="text-center mt-12 mb-4 text-gray-500 dark:text-gray-400 text-sm">
-                <p>A Project by Educational Spot.</p>
+                <p>A Project by Hmacs Studios.</p>
                 <p>&copy; 2025 Medmaccs. All rights reserved.</p>
             </div>
 
