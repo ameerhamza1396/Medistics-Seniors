@@ -196,7 +196,7 @@ const Dashboard = () => {
       title: 'Become a colaborator',
       description: 'Apply for the Medmacs xollaborator Program!',
       icon: Briefcase,
-      link: '/summerinternship2025',
+      link: '/collaborate',
       type: 'internal',
       gradient: 'from-blue-500 to-cyan-500',
       bgGradient: 'from-blue-50 to-cyan-50',
