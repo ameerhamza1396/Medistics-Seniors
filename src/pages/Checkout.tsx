@@ -9,6 +9,7 @@ import {
     BadgePercent,
     ShieldCheck,
     MessageSquare,
+    Send
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from 'next-themes';
@@ -29,6 +30,15 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 
+// WhatsApp number and Instagram handle
+const WHATSAPP_NUMBER = '+923242456162';
+const INSTAGRAM_HANDLE = '@ameerhamza.exe';
+const INSTAGRAM_LINK = 'https://www.instagram.com/ameerhamza.exe';
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace('+', '')}`; // Format for WhatsApp link
+
+// PostgreSQL Error Code for unique_violation
+const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
+
 const Checkout = () => {
     const { user } = useAuth();
     const { theme, setTheme } = useTheme();
@@ -36,6 +46,8 @@ const Checkout = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+    // NEW STATE: To track if access has been requested
+    const [hasRequestedAccess, setHasRequestedAccess] = useState(false);
 
     // Promocode states
     const [promoCode, setPromoCode] = useState('');
@@ -64,7 +76,36 @@ const Checkout = () => {
         setIsPromoApplied(false);
         setPromoDiscountDisplay(null);
         setError(null);
+        // Reset request status on plan change - optional, but useful if user is choosing a *different* plan
+        setHasRequestedAccess(false);
     }, [planName, duration, currency, basePriceStr]);
+
+    // NEW useEffect: Check for existing request on component load if the user is logged in
+    // This assumes the 'beta_access_requests' table has RLS policies allowing authenticated users to read their own request status.
+    useEffect(() => {
+        const checkExistingRequest = async () => {
+            if (user && planName && duration) { // Only check if logged in and plan details exist
+                try {
+                    const { data, error: fetchError } = await supabase
+                        .from('beta_access_requests')
+                        .select('id')
+                        .eq('user_id', user.id)
+                        .eq('plan_name', planName)
+                        .eq('duration', duration) // Filter by plan/duration to be specific
+                        .limit(1);
+
+                    if (data && data.length > 0) {
+                        setHasRequestedAccess(true);
+                        setError("You have already submitted a request for this plan. The developer will review and update your status shortly.");
+                    }
+                } catch (e) {
+                    console.error('Error checking existing request:', e);
+                }
+            }
+        };
+
+        checkExistingRequest();
+    }, [user, planName, duration]);
 
 
     // Handles the application of a promo code by calling Supabase RPC function (Kept logic for promo calculation)
@@ -170,17 +211,29 @@ const Checkout = () => {
                 ]);
 
             if (supabaseError) {
-                console.error('Supabase Beta Request Error:', supabaseError);
-                throw new Error(supabaseError.message || 'Failed to record beta access request in database.');
+                // Check for the unique constraint violation error code
+                if (supabaseError.code === POSTGRES_UNIQUE_VIOLATION_CODE) {
+                    console.warn('Supabase Beta Request Duplicate Error:', supabaseError);
+                    setHasRequestedAccess(true); // Set state to disable button
+                    setError("A premium access request for this plan has already been submitted by your account. The developer is reviewing all pending requests.");
+                } else {
+                    console.error('Supabase Beta Request Error:', supabaseError);
+                    throw new Error(supabaseError.message || 'Failed to record beta access request in database.');
+                }
+                return; // Exit if there was an error
             }
 
             console.log('Beta Access Request submitted to Supabase successfully.');
+            setHasRequestedAccess(true); // Set state to disable the button on success
             setShowSuccessDialog(true); // Show the success dialog
-            setPromoCode(''); // Clear fields
+
+            // Clear fields/states after successful submission
+            setPromoCode('');
             setPromoCodeError(null);
             setDiscountedPrice(null);
             setIsPromoApplied(false);
             setPromoDiscountDisplay(null);
+            setError(null); // Clear any general error before showing success dialog
 
         } catch (err: any) {
             console.error('Error during beta access request submission:', err);
@@ -189,6 +242,8 @@ const Checkout = () => {
             setIsLoading(false);
         }
     };
+
+    const isSubmissionDisabled = isLoading || hasRequestedAccess || !planName || !duration || !currency || !basePriceStr || !user;
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
@@ -338,19 +393,36 @@ const Checkout = () => {
                         <p className="mb-4">
                             If you are interested in <span className="font-bold">testing paid plans</span> and <span className="font-bold">unlocking the AI mode</span>, please contact the developer directly for access.
                         </p>
-                        <div className="flex items-center mb-4 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
-                            <MessageSquare className="w-6 h-6 mr-3 text-green-600 dark:text-green-400" />
-                            <p className="font-bold">
-                                Contact me on Instagram:
-                                <a
-                                    href="https://www.instagram.com/ameerhamza.exe"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="ml-2 text-purple-600 dark:text-purple-400 hover:underline transition-colors"
-                                >
-                                    @ameerhamza.exe
-                                </a>
-                            </p>
+                        <div className="space-y-3">
+                            <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+                                <MessageSquare className="w-6 h-6 mr-3 text-green-600 dark:text-green-400" />
+                                <p className="font-bold">
+                                    Contact me on Instagram:
+                                    <a
+                                        href={INSTAGRAM_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ml-2 text-purple-600 dark:text-purple-400 hover:underline transition-colors"
+                                    >
+                                        {INSTAGRAM_HANDLE}
+                                    </a>
+                                </p>
+                            </div>
+                            {/* Added WhatsApp Contact */}
+                            <div className="flex items-center p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+                                <Send className="w-6 h-6 mr-3 text-green-600 dark:text-green-400" />
+                                <p className="font-bold">
+                                    Message me on WhatsApp:
+                                    <a
+                                        href={WHATSAPP_LINK}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="ml-2 text-purple-600 dark:text-purple-400 hover:underline transition-colors"
+                                    >
+                                        {WHATSAPP_NUMBER}
+                                    </a>
+                                </p>
+                            </div>
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-6 italic">
                             No payment is required at this time. Click the button below to register your interest for premium beta access.
@@ -369,9 +441,13 @@ const Checkout = () => {
                     <Button
                         className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-3 px-8 rounded-full text-lg font-semibold"
                         onClick={handleBetaAccessRequest}
-                        disabled={isLoading || !planName || !duration || !currency || !basePriceStr || !user}
+                        disabled={isSubmissionDisabled}
                     >
-                        {isLoading ? 'Sending Request...' : 'Request Premium Beta Access'}
+                        {
+                            hasRequestedAccess ? 'Request Already Submitted' :
+                                isLoading ? 'Sending Request...' :
+                                    'Request Premium Beta Access'
+                        }
                     </Button>
                 </div>
 
@@ -399,17 +475,27 @@ const Checkout = () => {
                     </DialogHeader>
                     <div className="space-y-4 text-left text-gray-700 dark:text-gray-300">
                         <p className="font-medium">
-                            To gain access to the premium features and AI mode, please send a Direct Message (DM) on Instagram to:
+                            To gain access to the premium features and AI mode, please contact the developer via:
                         </p>
-                        <p className="text-center text-2xl font-bold text-purple-600 dark:text-purple-400">
-                            @ameerhamza.exe
-                        </p>
+                        <div className="space-y-2">
+                            <p className="text-center text-xl font-bold text-purple-600 dark:text-purple-400">
+                                Instagram: <a href={INSTAGRAM_LINK} target="_blank" rel="noopener noreferrer" className="hover:underline">{INSTAGRAM_HANDLE}</a>
+                            </p>
+                            <p className="text-center text-xl font-bold text-purple-600 dark:text-purple-400">
+                                WhatsApp: <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="hover:underline">{WHATSAPP_NUMBER}</a>
+                            </p>
+                        </div>
                         <p>
                             Mention the <span className="font-bold">plan you selected</span> to expedite your access!
                         </p>
                     </div>
-                    <DialogFooter className="mt-6 flex justify-center">
-                        <a href="https://www.instagram.com/ameerhamza.exe" target="_blank" rel="noopener noreferrer">
+                    <DialogFooter className="mt-6 flex justify-center space-x-4">
+                        <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                            <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                Message on WhatsApp
+                            </Button>
+                        </a>
+                        <a href={INSTAGRAM_LINK} target="_blank" rel="noopener noreferrer">
                             <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
                                 Message on Instagram
                             </Button>
@@ -420,5 +506,6 @@ const Checkout = () => {
         </div>
     );
 };
+
 
 export default Checkout;

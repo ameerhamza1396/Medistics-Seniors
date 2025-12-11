@@ -106,7 +106,7 @@ const IndexHeader: React.FC = () => {
                                     <li className="border-t border-current/30"></li>
                                     <li>
                                         <a
-                                            href="https://wa.me/03392456162"
+                                            href="https://wa.me/03242456162"
                                             target="_blank"
                                             rel="noreferrer"
                                             className="flex items-center space-x-3 hover:text-[#25D366]"
@@ -136,7 +136,7 @@ const IndexHeader: React.FC = () => {
                             <PopoverWrapper>
                                 <h4 className="font-semibold mb-4 text-lg">Monthly Plans (PKR)</h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {pricing.length === 0 && <div>No plans available.</div>}
+                                    {pricing.length === 0 && <div>Navigate to Pricing page to show all availiable plans.</div>}
                                     {pricing.map((p) => (
                                         <div
                                             key={p.id}
@@ -153,7 +153,7 @@ const IndexHeader: React.FC = () => {
                                         onClick={() => navigate("/pricing")}
                                         className="bg-purple-600 text-white hover:scale-105 rounded-full"
                                     >
-                                        View All
+                                        View All Plans
                                     </Button>
                                 </div>
                             </PopoverWrapper>
@@ -180,10 +180,10 @@ const IndexHeader: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-current/30 pt-4">
                                     <div className="p-3 rounded-xl border border-current/30 shadow-sm">
-                                        Saba Yaqoob – Academic Head
+                                        Anonymous Cat – Academic Head
                                     </div>
                                     <div className="p-3 rounded-xl border border-current/30 shadow-sm">
-                                        Junaid Imran – Head of Marketing
+                                        Anonymous Goat – Head of Marketing
                                     </div>
                                 </div>
                                 <div className="mt-4 text-right">
