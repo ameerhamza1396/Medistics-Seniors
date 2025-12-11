@@ -233,7 +233,7 @@ const ContactUsPage = () => {
                                 <Phone className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
                                 <span className="font-medium">Contact & WhatsApp:</span>
                             </div>
-                            <a href="tel:+923166891212" className="text-green-600 dark:text-green-400 hover:underline">03166891212</a>
+                            <a href="tel:+923166891212" className="text-green-600 dark:text-green-400 hover:underline">03242456162</a>
                         </div>
                         {/* Instagram */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 text-gray-700 dark:text-gray-300">
