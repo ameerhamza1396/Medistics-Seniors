@@ -3,29 +3,43 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { User as UserIcon } from 'lucide-react';
-import Seo from '@/components/Seo'; // Import the Seo component
-
-// No useQuery or supabase import needed on this page
+import Seo from '@/components/Seo';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const WelcomeNewUserPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Determine the display name (simple fallback using email prefix)
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
+  // Redirect if username exists
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!user) return;
 
-  // Handle click for the "Choose My Username" button
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      if (data?.username) {
+        navigate('/dashboard');
+      }
+    };
+
+    checkUsername();
+  }, [user, navigate]);
+
+  const displayName =
+    user?.user_metadata?.full_name ||
+    user?.email?.split('@')[0] ||
+    'there';
+
   const handleChooseUsername = () => {
-    navigate('/settings/username'); // Navigate to the username update page
+    navigate('/settings/username');
   };
 
-  // Optional: If user somehow lands here without being authenticated,
-  // or if `user` isn't immediately available (though useAuth should handle this)
-  // this can prevent rendering issues.
   if (!user) {
-    // Ideally, a higher-level route protector would handle unauthenticated users
-    // but this acts as a safeguard. You could redirect to login here too,
-    // but the request was to simplify by removing all redirects.
     return (
       <div className="min-h-screen flex items-center justify-center dark:bg-gray-900">
         <p className="text-gray-700 dark:text-gray-300">Please log in to continue.</p>
@@ -43,7 +57,11 @@ const WelcomeNewUserPage = () => {
       />
       <UserIcon className="w-20 h-20 text-purple-600 dark:text-purple-400 mb-6 animate-bounce-slow" />
       <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-4 leading-tight">
-        Welcome, <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent animate-pulse">{displayName}</span>!
+        Welcome,{' '}
+        <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent animate-pulse">
+          {displayName}
+        </span>
+        !
       </h1>
       <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-2xl">
         Get ready to supercharge your medical studies with Medmacs.

@@ -11,29 +11,24 @@ import {
   Users,
   Brain,
   Swords,
-  Moon,
-  Sun,
   Flame,
   Calendar,
   TrendingUp,
   Award,
   Briefcase,
-  BellRing,
-  Book,
-  Construction,
   Bookmark,
   ScrollText,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTheme } from 'next-themes';
+// import { useTheme } from 'next-themes'; // Unused import removed
 import { ProfileDropdown } from '@/components/ProfileDropdown';
 import { LeaderboardPreview } from '@/components/dashboard/LeaderboardPreview';
 import { StudyAnalytics } from '@/components/dashboard/StudyAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
-import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager';
-import AuthErrorDisplay from '@/components/AuthErrorDisplay';
+// import AnnouncementToastManager from '@/components/ui/AnnouncementToastManager'; // Unused import removed
+// import AuthErrorDisplay from '@/components/AuthErrorDisplay'; // Unused import removed
 import Seo from '@/components/Seo';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SignInPrompt from '@/components/SigninPrompt'; // Import SignInPrompt
@@ -66,6 +61,7 @@ const Dashboard = () => {
         .maybeSingle();
       if (error) {
         console.error('Error fetching profile:', error);
+        // Note: Returning null here means profile is not yet set up
         return null;
       }
       console.log('Profile data:', data);
@@ -77,6 +73,7 @@ const Dashboard = () => {
   const { data: userStats, isLoading: userStatsLoading } = useQuery({
     queryKey: ['user-stats', user?.id],
     queryFn: async () => {
+      // ... (rest of userStats queryFn is unchanged)
       if (!user?.id) return null;
       console.log('Fetching user stats for:', user.id);
       const { data: answers, error: answersError } = await supabase
@@ -135,32 +132,42 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (authLoading || profileLoading) return;
+    // 1. Wait for authentication status
+    if (authLoading) return;
 
-    if (!user) return; // Not authenticated — SignInPrompt will handle
+    // 2. Not authenticated: let the rest of the component handle the SignInPrompt
+    if (!user) return;
 
-    // Only redirect if profile has been fetched and exists
-    if (profile) {
-      // Check username - redirect only if profile exists but username is null/empty
-      if (!profile.username) {
-        navigate('/welcome-new-user');
-        return;
-      }
+    // 3. Authenticated, but profile is still loading: WAIT.
+    if (profileLoading) return;
 
-      // Check year of study - using year_of_study from Profile type
-      // Convert to string and check if it's a valid year
-      const yearString = profile.year?.toString();
-      const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
+    // At this point, we are authenticated (user exists) and profile has been fetched (profileLoading is false).
+    // The 'profile' variable holds either the user's profile object or null (from maybeSingle() if no profile exists).
 
-      // Check if year_of_study exists and is valid
-      if (!yearString || !validYears.includes(yearString)) {
-        navigate('/select-year');
-        return;
-      }
+    // 4. Check for username existence (user is authenticated but profile is missing or incomplete)
+    if (!profile?.username) {
+      console.log('Redirecting: Profile missing or username not set.');
+      navigate('/welcome-new-user', { replace: true });
+      return;
     }
-    // If profile is null (not fetched yet), do nothing
-  }, [authLoading, profileLoading, user, profile, navigate]);
 
+    // 5. Check year of study
+    const yearString = profile.year?.toString();
+    const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
+
+    // Check if year_of_study exists and is valid
+    if (!yearString || !validYears.includes(yearString)) {
+      console.log('Redirecting: Year of study missing or invalid.');
+      navigate('/select-year', { replace: true });
+      return;
+    }
+
+    // 6. All checks passed: user is authenticated, has a username, and a valid year.
+    console.log('User profile is complete. Proceeding to dashboard.');
+
+  }, [authLoading, profileLoading, user, profile, navigate]); // Dependencies are correct
+
+  // ... (rest of the component's Quick Actions, Premium Perks, Other Apps definitions are unchanged)
   const quickActions = [
     {
       title: 'Practice MCQs',
@@ -290,6 +297,7 @@ const Dashboard = () => {
       darkBgGradient: 'from-purple-900/30 to-indigo-900/30'
     }
   ];
+  // ... (rest of the component body is unchanged)
 
   const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medmacs User';
 
@@ -299,7 +307,7 @@ const Dashboard = () => {
         <img
           src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
           alt="Loading Medmacs"
-          className="w-32 h-32 object-contain"
+          className="w-32 h-32 object-contain animate-pulse" // Added animate-pulse for visual feedback
         />
       </div>
     );
@@ -313,6 +321,10 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  // Final rendering of the dashboard (only reached if authenticated and profile checks passed, or if the profile is incomplete and redirection is about to happen on next render)
+  // Note: Since useEffect handles immediate redirection, if we reach this point, either the profile is complete or the user is being redirected.
+  // The component structure remains the same for rendering.
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-teal-900/10 dark:to-cyan-900/10">
