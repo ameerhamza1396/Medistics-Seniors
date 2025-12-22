@@ -413,7 +413,7 @@ page.
 
 If you have any questions about this Privacy Policy, You can contact us:
 
-* By email: medistics@dr.com
+* By email: Medmacs@dr.com
 
 * By visiting this page on our website:
     [instagram.com/Medmacs.App](instagram.com/Medmacs.App)
@@ -423,7 +423,7 @@ If you have any questions about this Privacy Policy, You can contact us:
         <div className="min-h-screen w-full bg-white dark:bg-gray-900">
             <Seo
             title="Privacy Policy"
-            description="Understand how Medistics App collects, uses, and protects your personal data in our comprehensive Privacy Policy."
+            description="Understand how Medmacs App collects, uses, and protects your personal data in our comprehensive Privacy Policy."
             canonical="https://Medmacs.App/privacypolicy"
             />
             {/* Header */}
@@ -434,8 +434,8 @@ If you have any questions about this Privacy Policy, You can contact us:
                     </Link>
 
                     <div className="flex items-center space-x-3">
-                        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">MedisticsApp</span>
+                        <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain" />
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">MedmacsApp</span>
                     </div>
 
                     <div className="flex items-center space-x-3">

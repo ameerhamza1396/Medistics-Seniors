@@ -145,7 +145,7 @@ While we strive to provide accurate and up-to-date information through Medmacs.A
 
 If you have any questions about these Terms and Conditions, you can contact us:
 
-* By email: [medistics@dr.com](mailto:medistics@dr.com)
+* By email: [Medmacs@dr.com](mailto:Medmacs@dr.com)
 
 * By visiting this page on our website:
     [instagram.com/Medmacs.App](https://instagram.com/Medmacs.App)
@@ -155,7 +155,7 @@ If you have any questions about these Terms and Conditions, you can contact us:
     <div className="min-h-screen w-full bg-white dark:bg-gray-900">
       <Seo
         title="Terms and Conditions"
-        description="Read the terms and conditions for using Medistics App services. Your agreement to these terms is required for usage."
+        description="Read the terms and conditions for using Medmacs App services. Your agreement to these terms is required for usage."
         canonical="https://Medmacs.App/terms"
       />
       {/* Header */}
@@ -166,8 +166,8 @@ If you have any questions about these Terms and Conditions, you can contact us:
           </Link>
 
           <div className="flex items-center space-x-3">
-            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medistics Logo" className="w-8 h-8 object-contain" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">MedisticsApp</span>
+            <img src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png" alt="Medmacs Logo" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">MedmacsApp</span>
           </div>
 
           <div className="flex items-center space-x-3">
