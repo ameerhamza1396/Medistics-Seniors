@@ -34,10 +34,10 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SignInPrompt from '@/components/SigninPrompt'; // Import SignInPrompt
 
 const Dashboard = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, authResolved } = useAuth();
   const navigate = useNavigate();
 
-  type Profile = {
+  type Profiles = {
     avatar_url: string;
     created_at: string;
     full_name: string;
@@ -49,8 +49,8 @@ const Dashboard = () => {
     plan?: string;
   };
 
-  const { data: profile, isLoading: profileLoading } = useQuery<Profile | null>({
-    queryKey: ['profile', user?.id],
+  const { data: profiles, isLoading: profileLoading } = useQuery<Profiles | null>({
+    queryKey: ['profiles', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       console.log('Fetching profile for user:', user.id);
@@ -132,27 +132,17 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    // 1. Wait for authentication status
-    if (authLoading) return;
-
-    // 2. Not authenticated: let the rest of the component handle the SignInPrompt
+    if (!authResolved || authLoading) return;    // 2. Not authenticated: let the rest of the component handle the SignInPrompt
     if (!user) return;
-
-    // 3. Authenticated, but profile is still loading: WAIT.
     if (profileLoading) return;
-
-    // At this point, we are authenticated (user exists) and profile has been fetched (profileLoading is false).
-    // The 'profile' variable holds either the user's profile object or null (from maybeSingle() if no profile exists).
-
-    // 4. Check for username existence (user is authenticated but profile is missing or incomplete)
-    if (!profile?.username) {
+    if (!profiles?.username) {
       console.log('Redirecting: Profile missing or username not set.');
       navigate('/welcome-new-user', { replace: true });
       return;
     }
 
     // 5. Check year of study
-    const yearString = profile.year?.toString();
+    const yearString = profiles.year?.toString();
     const validYears = ["1st", "2nd", "3rd", "4th", "5th"];
 
     // Check if year_of_study exists and is valid
@@ -165,7 +155,7 @@ const Dashboard = () => {
     // 6. All checks passed: user is authenticated, has a username, and a valid year.
     console.log('User profile is complete. Proceeding to dashboard.');
 
-  }, [authLoading, profileLoading, user, profile, navigate]); // Dependencies are correct
+  }, [authLoading, authResolved, profileLoading, user, profiles, navigate]); // Dependencies are correct
 
   // ... (rest of the component's Quick Actions, Premium Perks, Other Apps definitions are unchanged)
   const quickActions = [
@@ -299,9 +289,9 @@ const Dashboard = () => {
   ];
   // ... (rest of the component body is unchanged)
 
-  const displayName = profile?.full_name || profile?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medmacs User';
+  const displayName = profiles?.full_name || profiles?.username || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Medmacs User';
 
-  if (authLoading || profileLoading || userStatsLoading) {
+  if (!authResolved || authLoading || profileLoading || userStatsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <img
@@ -334,7 +324,7 @@ const Dashboard = () => {
         canonical="https://medmacs.app/dashboard"
       />
 
-      <DashboardHeader profile={profile} user={user} displayName={displayName} />
+      <DashboardHeader profile={profiles} user={user} displayName={displayName} />
 
       <div className="container mx-auto px-4 lg:px-8 py-8">
         {/* Welcome Section */}

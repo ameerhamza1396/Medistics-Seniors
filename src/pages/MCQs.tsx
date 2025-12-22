@@ -34,7 +34,7 @@ const MCQs = () => {
   });
 
   const { theme, setTheme } = useTheme();
-  const { user, loading: authLoading } = useAuth(); // Get loading state from useAuth
+  const { user, loading: authLoading, authResolved } = useAuth(); // Get loading state from useAuth
 
   // Get user profile data using useQuery
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -151,7 +151,7 @@ const MCQs = () => {
   };
 
   // Show a loading state while authentication is in progress
-if (authLoading || profileLoading) {
+  if (!authResolved || authLoading || profileLoading) {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 dark:bg-gradient-to-br dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
       {/* Replaced the loading spinner with the image */}
