@@ -47,7 +47,7 @@ For the purposes of this Privacy Policy:
     for election of directors or other managing authority.
 
 * **Company** (referred to as either "the Company", "We", "Us" or "Our" in this
-    Agreement) refers to Medistics.app, L13, KDA Flats, Sector 5E Surjani
+    Agreement) refers to Medmacs.App, L13, KDA Flats, Sector 5E Surjani
     Town, Karachi.
 
 * **Cookies** are small files that are placed on Your computer, mobile device or
@@ -78,8 +78,8 @@ For the purposes of this Privacy Policy:
     use of the Service or from the Service infrastructure itself (for example,
     the duration of a page visit).
 
-* **Website** refers to Medistics.app, accessible from
-    [medistics.app](medistics.app)
+* **Website** refers to Medmacs.App, accessible from
+    [Medmacs.App](Medmacs.App)
 
 * **You** means the individual accessing or using the Service, or the company,
     or other legal entity on behalf of which such individual is accessing or
@@ -416,7 +416,7 @@ If you have any questions about this Privacy Policy, You can contact us:
 * By email: medistics@dr.com
 
 * By visiting this page on our website:
-    [instagram.com/medistics.app](instagram.com/medistics.app)
+    [instagram.com/Medmacs.App](instagram.com/Medmacs.App)
 `;
 
     return (
@@ -424,7 +424,7 @@ If you have any questions about this Privacy Policy, You can contact us:
             <Seo
             title="Privacy Policy"
             description="Understand how Medistics App collects, uses, and protects your personal data in our comprehensive Privacy Policy."
-            canonical="https://medistics.app/privacypolicy"
+            canonical="https://Medmacs.App/privacypolicy"
             />
             {/* Header */}
             <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-purple-200 dark:border-purple-800 sticky top-0 z-50">
