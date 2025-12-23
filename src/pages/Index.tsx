@@ -648,7 +648,7 @@ const Index = () => {
               <div>
                 <div className="flex items-center space-x-2 mb-4 group">
                   <img
-                    src="/lovable-uploads/161d7edb-aa7b-4383-a8e2-75b6685fc44f.png"
+                    src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
                     alt="Medmacs Logo"
                     className="w-8 h-8 object-contain group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
                   />
@@ -682,10 +682,11 @@ const Index = () => {
               <div>
                 <h3 className="font-semibold mb-4 text-purple-400">Support & Legal</h3>
                 <ul className="space-y-2 text-gray-400">
-                  <li className="hover:text-purple-300 transition-colors duration-300">hamza@dr.com</li>
-                  <li className="hover:text-purple-300 transition-colors duration-300">Pakistan</li>
+                  {/* <li className="hover:text-purple-300 transition-colors duration-300">hamza@dr.com</li>
+                  <li className="hover:text-purple-300 transition-colors duration-300">Pakistan</li> */}
                   <li><Link to="/privacypolicy" className="hover:text-white hover:text-purple-300 transition-all duration-300 hover:translate-x-1">Privacy Policy</Link></li>
                   <li><Link to="/terms" className="hover:text-white hover:text-purple-300 transition-all duration-300 hover:translate-x-1">Terms and Conditions</Link></li>
+                  <li><Link to="/refund-policy" className="hover:text-white hover:text-purple-300 transition-all duration-300 hover:translate-x-1">Refund Policy</Link></li>
                 </ul>
               </div>
             </div>

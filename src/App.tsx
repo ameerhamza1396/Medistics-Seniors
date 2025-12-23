@@ -32,6 +32,7 @@ import Profile from '@/pages/Profile';
 import Pricing from '@/pages/Pricing';
 import TermsAndConditions from '@/pages/TermsAndConditions';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import RefundPolicy from '@/pages/RefundPolicy';
 import Checkout from '@/pages/Checkout';
 import NotFound from '@/pages/NotFound';
 import ChangePassword from '@/pages/ChangePassword';
@@ -118,6 +119,7 @@ function App() {
                 <Route path="/test-completed" element={<TestCompletionPage />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/terms" element={<TermsAndConditions />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/classroom" element={<Classroom />} />
                 {/* <Route path="/classroom/:id" element={<ClassroomChat />} /> */}

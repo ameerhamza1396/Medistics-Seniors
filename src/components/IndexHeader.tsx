@@ -54,7 +54,7 @@ const IndexHeader: React.FC = () => {
             <div className="container mx-auto px-4 lg:px-8 py-4 flex justify-between items-center max-w-7xl">
                 <Link to="/" className="flex items-center space-x-3 group">
                     <img
-                        src="/lovable-uploads/161d7edb-aa7b-4383-a8e2-75b6685fc44f.png"
+                        src="/lovable-uploads/bf69a7f7-550a-45a1-8808-a02fb889f8c5.png"
                         alt="Medistics Logo"
                         className="w-9 h-9 object-contain group-hover:scale-110 transition-all duration-300 group-hover:rotate-12"
                     />
