@@ -372,9 +372,9 @@ const CareerAmbassador = () => {
                         <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 hover:scale-105 transition-transform duration-300">
                             <CardHeader className="text-center">
                                 <Brain className="h-8 w-8 mx-auto mb-2 text-red-600 dark:text-red-400" />
-                                <CardTitle className="text-gray-900 dark:text-white">Exclusive Features</CardTitle>
+                                <CardTitle className="text-gray-900 dark:text-white">Early Access to Mobile Application </CardTitle>
                                 <CardDescription className="text-gray-600 dark:text-gray-400">
-                                    Gain early access to new Medmacs features and tools.
+                                    Gain early access Mobile Application to test it out before public release (Android Users Only).
                                 </CardDescription>
                             </CardHeader>
                         </Card>

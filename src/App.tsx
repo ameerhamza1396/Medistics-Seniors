@@ -128,7 +128,7 @@ function App() {
                 <Route path="/settings/username" element={<UsernamePage />} />
                 <Route path="/results" element={<MockTestResults />} />
                 <Route path="/test-summary" element={<TestCompletion />} />
-                <Route path="/career" element={<Career />} />
+                <Route path="/join" element={<Career />} />
                 <Route path="/teaching-career" element={<TeachingAmbassadors />} />
                 <Route path="/collaborate" element={<InternshipApplication />} />
                 <Route path="/saved-mcqs" element={<SavedMCQsPage />} />
